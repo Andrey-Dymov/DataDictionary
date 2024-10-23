@@ -1,0 +1,31 @@
+{
+  "collections": [
+    {
+      "name": "meetings",
+      "description": "Информация о встречах",
+      "icon": "event",
+      "prompt": "Встречи",
+      "promptSingle": "Встреча",
+      "fields": [
+        {"name": "id", "type": "number"},
+        {"name": "name", "type": "string", "input": "string", "prompt": "Название", "req": true, "list": "main-title"},
+        {"name": "date", "type": "date", "input": "date", "prompt": "Дата", "req": true, "list": "data-date"},
+        {"name": "meetingTypeId", "type": "reference", "input": "select", "prompt": "Тип встречи", "req": true, "list": "main-chips"}
+      ],
+      "relations": {
+        "meetingType": {
+          "type": "belongsTo",
+          "target": "meeting_types",
+          "foreignKey": "meetingTypeId",
+          "restriction": "restrict"
+        },
+        "solutions": {
+          "type": "hasMany",
+          "target": "solutions",
+          "foreignKey": "meetingId",
+          "restriction": "cascade"
+        }
+      }
+    }
+  ]
+}

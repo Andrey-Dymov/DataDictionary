@@ -1,0 +1,25 @@
+{
+  "collections": [
+    {
+      "name": "projects",
+      "description": "Информация о проектах",
+      "icon": "work",
+      "prompt": "Проекты",
+      "promptSingle": "Проект",
+      "fields": [
+        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
+        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
+        {"name": "description", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Описание"},
+        {"name": "schemaType", "type": "string", "inputType": "select", "displayType": "string", "prompt": "Тип схемы", "req": true}
+      ],
+      "relations": {
+        "subProjects": {
+          "type": "hasMany",
+          "target": "sub_projects",
+          "foreignKey": "projectId",
+          "restriction": "cascade"
+        }
+      }
+    }
+  ]
+}
