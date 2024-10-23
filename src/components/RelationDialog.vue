@@ -5,15 +5,44 @@
         <div class="text-h6">{{ isEdit ? 'Редактировать' : 'Добавить' }} связь</div>
       </q-card-section>
 
-      <q-card-section class="q-pt-none">
-        <q-input 
-          v-model="form.name" 
-          label="Название" 
-          standout 
-          class="q-mb-md"
-          :rules="[val => !!val || 'Обязательное поле']"
-        />
+      <!-- Перемещаем информационное поле сюда -->
+      <q-card-section class="q-pa-none">
+        <div class="relation-info bg-yellow-2 q-ma-md q-pa-sm rounded-borders">
+          <div class="row items-center justify-between q-col-gutter-md">
+            <div class="col-4 text-center">
+              <div class="text-caption text-grey-7">{{ sourceRole }}</div>
+              <div class="text-subtitle2">{{ sourceName }}</div>
+              <div class="text-caption">{{ sourcePrompt }}</div>
+              <q-badge
+                color="primary"
+                text-color="white"
+                class="q-mt-xs field-badge"
+              >
+                {{ sourceField }}
+              </q-badge>
+            </div>
+            <div class="col-4 text-center">
+              <div class="relation-icon" v-html="getRelationIcon"></div>
+              <div class="text-caption q-mt-xs">{{ getRelationTypeText }}</div>
+            </div>
+            <div class="col-4 text-center">
+              <div class="text-caption text-grey-7">{{ targetRole }}</div>
+              <div class="text-subtitle2">{{ form.target }}</div>
+              <div class="text-caption">{{ targetPrompt }}</div>
+              <q-badge
+                v-if="form.foreignKey"
+                color="primary"
+                text-color="white"
+                class="q-mt-xs field-badge"
+              >
+                {{ form.type === 'belongsTo' ? form.foreignKey : getTargetField }}
+              </q-badge>
+            </div>
+          </div>
+        </div>
+      </q-card-section>
 
+      <q-card-section class="q-pt-none">
         <div class="relation-type q-mb-md">
           <div class="text-subtitle2 q-mb-sm">Тип связи</div>
           <q-btn-toggle
@@ -142,6 +171,14 @@
             </template>
           </q-btn-toggle>
         </div>
+
+        <q-input 
+          v-model="form.name" 
+          label="Название связи" 
+          standout 
+          class="q-mb-md"
+          :rules="[val => !!val || 'Обязательное поле']"
+        />
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
@@ -153,7 +190,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { useSchemaStore } from '../stores/schema'
 import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
@@ -161,15 +198,38 @@ import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relat
 export default {
   name: 'RelationDialog',
 
+  props: {
+    sourceName: {
+      type: String,
+      required: true
+    },
+    sourcePrompt: {
+      type: String,
+      default: ''
+    },
+    sourceField: {
+      type: String,
+      default: ''
+    }
+  },
+
   emits: [
     ...useDialogPluginComponent.emits
   ],
 
-  setup () {
+  setup (props) {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     const schemaStore = useSchemaStore()
     const isEdit = ref(false)
     const foreignKeyOptions = ref([])
+
+    // Создаем еактивную переменную для sourceName
+    const sourceName = ref(props.sourceName)
+
+    // Следим за изменениями пропса sourceName
+    watch(() => props.sourceName, (newSourceName) => {
+      sourceName.value = newSourceName
+    })
 
     const form = ref({
       name: '',
@@ -182,7 +242,7 @@ export default {
     const collectionOptions = computed(() => {
       const collections = schemaStore.collections || []
       return collections.map(collection => ({
-        label: `${collection.prompt} - ${collection.description}`,
+        label: `${collection.name} - ${collection.prompt}`,
         value: collection.name
       }))
     })
@@ -213,9 +273,17 @@ export default {
               label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
               value: field.name
             }))
+          
+          // Автоматически заполняем название связи
+          let relationName = targetCollection.name
+          if (form.value.type === 'belongsTo') {
+            relationName = relationName.replace(/es$/, '').replace(/s$/, '')
+          }
+          form.value.name = relationName
         }
       } else {
         foreignKeyOptions.value = []
+        form.value.name = ''
       }
     }
 
@@ -269,6 +337,8 @@ export default {
         foreignKeyOptions.value = []
         isEdit.value = false
       }
+      // Обновляем sourceName при каждом открытии диалога
+      sourceName.value = props.sourceName
       dialogRef.value.show()
     }
 
@@ -277,6 +347,100 @@ export default {
         onDialogOK(form.value)
       }
     }
+
+    const sourceRole = computed(() => {
+      switch (form.value.type) {
+        case 'hasMany':
+          return 'Родитель'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'Ребеок'
+        default:
+          return ''
+      }
+    })
+
+    const targetRole = computed(() => {
+      switch (form.value.type) {
+        case 'hasMany':
+          return 'Ребенок'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'Родитель'
+        default:
+          return ''
+      }
+    })
+
+    const getRelationIcon = computed(() => {
+      switch (form.value.type) {
+        case 'hasMany':
+          return oneToManySvg
+        case 'belongsTo':
+          return manyToOneSvg
+        case 'belongsToMany':
+          return manyToManySvg
+        default:
+          return ''
+      }
+    })
+
+    const targetPrompt = computed(() => {
+      const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+      return targetCollection ? targetCollection.prompt : ''
+    })
+
+    const getRelationTypeText = computed(() => {
+      switch (form.value.type) {
+        case 'hasMany':
+          return 'Один ко многим'
+        case 'belongsTo':
+          return 'Многие к одному'
+        case 'belongsToMany':
+          return 'Многие ко многим'
+        default:
+          return ''
+      }
+    })
+
+    const sourceField = computed(() => {
+      if (form.value.type === 'belongsTo') {
+        return form.value.foreignKey
+      } else {
+        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
+        return sourceCollection ? sourceCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
+      }
+    })
+
+    const getTargetField = computed(() => {
+      if (form.value.type === 'belongsTo') {
+        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+        return targetCollection ? targetCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
+      } else {
+        return form.value.foreignKey
+      }
+    })
+
+    watch(() => form.value.type, (newType) => {
+      // Обновляем foreignKey при изменении типа связи
+      if (newType === 'belongsTo') {
+        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+        form.value.foreignKey = targetCollection ? `${targetCollection.name.toLowerCase()}Id` : ''
+      } else {
+        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
+        form.value.foreignKey = sourceCollection ? `${sourceCollection.name.toLowerCase()}Id` : ''
+      }
+    })
+
+    watch(() => form.value.target, (newTarget) => {
+      // Обновляем foreignKey при изменении целевой сущности
+      if (form.value.type === 'belongsTo') {
+        form.value.foreignKey = newTarget ? `${newTarget.toLowerCase()}Id` : ''
+      } else {
+        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
+        form.value.foreignKey = sourceCollection ? `${sourceCollection.name.toLowerCase()}Id` : ''
+      }
+    })
 
     return {
       dialogRef,
@@ -293,7 +457,16 @@ export default {
       updateForeignKeyOptions,
       manyToManySvg,
       oneToManySvg,
-      manyToOneSvg
+      manyToOneSvg,
+      sourceRole,
+      targetRole,
+      getRelationIcon,
+      sourceName,
+      sourcePrompt: props.sourcePrompt,
+      targetPrompt,
+      getRelationTypeText,
+      sourceField,
+      getTargetField
     }
   }
 }
@@ -364,4 +537,32 @@ export default {
   .q-btn
     flex: 1
     min-width: 0
+
+.relation-info
+  padding: 12px
+  border-radius: 8px
+  background-color: rgba(255, 255, 0, 0.1) // Бледно-желтый цвет
+
+.relation-icon
+  width: 32px
+  height: 32px
+  margin: 0 auto
+
+  svg
+    width: 100%
+    height: 100%
+
+.relation-info
+  .text-caption
+    font-size: 0.75rem
+    line-height: 1.2
+
+  .text-grey-7
+    opacity: 0.7
+
+  .field-badge
+    border-radius: 4px
+    font-size: 0.7rem
+    padding: 2px 6px
 </style>
+

@@ -10,11 +10,11 @@
       v-if="icon"
       avatar
     >
-      <q-icon :name="icon" color="primary" />
+      <q-icon :name="icon" :color="active ? 'white' : 'primary'" />
     </q-item-section>
 
     <q-item-section>
-      <q-item-label>{{ prompt }}</q-item-label>
+      <q-item-label>{{ name }} - {{ prompt }}</q-item-label>
       <q-item-label caption>{{ description }}</q-item-label>
     </q-item-section>
 
@@ -39,6 +39,10 @@ import { defineComponent } from 'vue'
 export default defineComponent({
   name: 'EssentialLink',
   props: {
+    name: {
+      type: String,
+      required: true
+    },
     prompt: {
       type: String,
       required: true
@@ -73,8 +77,6 @@ export default defineComponent({
 
   &.q-router-link--active
     font-weight: 600
-    .q-icon
-      color: white !important
 
   .q-item__section--side
     .q-btn

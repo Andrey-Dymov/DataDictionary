@@ -16,6 +16,8 @@
         <div class="col-12 col-md-6">
           <RelationsList 
             :relations="collection.relations" 
+            :source-name="collection.name"
+            :source-prompt="collection.prompt"
             @deleteRelation="handleDeleteRelation"
             @addRelation="showAddRelationDialog"
             @editRelation="showEditRelationDialog"
@@ -33,6 +35,9 @@
     />
     <RelationDialog 
       ref="relationDialog" 
+      :source-name="collection?.name"
+      :source-prompt="collection?.prompt"
+      :source-field="collection?.fields[0]?.name"
       @ok="handleRelationSave"
     />
   </q-page>
@@ -143,7 +148,10 @@ export default defineComponent({
     const showEditRelationDialog = (relation) => {
       console.log('[CollectionDetails] Showing edit relation dialog:', relation.name)
       editingRelationName.value = relation.name
-      relationDialog.value.show(relation)
+      relationDialog.value.show({
+        ...relation,
+        sourceField: collection.value.fields.find(f => f.name === relation.foreignKey)?.name
+      })
     }
 
     const handleFieldSave = async (fieldData) => {

@@ -48,6 +48,7 @@
               v-for="collection in collections"
               :key="collection.name"
               v-bind="collection"
+              :title="`${collection.name} - ${collection.prompt}`"
               :link="`/collection/${collection.name}`"
               :active="collection.name === selectedCollectionName"
               @click="setSelectedCollection(collection.name)"

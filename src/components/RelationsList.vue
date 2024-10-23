@@ -1,144 +1,197 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2">Связи</div>
-        <q-space />
-        <q-btn flat round dense color="primary" icon="add" @click="$emit('addRelation')">
-          <q-tooltip>Добавить связь</q-tooltip>
-        </q-btn>
-      </div>
-      <q-list dense separator>
-        <q-item v-for="(relation, name) in relations" 
-                :key="name" 
-                class="q-py-xs" 
-                clickable 
-                @click="$emit('editRelation', { name, ...relation })">
-          <q-item-section avatar>
-            <div class="relation-icon" v-html="getRelationSvg(relation.type)" />
-          </q-item-section>
-          
-          <q-item-section>
-            <q-item-label class="text-subtitle2">{{ name }}</q-item-label>
-            <q-item-label caption>
-              <div class="row items-center q-gutter-x-sm">
-                <q-badge color="primary">
-                  {{ getRelationTypeLabel(relation.type) }}
-                </q-badge>
-                <q-badge color="secondary">
-                  {{ relation.target }}
-                </q-badge>
-                <q-badge :color="getRestrictionColor(relation.restriction)">
-                  {{ getRestrictionLabel(relation.restriction) }}
-                </q-badge>
-              </div>
-            </q-item-label>
-          </q-item-section>
-
-          <q-item-section side>
-            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(name)">
-              <q-tooltip>Удалить связь</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-card-section>
-  </q-card>
+  <div class="relations-list">
+    <div class="text-h6 q-mb-md">
+      Связи
+      <q-btn
+        flat
+        round
+        dense
+        color="primary"
+        icon="add"
+        @click="$emit('addRelation')"
+        class="float-right"
+      >
+        <q-tooltip>Добавить связь</q-tooltip>
+      </q-btn>
+    </div>
+    <q-list bordered separator>
+      <q-item
+        v-for="(relation, name) in relations"
+        :key="name"
+        class="q-py-md"
+        clickable
+        @click="$emit('editRelation', { name, ...relation })"
+      >
+        <q-item-section>
+          <div class="text-subtitle1 text-weight-medium text-center q-mb-sm">{{ name }}</div>
+          <div class="row items-center justify-between q-col-gutter-md">
+            <div class="col-4 text-center">
+              <div class="text-caption text-grey-7">{{ getSourceRole(relation.type) }}</div>
+              <div class="text-subtitle2">{{ sourceName }}</div>
+              <div class="text-caption">{{ sourcePrompt }}</div>
+              <q-badge
+                color="primary"
+                text-color="white"
+                class="q-mt-xs field-badge"
+              >
+                {{ getSourceField(relation) }}
+              </q-badge>
+            </div>
+            <div class="col-4 text-center">
+              <div class="relation-icon" v-html="getRelationIcon(relation.type)"></div>
+              <div class="text-caption q-mt-xs">{{ getRelationTypeText(relation.type) }}</div>
+            </div>
+            <div class="col-4 text-center">
+              <div class="text-caption text-grey-7">{{ getTargetRole(relation.type) }}</div>
+              <div class="text-subtitle2">{{ relation.target }}</div>
+              <div class="text-caption">{{ getTargetPrompt(relation.target) }}</div>
+              <q-badge
+                color="primary"
+                text-color="white"
+                class="q-mt-xs field-badge"
+              >
+                {{ relation.foreignKey }}
+              </q-badge>
+            </div>
+          </div>
+        </q-item-section>
+        <q-item-section side>
+          <q-btn flat round color="grey" icon="delete" @click.stop="$emit('deleteRelation', name)">
+            <q-tooltip>Удалить связь</q-tooltip>
+          </q-btn>
+        </q-item-section>
+      </q-item>
+    </q-list>
+  </div>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
-import { useQuasar } from 'quasar'
 import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
+import { useSchemaStore } from '../stores/schema'
 
 export default defineComponent({
   name: 'RelationsList',
+
   props: {
     relations: {
       type: Object,
       required: true
+    },
+    sourceName: {
+      type: String,
+      required: true
+    },
+    sourcePrompt: {
+      type: String,
+      required: true
     }
   },
-  emits: ['deleteRelation', 'addRelation', 'editRelation'],
-  setup(props, { emit }) {
-    const $q = useQuasar()
 
-    const getRelationSvg = (type) => {
+  emits: ['editRelation', 'deleteRelation', 'addRelation'],
+
+  setup(props) {
+    const schemaStore = useSchemaStore()
+
+    const getSourceRole = (type) => {
       switch (type) {
-        case 'hasMany': return oneToManySvg
-        case 'belongsTo': return manyToOneSvg
-        case 'belongsToMany': return manyToManySvg
-        default: return oneToManySvg
+        case 'hasMany':
+          return 'Родитель'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'Ребенок'
+        default:
+          return ''
       }
     }
 
-    const getRelationTypeLabel = (type) => {
+    const getTargetRole = (type) => {
       switch (type) {
-        case 'hasMany': return 'Один ко многим'
-        case 'belongsTo': return 'Многие к одному'
-        case 'belongsToMany': return 'Многие ко многим'
-        default: return type
+        case 'hasMany':
+          return 'Ребенок'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'Родитель'
+        default:
+          return ''
       }
     }
 
-    const getRestrictionLabel = (restriction) => {
-      switch (restriction) {
-        case 'restrict': return 'Запрет'
-        case 'cascade': return 'Каскад'
-        case 'setnull': return 'Обнуление'
-        default: return 'Запрет'
+    const getRelationIcon = (type) => {
+      switch (type) {
+        case 'hasMany':
+          return oneToManySvg
+        case 'belongsTo':
+          return manyToOneSvg
+        case 'belongsToMany':
+          return manyToManySvg
+        default:
+          return ''
       }
     }
 
-    const getRestrictionColor = (restriction) => {
-      switch (restriction) {
-        case 'restrict': return 'negative'
-        case 'cascade': return 'warning'
-        case 'setnull': return 'info'
-        default: return 'grey'
+    const getTargetPrompt = (targetName) => {
+      const targetCollection = schemaStore.collections.find(c => c.name === targetName)
+      return targetCollection ? targetCollection.prompt : ''
+    }
+
+    const getSourceField = (relation) => {
+      if (relation.type === 'belongsTo') {
+        return relation.foreignKey
+      } else {
+        // Для hasMany и belongsToMany, собственное поле - это первичный ключ текущей сущности
+        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
+        return sourceCollection ? sourceCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
       }
     }
 
-    const confirmDelete = (name) => {
-      $q.dialog({
-        title: 'Подтверждение',
-        message: `Вы уверены, что хотите удалить связь "${name}"?`,
-        cancel: true,
-        persistent: true
-      }).onOk(() => {
-        emit('deleteRelation', name)
-      })
+    const getRelationTypeText = (type) => {
+      switch (type) {
+        case 'hasMany':
+          return 'Один ко многим'
+        case 'belongsTo':
+          return 'Многие к одному'
+        case 'belongsToMany':
+          return 'Многие ко многим'
+        default:
+          return ''
+      }
     }
 
     return {
-      getRelationSvg,
-      getRelationTypeLabel,
-      getRestrictionLabel,
-      getRestrictionColor,
-      confirmDelete
+      getSourceRole,
+      getTargetRole,
+      getRelationIcon,
+      getTargetPrompt,
+      getSourceField,
+      getRelationTypeText
     }
   }
 })
 </script>
 
-<style lang="sass">
-.relation-icon
-  width: 24px
-  height: 24px
-  display: flex
-  align-items: center
-  justify-content: center
-  color: var(--q-primary)
+<style lang="sass" scoped>
+.relations-list
+  .relation-icon
+    width: 24px
+    height: 24px
+    margin: 0 auto
+    svg
+      width: 100%
+      height: 100%
 
-  svg
-    width: 100%
-    height: 100%
+  .field-badge
+    border-radius: 4px
+    font-size: 0.7rem
+    padding: 2px 6px
 
-.q-badge
-  font-size: 12px
-  padding: 4px 8px
-  
-  .q-icon
-    font-size: 14px
-    margin-right: 4px
+  .text-caption
+    font-size: 0.75rem
+    line-height: 1.2
+
+  .text-grey-7
+    opacity: 0.7
+
+  .q-item
+    cursor: pointer
 </style>
