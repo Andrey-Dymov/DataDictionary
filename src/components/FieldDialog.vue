@@ -10,7 +10,8 @@
           v-model="form.name" 
           label="Название" 
           standout 
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           :rules="[val => !!val || 'Обязательное поле']"
         />
 
@@ -19,17 +20,19 @@
           :options="dataTypeOptions"
           label="Тип данных"
           standout
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           emit-value
           map-options
         />
 
-        <div class="q-mb-md">
-          <div class="text-subtitle2 q-mb-sm">Секция</div>
+        <div class="q-mb-sm">
+          <div class="text-subtitle2 q-mb-xs">Секция</div>
           <q-btn-toggle
             v-model="form.section"
             :options="sectionOptions"
             unelevated
+            dense
             toggle-color="primary"
             spread
           />
@@ -40,7 +43,8 @@
           :options="listTypeOptions"
           label="Тип в списке"
           standout
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           emit-value
           map-options
         />
@@ -50,7 +54,8 @@
           :options="inputTypeOptions"
           label="Тип ввода в форме"
           standout
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           emit-value
           map-options
         />
@@ -59,13 +64,17 @@
           v-model="form.prompt" 
           label="Метка" 
           standout 
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
         />
 
         <q-toggle
           v-model="form.required"
           label="Обязательное"
-          class="q-mb-md"
+          left-label
+          color="green"
+          dense
+          class="q-mb-sm"
         />
       </q-card-section>
 
@@ -155,7 +164,13 @@ export default {
     const show = (field = null) => {
       if (field) {
         form.value = { 
-          ...field
+          name: field.name,
+          dataType: field.type,
+          section: field.list ? field.list.split('-')[0] : 'main',
+          listType: field.list ? field.list.split('-')[1] : '',
+          inputType: field.input,
+          prompt: field.prompt,
+          required: field.req || false
         }
         isEdit.value = true
       } else {
@@ -175,7 +190,15 @@ export default {
 
     const onOKClick = () => {
       if (isFormValid.value) {
-        onDialogOK(form.value)
+        const fieldData = {
+          name: form.value.name,
+          type: form.value.dataType,
+          list: `${form.value.section}-${form.value.listType}`,
+          input: form.value.inputType,
+          prompt: form.value.prompt,
+          req: form.value.required
+        }
+        onDialogOK(fieldData)
       }
     }
 
@@ -200,4 +223,3 @@ export default {
 .q-dialog-plugin
   max-width: 95vw
 </style>
-

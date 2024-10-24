@@ -5,6 +5,7 @@
     :active="active"
     active-class="bg-primary text-white"
     @click="$emit('click')"
+    @dblclick="$emit('editCollection', name)"
   >
     <q-item-section
       v-if="icon"
@@ -64,7 +65,7 @@ export default defineComponent({
       default: false
     }
   },
-  emits: ['click', 'delete']
+  emits: ['click', 'delete', 'editCollection']
 })
 </script>
 

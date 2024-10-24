@@ -41,28 +41,20 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <div class="relation-type q-mb-md">
-          <div class="text-subtitle2 q-mb-sm">Тип связи</div>
+        <div class="relation-type q-mb-sm">
+          <div class="text-subtitle2 q-mb-xs">Тип связи</div>
           <q-btn-toggle
             v-model="form.type"
             spread
             no-caps
             unelevated
+            dense
             toggle-color="primary"
             class="relation-buttons"
             :options="[
-              {
-                value: 'hasMany',
-                slot: 'hasMany'
-              },
-              {
-                value: 'belongsTo',
-                slot: 'belongsTo'
-              },
-              {
-                value: 'belongsToMany',
-                slot: 'belongsToMany'
-              }
+              { value: 'hasMany', slot: 'hasMany' },
+              { value: 'belongsTo', slot: 'belongsTo' },
+              { value: 'belongsToMany', slot: 'belongsToMany' }
             ]"
           >
             <template #hasMany>
@@ -93,7 +85,8 @@
           :options="collectionOptions"
           label="Связанная сущность"
           standout
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           emit-value
           map-options
           @update:model-value="updateForeignKeyOptions"
@@ -103,32 +96,25 @@
           v-model="form.foreignKey"
           :label="foreignKeyLabel"
           standout 
-          class="q-mb-md"
+          dense
+          class="q-mb-sm"
           :rules="[val => !!val || 'Обязательное поле']"
         />
 
-        <div class="restriction-type q-mb-md">
-          <div class="text-subtitle2 q-mb-sm">Ограничения на удаление</div>
+        <div class="restriction-type q-mb-sm">
+          <div class="text-subtitle2 q-mb-xs">Ограничения на удаление</div>
           <q-btn-toggle
             v-model="form.restriction"
             spread
             no-caps
             unelevated
+            dense
             toggle-color="primary"
             class="restriction-buttons"
             :options="[
-              {
-                value: 'restrict',
-                slot: 'restrict'
-              },
-              {
-                value: 'cascade',
-                slot: 'cascade'
-              },
-              {
-                value: 'setnull',
-                slot: 'setnull'
-              }
+              { value: 'restrict', slot: 'restrict' },
+              { value: 'cascade', slot: 'cascade' },
+              { value: 'setnull', slot: 'setnull' }
             ]"
           >
             <template #restrict>
@@ -157,16 +143,18 @@
           </q-btn-toggle>
         </div>
 
-        <div class="q-mb-md row items-center">
+        <div class="q-mb-sm row items-center">
           <q-input 
             v-model="form.name" 
             label="Название связи" 
             standout 
+            dense
             class="col"
             :rules="[val => !!val || 'Обязательное поле']"
           />
           <q-btn
             no-caps
+            dense
             color="green"
             icon="arrow_left"
             :label="suggestedName"
@@ -177,8 +165,8 @@
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Отмена" v-close-popup />
-        <q-btn flat label="OK" @click="onOKClick" :disable="!isFormValid" />
+        <q-btn flat dense label="Отмена" v-close-popup />
+        <q-btn flat dense label="OK" @click="onOKClick" :disable="!isFormValid" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -595,4 +583,5 @@ export default {
     font-size: 0.7rem
     padding: 2px 6px
 </style>
+
 

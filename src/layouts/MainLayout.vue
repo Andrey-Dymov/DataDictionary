@@ -38,11 +38,21 @@
       class="bg-grey-1"
     >
       <q-scroll-area class="fit">
-        <q-list padding>
-          <q-item-label header class="text-grey-8">
-            Entities
-          </q-item-label>
+        <div class="row items-center q-mb-md q-px-md">
+          <div class="text-h4 q-mr-auto">Сущности</div>
+          <q-btn
+            flat
+            round
+            dense
+            color="primary"
+            icon="add"
+            @click="showAddCollectionDialog"
+          >
+            <q-tooltip>Добавить сущность</q-tooltip>
+          </q-btn>
+        </div>
 
+        <q-list padding>
           <template v-if="collections.length > 0">
             <EssentialLink
               v-for="collection in collections"
@@ -52,6 +62,8 @@
               :link="`/collection/${collection.name}`"
               :active="collection.name === selectedCollectionName"
               @click="setSelectedCollection(collection.name)"
+              @delete="deleteCollection(collection.name)"
+              @editCollection="showEditCollectionDialog"
             />
           </template>
           <q-item v-else class="text-grey">
@@ -70,6 +82,8 @@
         </keep-alive>
       </router-view>
     </q-page-container>
+
+    <CollectionDialog ref="collectionDialog" @ok="handleCollectionSave" />
   </q-layout>
 </template>
 
@@ -77,13 +91,16 @@
 import { defineComponent, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EssentialLink from '../components/EssentialLink.vue'
+import CollectionDialog from '../components/CollectionDialog.vue'
 import { useSchemaStore } from '../stores/schema'
+import { useQuasar } from 'quasar'
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    EssentialLink
+    EssentialLink,
+    CollectionDialog
   },
 
   setup() {
@@ -92,6 +109,8 @@ export default defineComponent({
     const schemaStore = useSchemaStore()
     const router = useRouter()
     const route = useRoute()
+    const collectionDialog = ref(null)
+    const $q = useQuasar()
 
     const currentDictionary = computed({
       get: () => schemaStore.getCurrentDictionary,
@@ -151,6 +170,53 @@ export default defineComponent({
       schemaStore.setSelectedCollection(name)
     }
 
+    const showAddCollectionDialog = () => {
+      collectionDialog.value.show()
+    }
+
+    const showEditCollectionDialog = (collectionName) => {
+      const collection = schemaStore.getCollectionByName(collectionName)
+      if (collection) {
+        collectionDialog.value.show(collection)
+      }
+    }
+
+    const handleCollectionSave = async (collectionData) => {
+      try {
+        if (collectionData.name) {
+          await schemaStore.updateCollection(collectionData.name, collectionData)
+        } else {
+          await schemaStore.addCollection(collectionData)
+        }
+        $q.notify({
+          type: 'positive',
+          message: `Сущность успешно ${collectionData.name ? 'обновлена' : 'добавлена'}`
+        })
+      } catch (error) {
+        console.error('Error saving collection:', error)
+        $q.notify({
+          type: 'negative',
+          message: `Ошибка при ${collectionData.name ? 'обновлении' : 'добавлении'} сущности`
+        })
+      }
+    }
+
+    const deleteCollection = async (collectionName) => {
+      try {
+        await schemaStore.deleteCollection(collectionName)
+        $q.notify({
+          type: 'positive',
+          message: 'Сущность успешно удалена'
+        })
+      } catch (error) {
+        console.error('Error deleting collection:', error)
+        $q.notify({
+          type: 'negative',
+          message: 'Ошибка при удалении сущности'
+        })
+      }
+    }
+
     console.log('[Layout] Setup completed')
     return {
       leftDrawerOpen,
@@ -162,7 +228,12 @@ export default defineComponent({
       currentDictionary,
       dictionaryOptions,
       changeDictionary,
-      setSelectedCollection
+      setSelectedCollection,
+      showAddCollectionDialog,
+      showEditCollectionDialog,
+      handleCollectionSave,
+      deleteCollection,
+      collectionDialog
     }
   }
 })

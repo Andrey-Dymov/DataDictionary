@@ -1,28 +1,68 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin" style="min-width: 350px">
+    <q-card class="q-dialog-plugin" style="min-width: 500px">
       <q-card-section>
-        <div class="text-h6">{{ isEdit ? 'Edit' : 'Add' }} Entity</div>
+        <div class="text-h6">{{ isEdit ? 'Редактировать' : 'Добавить' }} сущность</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <q-input dense v-model="form.name" label="Name" autofocus @keyup.enter="onOKClick" />
-        <q-input dense v-model="form.description" label="Description" />
-        <q-input dense v-model="form.icon" label="Icon" />
-        <q-input dense v-model="form.prompt" label="Prompt" />
-        <q-input dense v-model="form.promptSingle" label="Prompt Single" />
+        <q-input 
+          v-model="form.name" 
+          label="Название" 
+          standout 
+          dense
+          class="q-mb-sm"
+          :rules="[val => !!val || 'Обязательное поле']"
+        />
+
+        <q-input 
+          v-model="form.prompt" 
+          label="Метка" 
+          standout 
+          dense
+          class="q-mb-sm"
+        />
+
+        <q-input 
+          v-model="form.promptSingle" 
+          label="Метка единственного числа" 
+          standout 
+          dense
+          class="q-mb-sm"
+        />
+
+        <q-input 
+          v-model="form.description" 
+          label="Описание" 
+          type="textarea" 
+          standout 
+          dense
+          class="q-mb-sm"
+        />
+
+        <q-input 
+          v-model="form.icon" 
+          label="Иконка" 
+          standout 
+          dense
+          class="q-mb-sm"
+        >
+          <template v-slot:append>
+            <q-icon :name="form.icon" />
+          </template>
+        </q-input>
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Cancel" v-close-popup />
-        <q-btn flat label="OK" @click="onOKClick" />
+        <q-btn flat label="Отмена" v-close-popup />
+        <q-btn flat label="OK" @click="onOKClick" :disable="!isFormValid" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose } from 'vue'
+import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 
 const props = defineProps({
@@ -42,23 +82,42 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 
 const form = ref({
   name: '',
-  description: '',
-  icon: '',
   prompt: '',
-  promptSingle: ''
+  promptSingle: '',
+  description: '',
+  icon: ''
+})
+
+const isEdit = ref(false)
+
+const isFormValid = computed(() => {
+  return !!form.value.name
 })
 
 function onOKClick () {
-  onDialogOK(form.value)
+  if (isFormValid.value) {
+    onDialogOK(form.value)
+  }
 }
 
 defineExpose({
-  show () {
-    form.value = { ...props.collection }
+  show(collection = null) {
+    if (collection) {
+      form.value = { ...collection }
+      isEdit.value = true
+    } else {
+      form.value = { name: '', prompt: '', promptSingle: '', description: '', icon: '' }
+      isEdit.value = false
+    }
     dialogRef.value.show()
   },
-  hide () {
+  hide() {
     dialogRef.value.hide()
   }
 })
 </script>
+
+<style lang="sass">
+.q-dialog-plugin
+  max-width: 95vw
+</style>
