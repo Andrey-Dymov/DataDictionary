@@ -157,13 +157,23 @@
           </q-btn-toggle>
         </div>
 
-        <q-input 
-          v-model="form.name" 
-          label="Название связи" 
-          standout 
-          class="q-mb-md"
-          :rules="[val => !!val || 'Обязательное поле']"
-        />
+        <div class="q-mb-md row items-center">
+          <q-input 
+            v-model="form.name" 
+            label="Название связи" 
+            standout 
+            class="col"
+            :rules="[val => !!val || 'Обязательное поле']"
+          />
+          <q-btn
+            no-caps
+            color="green"
+            icon="arrow_left"
+            :label="suggestedName"
+            @click="form.name = suggestedName"
+            class="q-ml-sm"
+          />
+        </div>
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
@@ -211,7 +221,7 @@ export default {
     // Создаем еактивную переменную для sourceName
     const sourceName = ref(props.sourceName)
 
-    // Следим за изменениями пропса sourceName
+    // Следим за изменениями пропа sourceName
     watch(() => props.sourceName, (newSourceName) => {
       sourceName.value = newSourceName
     })
@@ -351,7 +361,7 @@ export default {
           return 'Родитель'
         case 'belongsTo':
         case 'belongsToMany':
-          return 'Ребеок'
+          return 'Ребенок'
         default:
           return ''
       }
@@ -444,6 +454,22 @@ export default {
     watch(() => form.value.type, updateForeignKey)
     watch(() => form.value.target, updateForeignKey)
 
+    const suggestedName = computed(() => {
+      const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+      if (!targetCollection) return ''
+
+      let name = targetCollection.name
+      if (form.value.type === 'belongsTo') {
+        // Убираем окончание 's' или 'es' для 'Многие ко одному'
+        if (name.endsWith('es')) {
+          name = name.slice(0, -2)
+        } else if (name.endsWith('s')) {
+          name = name.slice(0, -1)
+        }
+      }
+      return name
+    })
+
     return {
       dialogRef,
       onDialogHide,
@@ -469,7 +495,8 @@ export default {
       getRelationTypeText,
       sourceField,
       getTargetField,
-      updateForeignKey
+      updateForeignKey,
+      suggestedName
     }
   }
 }
