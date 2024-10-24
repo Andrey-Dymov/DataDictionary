@@ -5,14 +5,13 @@
         <div class="text-h6">{{ isEdit ? 'Редактировать' : 'Добавить' }} связь</div>
       </q-card-section>
 
-      <!-- Перемещаем информационное поле сюда -->
+      <!-- Обновленная информационная панель -->
       <q-card-section class="q-pa-none">
         <div class="relation-info bg-yellow-2 q-ma-md q-pa-sm rounded-borders">
           <div class="row items-center justify-between q-col-gutter-md">
             <div class="col-4 text-center">
               <div class="text-caption text-grey-7">{{ sourceRole }}</div>
-              <div class="text-subtitle2">{{ sourceName }}</div>
-              <div class="text-caption">{{ sourcePrompt }}</div>
+              <div class="text-subtitle2">{{ sourceName }} - {{ sourcePrompt }}</div>
               <q-badge
                 color="primary"
                 text-color="white"
@@ -27,15 +26,14 @@
             </div>
             <div class="col-4 text-center">
               <div class="text-caption text-grey-7">{{ targetRole }}</div>
-              <div class="text-subtitle2">{{ form.target }}</div>
-              <div class="text-caption">{{ targetPrompt }}</div>
+              <div class="text-subtitle2">{{ form.target }} - {{ targetPrompt }}</div>
               <q-badge
                 v-if="form.foreignKey"
                 color="primary"
                 text-color="white"
                 class="q-mt-xs field-badge"
               >
-                {{ form.type === 'belongsTo' ? form.foreignKey : getTargetField }}
+                {{ getTargetField }}
               </q-badge>
             </div>
           </div>
@@ -101,26 +99,13 @@
           @update:model-value="updateForeignKeyOptions"
         />
 
-        <q-select
+        <q-input 
           v-model="form.foreignKey"
-          :options="foreignKeyOptions"
           :label="foreignKeyLabel"
-          standout
+          standout 
           class="q-mb-md"
-          emit-value
-          map-options
-          use-input
-          input-debounce="0"
-          @filter="filterForeignKeys"
-        >
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey">
-                Нет подходящих полей
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
+          :rules="[val => !!val || 'Обязательное поле']"
+        />
 
         <div class="restriction-type q-mb-md">
           <div class="text-subtitle2 q-mb-sm">Ограничения на удаление</div>
@@ -250,8 +235,13 @@ export default {
     const foreignKeyLabel = computed(() => {
       if (!form.value.target) return 'Внешний ключ'
       const collections = schemaStore.collections || []
+      const sourceCollection = collections.find(c => c.name === props.sourceName)
       const targetCollection = collections.find(c => c.name === form.value.target)
-      return `Внешний ключ (${targetCollection?.prompt || form.value.target})`
+      if (form.value.type === 'belongsTo') {
+        return `Внешний ключ (${sourceCollection?.name} - ${sourceCollection?.prompt})`
+      } else {
+        return `Внешний ключ (${targetCollection?.name} - ${targetCollection?.prompt})`
+      }
     })
 
     const isValidForeignKey = (fieldName) => {
@@ -265,22 +255,37 @@ export default {
     const updateForeignKeyOptions = () => {
       if (form.value.target) {
         const collections = schemaStore.collections || []
+        const sourceCollection = collections.find(c => c.name === props.sourceName)
         const targetCollection = collections.find(c => c.name === form.value.target)
-        if (targetCollection) {
+        
+        if (form.value.type === 'hasMany') {
+          // Для "один ко многим" выбираем поля из целевой сущности с оончанием на Id
           foreignKeyOptions.value = targetCollection.fields
-            .filter(field => isValidForeignKey(field.name))
+            .filter(field => field.name.toLowerCase().endsWith('id'))
             .map(field => ({
               label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
               value: field.name
             }))
-          
-          // Автоматически заполняем название связи
-          let relationName = targetCollection.name
-          if (form.value.type === 'belongsTo') {
-            relationName = relationName.replace(/es$/, '').replace(/s$/, '')
-          }
-          form.value.name = relationName
+        } else if (form.value.type === 'belongsTo') {
+          // Для "многие к одному" выбираем поля из исходной сущности с окончанием на Id
+          foreignKeyOptions.value = sourceCollection.fields
+            .filter(field => field.name.toLowerCase().endsWith('id'))
+            .map(field => ({
+              label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
+              value: field.name
+            }))
+        } else if (form.value.type === 'belongsToMany') {
+          // Для "многие ко многим" выбираем поля из исходной сущности с окончанием на Ids
+          foreignKeyOptions.value = sourceCollection.fields
+            .filter(field => field.name.toLowerCase().endsWith('ids'))
+            .map(field => ({
+              label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
+              value: field.name
+            }))
         }
+        
+        // Автоматически заполняем название связи
+        form.value.name = targetCollection.name
       } else {
         foreignKeyOptions.value = []
         form.value.name = ''
@@ -295,18 +300,10 @@ export default {
 
       update(() => {
         const needle = val.toLowerCase()
-        const collections = schemaStore.collections || []
-        const targetCollection = collections.find(c => c.name === form.value.target)
-        if (targetCollection) {
-          foreignKeyOptions.value = targetCollection.fields
-            .filter(field => isValidForeignKey(field.name))
-            .filter(field => field.name.toLowerCase().includes(needle) || 
-                           (field.prompt && field.prompt.toLowerCase().includes(needle)))
-            .map(field => ({
-              label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
-              value: field.name
-            }))
-        }
+        let filteredOptions = foreignKeyOptions.value.filter(
+          option => option.label.toLowerCase().includes(needle)
+        )
+        foreignKeyOptions.value = filteredOptions
       })
     }
 
@@ -404,43 +401,48 @@ export default {
     })
 
     const sourceField = computed(() => {
-      if (form.value.type === 'belongsTo') {
-        return form.value.foreignKey
-      } else {
-        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
-        return sourceCollection ? sourceCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
+      switch (form.value.type) {
+        case 'hasMany':
+          return 'id'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return form.value.foreignKey
+        default:
+          return ''
       }
     })
 
     const getTargetField = computed(() => {
-      if (form.value.type === 'belongsTo') {
-        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
-        return targetCollection ? targetCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
-      } else {
-        return form.value.foreignKey
+      switch (form.value.type) {
+        case 'hasMany':
+          return form.value.foreignKey
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'id'
+        default:
+          return ''
       }
     })
 
-    watch(() => form.value.type, (newType) => {
-      // Обновляем foreignKey при изменении типа связи
-      if (newType === 'belongsTo') {
+    const updateForeignKey = () => {
+      if (form.value.target && form.value.type) {
+        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
         const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
-        form.value.foreignKey = targetCollection ? `${targetCollection.name.toLowerCase()}Id` : ''
+        
+        if (form.value.type === 'hasMany') {
+          form.value.foreignKey = `${sourceCollection.name.toLowerCase()}Id`
+        } else if (form.value.type === 'belongsTo') {
+          form.value.foreignKey = `${targetCollection.name.toLowerCase()}Id`
+        } else if (form.value.type === 'belongsToMany') {
+          form.value.foreignKey = `${targetCollection.name.toLowerCase()}Ids`
+        }
       } else {
-        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
-        form.value.foreignKey = sourceCollection ? `${sourceCollection.name.toLowerCase()}Id` : ''
+        form.value.foreignKey = ''
       }
-    })
+    }
 
-    watch(() => form.value.target, (newTarget) => {
-      // Обновляем foreignKey при изменении целевой сущности
-      if (form.value.type === 'belongsTo') {
-        form.value.foreignKey = newTarget ? `${newTarget.toLowerCase()}Id` : ''
-      } else {
-        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
-        form.value.foreignKey = sourceCollection ? `${sourceCollection.name.toLowerCase()}Id` : ''
-      }
-    })
+    watch(() => form.value.type, updateForeignKey)
+    watch(() => form.value.target, updateForeignKey)
 
     return {
       dialogRef,
@@ -466,7 +468,8 @@ export default {
       targetPrompt,
       getRelationTypeText,
       sourceField,
-      getTargetField
+      getTargetField,
+      updateForeignKey
     }
   }
 }

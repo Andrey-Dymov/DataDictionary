@@ -27,8 +27,7 @@
           <div class="row items-center justify-between q-col-gutter-md">
             <div class="col-4 text-center">
               <div class="text-caption text-grey-7">{{ getSourceRole(relation.type) }}</div>
-              <div class="text-subtitle2">{{ sourceName }}</div>
-              <div class="text-caption">{{ sourcePrompt }}</div>
+              <div class="text-subtitle2">{{ sourceName }} - {{ sourcePrompt }}</div>
               <q-badge
                 color="primary"
                 text-color="white"
@@ -43,14 +42,13 @@
             </div>
             <div class="col-4 text-center">
               <div class="text-caption text-grey-7">{{ getTargetRole(relation.type) }}</div>
-              <div class="text-subtitle2">{{ relation.target }}</div>
-              <div class="text-caption">{{ getTargetPrompt(relation.target) }}</div>
+              <div class="text-subtitle2">{{ relation.target }} - {{ getTargetPrompt(relation.target) }}</div>
               <q-badge
                 color="primary"
                 text-color="white"
                 class="q-mt-xs field-badge"
               >
-                {{ relation.foreignKey }}
+                {{ getTargetField(relation) }}
               </q-badge>
             </div>
           </div>
@@ -136,12 +134,26 @@ export default defineComponent({
     }
 
     const getSourceField = (relation) => {
-      if (relation.type === 'belongsTo') {
-        return relation.foreignKey
-      } else {
-        // Для hasMany и belongsToMany, собственное поле - это первичный ключ текущей сущности
-        const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
-        return sourceCollection ? sourceCollection.fields.find(f => f.isPrimaryKey)?.name || 'id' : 'id'
+      switch (relation.type) {
+        case 'hasMany':
+          return 'id'
+        case 'belongsTo':
+        case 'belongsToMany':
+          return relation.foreignKey
+        default:
+          return ''
+      }
+    }
+
+    const getTargetField = (relation) => {
+      switch (relation.type) {
+        case 'hasMany':
+          return relation.foreignKey
+        case 'belongsTo':
+        case 'belongsToMany':
+          return 'id'
+        default:
+          return ''
       }
     }
 
@@ -164,6 +176,7 @@ export default defineComponent({
       getRelationIcon,
       getTargetPrompt,
       getSourceField,
+      getTargetField,
       getRelationTypeText
     }
   }
