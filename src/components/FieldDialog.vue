@@ -24,10 +24,21 @@
           map-options
         />
 
+        <div class="q-mb-md">
+          <div class="text-subtitle2 q-mb-sm">Секция</div>
+          <q-btn-toggle
+            v-model="form.section"
+            :options="sectionOptions"
+            unelevated
+            toggle-color="primary"
+            spread
+          />
+        </div>
+
         <q-select
           v-model="form.listType"
           :options="listTypeOptions"
-          label="Тип вывода в списке"
+          label="Тип в списке"
           standout
           class="q-mb-md"
           emit-value
@@ -86,19 +97,57 @@ export default {
     const form = ref({
       name: '',
       dataType: '',
+      section: 'main',
       listType: '',
       inputType: '',
       prompt: '',
       required: false
     })
 
-    const dataTypeOptions = computed(() => schemaStore.dataTypes)
-    const listTypeOptions = computed(() => schemaStore.listTypes)
-    const inputTypeOptions = computed(() => schemaStore.inputTypes)
+    const dataTypeOptions = [
+      { label: 'number - Число', value: 'number' },
+      { label: 'string - Строка', value: 'string' },
+      { label: 'reference - Ссылка', value: 'reference' },
+      { label: 'textarea - Текстовое поле', value: 'textarea' },
+      { label: 'date - Дата', value: 'date' },
+      { label: 'time - Время', value: 'time' },
+      { label: 'checkbox - Флажок', value: 'checkbox' },
+      { label: 'email - Электронная почта', value: 'email' },
+      { label: 'numbers - Массив чисел', value: 'numbers' }
+    ]
+
+    const sectionOptions = [
+      { label: 'Avatar', value: 'avatar' },
+      { label: 'Main', value: 'main' },
+      { label: 'Data', value: 'data' }
+    ]
+
+    const listTypeOptions = [
+      { label: 'title - Заголовок', value: 'title' },
+      { label: 'subtitle - Подзаголовок', value: 'subtitle' },
+      { label: 'content - Содержание', value: 'content' },
+      { label: 'label - Метка', value: 'label' },
+      { label: 'chips - Чипы', value: 'chips' },
+      { label: 'count - Счетчик', value: 'count' },
+      { label: 'date - Дата', value: 'date' },
+      { label: 'switch - Переключатель', value: 'switch' }
+    ]
+
+    const inputTypeOptions = [
+      { label: 'select - Выбор', value: 'select' },
+      { label: 'string - Строка', value: 'string' },
+      { label: 'textarea - Текстовое поле', value: 'textarea' },
+      { label: 'date - Дата', value: 'date' },
+      { label: 'numbers - Массив чисел', value: 'numbers' },
+      { label: 'checkbox - Флажок', value: 'checkbox' },
+      { label: 'email - Электронная почта', value: 'email' },
+      { label: 'time - Время', value: 'time' }
+    ]
 
     const isFormValid = computed(() => {
       return form.value.name && 
              form.value.dataType && 
+             form.value.section && 
              form.value.listType && 
              form.value.inputType
     })
@@ -113,6 +162,7 @@ export default {
         form.value = {
           name: '',
           dataType: '',
+          section: 'main',
           listType: '',
           inputType: '',
           prompt: '',
@@ -136,6 +186,7 @@ export default {
       form,
       isEdit,
       dataTypeOptions,
+      sectionOptions,
       listTypeOptions,
       inputTypeOptions,
       isFormValid,
@@ -149,3 +200,4 @@ export default {
 .q-dialog-plugin
   max-width: 95vw
 </style>
+
