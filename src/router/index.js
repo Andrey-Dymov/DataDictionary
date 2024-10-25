@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import IndexPage from '../pages/IndexPage.vue'
-import CollectionDetails from '../pages/CollectionDetails.vue'
+import EntityInfo from '../pages/EntityInfo.vue'
 import ErrorNotFound from '../pages/ErrorNotFound.vue'
 
 const routes = [
@@ -11,14 +11,11 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'index',
         component: IndexPage
       },
       {
-        path: '/collection/:name?',
-        name: 'CollectionDetails',
-        component: CollectionDetails,
-        props: true
+        path: '/collection/:name',
+        component: EntityInfo
       }
     ]
   },
@@ -29,7 +26,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL || '/'),  // Исправлено с process.env на import.meta.env
   routes
 })
 
