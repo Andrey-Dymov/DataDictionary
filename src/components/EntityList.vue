@@ -14,13 +14,14 @@
       </q-btn>
     </div>
 
-    <q-list padding>
+    <q-list padding dense>
       <template v-if="entities.length > 0">
         <q-item
           v-for="entity in entities"
           :key="entity.name"
           :active="entity.name === selectedEntityName"
           active-class="bg-primary text-white"
+          dense
         >
           <div 
             class="row full-width items-center cursor-pointer"
@@ -40,7 +41,7 @@
           </div>
 
           <q-item-section side>
-            <div class="row items-center">
+            <div class="row items-center no-wrap">
               <q-btn
                 flat
                 round
@@ -65,7 +66,7 @@
           </q-item-section>
         </q-item>
       </template>
-      <q-item v-else class="text-grey">
+      <q-item v-else class="text-grey" dense>
         <q-item-section>
           Нет доступных сущностей
         </q-item-section>
@@ -124,4 +125,8 @@ export default defineComponent({
 
 .cursor-pointer
   cursor: pointer
+
+.q-item__section--side
+  .row
+    gap: 4px
 </style>

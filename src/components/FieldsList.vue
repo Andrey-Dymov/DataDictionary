@@ -1,9 +1,8 @@
 <template>
     <q-card flat bordered class="q-mb-md">
         <q-card-section>
-            <div class="row items-center q-mb-sm">
-                <div class="text-subtitle2">Поля</div>
-                <q-space />
+            <div class="row items-center q-mb-md">
+                <div class="text-h6 q-mr-auto">Поля</div>
                 <q-btn flat round dense color="primary" icon="add" @click="$emit('addField')">
                     <q-tooltip>Добавить поле</q-tooltip>
                 </q-btn>
@@ -176,4 +175,10 @@ export default defineComponent({
   top: -2px
   right: -2px
   transform: scale(0.7)
+
+.text-h6
+  font-size: 1.25rem
+  font-weight: 500
+  line-height: 2rem
+  letter-spacing: 0.0125em
 </style>

@@ -1,19 +1,18 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated class="bg-white text-black">
-      <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-
-        <q-toolbar-title class="text-primary">
-          Data Dictionary
-        </q-toolbar-title>
+      <q-toolbar class="row no-wrap items-center justify-between">
+        <div class="row no-wrap items-center">
+          <q-btn
+            flat
+            dense
+            round
+            icon="menu"
+            aria-label="Menu"
+            @click="toggleLeftDrawer"
+          />
+          <div class="text-primary q-ml-sm">Data Dictionary</div>
+        </div>
 
         <q-select
           v-model="currentDictionary"
@@ -24,7 +23,7 @@
           outlined
           emit-value
           map-options
-          class="q-ml-md dictionary-select"
+          class="dictionary-select"
           @update:model-value="changeDictionary"
         />
       </q-toolbar>
@@ -218,13 +217,21 @@ export default defineComponent({
   border-bottom: 1px solid rgba(0,0,0,0.1)
   .q-toolbar
     height: 64px
+    padding: 0 12px
+
+    .text-primary
+      font-size: 1.2rem
+      white-space: nowrap
 
 .dictionary-select
-  min-width: 200px
+  width: 200px
+  .q-field__control
+    height: 40px
   .q-field__native
     color: $primary
-  .q-field__label
-    color: rgba(0,0,0,0.6)
+    padding-top: 0 !important
+  &.q-field--labeled .q-field__native
+    padding-top: 0
 
 .q-drawer
   border-right: 1px solid rgba(0,0,0,0.1)

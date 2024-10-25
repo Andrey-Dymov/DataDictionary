@@ -1,66 +1,61 @@
 <template>
-  <div class="relations-list">
-    <div class="text-h6 q-mb-md">
-      Связи
-      <q-btn
-        flat
-        round
-        dense
-        color="primary"
-        icon="add"
-        @click="$emit('addRelation')"
-        class="float-right"
-      >
-        <q-tooltip>Добавить связь</q-tooltip>
-      </q-btn>
-    </div>
-    <q-list bordered separator>
-      <q-item
-        v-for="(relation, name) in relations"
-        :key="name"
-        class="q-py-md"
-        clickable
-        @click="$emit('editRelation', { name, ...relation })"
-      >
-        <q-item-section>
-          <div class="text-subtitle1 text-weight-medium text-center q-mb-sm">{{ name }}</div>
-          <div class="row items-center justify-between q-col-gutter-md">
-            <div class="col-4 text-center">
-              <div class="text-caption text-grey-7">{{ getSourceRole(relation.type) }}</div>
-              <div class="text-subtitle2">{{ sourceName }} - {{ sourcePrompt }}</div>
-              <q-badge
-                color="primary"
-                text-color="white"
-                class="q-mt-xs field-badge"
-              >
-                {{ getSourceField(relation) }}
-              </q-badge>
+  <q-card flat bordered class="q-mb-md">
+    <q-card-section>
+      <div class="row items-center q-mb-md">
+        <div class="text-h6 q-mr-auto">Связи</div>
+        <q-btn flat round dense color="primary" icon="add" @click="$emit('addRelation')">
+          <q-tooltip>Добавить связь</q-tooltip>
+        </q-btn>
+      </div>
+
+      <q-list dense separator>
+        <q-item
+          v-for="(relation, name) in relations"
+          :key="name"
+          class="q-py-xs"
+          clickable
+          @click="$emit('editRelation', { name, ...relation })"
+        >
+          <q-item-section>
+            <div class="text-subtitle1 text-weight-medium text-center q-mb-sm">{{ name }}</div>
+            <div class="row items-center justify-between q-col-gutter-md">
+              <div class="col-4 text-center">
+                <div class="text-caption text-grey-7">{{ getSourceRole(relation.type) }}</div>
+                <div class="text-subtitle2">{{ sourceName }} - {{ sourcePrompt }}</div>
+                <q-badge
+                  color="primary"
+                  text-color="white"
+                  class="q-mt-xs field-badge"
+                >
+                  {{ getSourceField(relation) }}
+                </q-badge>
+              </div>
+              <div class="col-4 text-center">
+                <div class="relation-icon" v-html="getRelationIcon(relation.type)"></div>
+                <div class="text-caption q-mt-xs">{{ getRelationTypeText(relation.type) }}</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="text-caption text-grey-7">{{ getTargetRole(relation.type) }}</div>
+                <div class="text-subtitle2">{{ relation.target }} - {{ getTargetPrompt(relation.target) }}</div>
+                <q-badge
+                  color="primary"
+                  text-color="white"
+                  class="q-mt-xs field-badge"
+                >
+                  {{ getTargetField(relation) }}
+                </q-badge>
+              </div>
             </div>
-            <div class="col-4 text-center">
-              <div class="relation-icon" v-html="getRelationIcon(relation.type)"></div>
-              <div class="text-caption q-mt-xs">{{ getRelationTypeText(relation.type) }}</div>
-            </div>
-            <div class="col-4 text-center">
-              <div class="text-caption text-grey-7">{{ getTargetRole(relation.type) }}</div>
-              <div class="text-subtitle2">{{ relation.target }} - {{ getTargetPrompt(relation.target) }}</div>
-              <q-badge
-                color="primary"
-                text-color="white"
-                class="q-mt-xs field-badge"
-              >
-                {{ getTargetField(relation) }}
-              </q-badge>
-            </div>
-          </div>
-        </q-item-section>
-        <q-item-section side>
-          <q-btn flat round color="grey" icon="delete" @click.stop="$emit('deleteRelation', name)">
-            <q-tooltip>Удалить связь</q-tooltip>
-          </q-btn>
-        </q-item-section>
-      </q-item>
-    </q-list>
-  </div>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn flat round color="grey" icon="delete" @click.stop="$emit('deleteRelation', name)">
+              <q-tooltip>Удалить связь</q-tooltip>
+            </q-btn>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script>
@@ -183,7 +178,7 @@ export default defineComponent({
 })
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .relations-list
   .relation-icon
     width: 24px
@@ -207,4 +202,10 @@ export default defineComponent({
 
   .q-item
     cursor: pointer
+
+.text-h6
+  font-size: 1.25rem
+  font-weight: 500
+  line-height: 2rem
+  letter-spacing: 0.0125em
 </style>
