@@ -38,40 +38,14 @@
       class="bg-grey-1"
     >
       <q-scroll-area class="fit">
-        <div class="row items-center q-mb-md q-px-md">
-          <div class="text-h4 q-mr-auto">Сущности</div>
-          <q-btn
-            flat
-            round
-            dense
-            color="primary"
-            icon="add"
-            @click="showAddCollectionDialog"
-          >
-            <q-tooltip>Добавить сущность</q-tooltip>
-          </q-btn>
-        </div>
-
-        <q-list padding>
-          <template v-if="collections.length > 0">
-            <EssentialLink
-              v-for="collection in collections"
-              :key="collection.name"
-              v-bind="collection"
-              :title="`${collection.name} - ${collection.prompt}`"
-              :link="`/collection/${collection.name}`"
-              :active="collection.name === selectedCollectionName"
-              @click="setSelectedCollection(collection.name)"
-              @delete="deleteCollection(collection.name)"
-              @editCollection="showEditCollectionDialog"
-            />
-          </template>
-          <q-item v-else class="text-grey">
-            <q-item-section>
-              No entities available
-            </q-item-section>
-          </q-item>
-        </q-list>
+        <EntityList
+          :entities="collections"
+          :selectedEntityName="selectedCollectionName"
+          @addEntity="showAddCollectionDialog"
+          @selectEntity="setSelectedCollection"
+          @deleteEntity="deleteCollection"
+          @editEntity="showEditCollectionDialog"
+        />
       </q-scroll-area>
     </q-drawer>
 
@@ -90,7 +64,7 @@
 <script>
 import { defineComponent, ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import EssentialLink from '../components/EssentialLink.vue'
+import EntityList from '../components/EntityList.vue'
 import CollectionDialog from '../components/CollectionDialog.vue'
 import { useSchemaStore } from '../stores/schema'
 import { useQuasar } from 'quasar'
@@ -99,7 +73,7 @@ export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    EssentialLink,
+    EntityList,
     CollectionDialog
   },
 
@@ -127,7 +101,7 @@ export default defineComponent({
       }))
     })
 
-    // Следим за изменением ��аршрта
+    // Следим за изменением аршрта
     watch(() => route.params.name, (newName) => {
       console.log('[Layout] Route collection changed:', newName)
       if (newName && newName !== selectedCollectionName.value) {
@@ -174,25 +148,10 @@ export default defineComponent({
       collectionDialog.value.show()
     }
 
-    const showEditCollectionDialog = async (collectionName) => {
-      console.log('[MainLayout] Showing edit dialog for collection:', collectionName)
+    const showEditCollectionDialog = (collectionName) => {
       const collection = schemaStore.getCollectionByName(collectionName)
       if (collection) {
-        console.log('[MainLayout] Collection found:', collection)
-        // Добавляем небольшую задержку для уверенности, что компонент полностью инициализирован
-        await nextTick()
-        if (collectionDialog.value) {
-          console.log('[MainLayout] Dialog ref exists, showing dialog')
-          try {
-            await collectionDialog.value.show(collection)
-          } catch (error) {
-            console.error('[MainLayout] Error showing dialog:', error)
-          }
-        } else {
-          console.error('[MainLayout] Dialog ref is null')
-        }
-      } else {
-        console.warn('[MainLayout] Collection not found:', collectionName)
+        collectionDialog.value.show(collection)
       }
     }
 
@@ -269,14 +228,4 @@ export default defineComponent({
 
 .q-drawer
   border-right: 1px solid rgba(0,0,0,0.1)
-  .q-item
-    border-radius: 8px
-    margin: 4px 8px
-    &:hover
-      background: rgba($primary, 0.1)
-    &.q-router-link--active
-      background: $primary
-      color: white
-      .q-icon
-        color: white !important
 </style>
