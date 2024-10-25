@@ -1,35 +1,48 @@
 <template>
   <q-item
-    clickable
-    :to="link"
     :active="active"
     active-class="bg-primary text-white"
-    @click="$emit('click')"
-    @dblclick="$emit('editCollection', name)"
   >
-    <q-item-section
-      v-if="icon"
-      avatar
+    <div 
+      class="row full-width items-center cursor-pointer"
+      @click="$emit('click')"
     >
-      <q-icon :name="icon" :color="active ? 'white' : 'primary'" />
-    </q-item-section>
+      <q-item-section
+        v-if="icon"
+        avatar
+      >
+        <q-icon :name="icon" :color="active ? 'white' : 'primary'" />
+      </q-item-section>
 
-    <q-item-section>
-      <q-item-label>{{ name }} - {{ prompt }}</q-item-label>
-      <q-item-label caption>{{ description }}</q-item-label>
-    </q-item-section>
+      <q-item-section>
+        <q-item-label>{{ name }} - {{ prompt }}</q-item-label>
+        <q-item-label caption>{{ description }}</q-item-label>
+      </q-item-section>
+    </div>
 
     <q-item-section side>
-      <q-btn
-        flat
-        round
-        dense
-        color="grey-6"
-        icon="delete"
-        @click.stop="$emit('delete')"
-      >
-        <q-tooltip>Удалить сущность</q-tooltip>
-      </q-btn>
+      <div class="row items-center">
+        <q-btn
+          flat
+          round
+          dense
+          color="grey-6"
+          icon="edit"
+          @click="$emit('editCollection', name)"
+        >
+          <q-tooltip>Редактировать сущность</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          round
+          dense
+          color="grey-6"
+          icon="delete"
+          @click="$emit('delete')"
+        >
+          <q-tooltip>Удалить сущность</q-tooltip>
+        </q-btn>
+      </div>
     </q-item-section>
   </q-item>
 </template>
@@ -87,4 +100,7 @@ export default defineComponent({
     .q-item__section--side
       .q-btn
         color: white
+
+.cursor-pointer
+  cursor: pointer
 </style>

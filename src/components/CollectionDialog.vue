@@ -6,51 +6,58 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <q-input 
-          v-model="form.name" 
-          label="Название" 
-          standout 
-          dense
-          class="q-mb-sm"
-          :rules="[val => !!val || 'Обязательное поле']"
-        />
+        <div class="row q-col-gutter-xs">
+          <div class="col-12 q-mb-xs">
+            <q-input 
+              v-model="form.name" 
+              label="Название" 
+              standout 
+              dense
+              :rules="[val => !!val || 'Обязательное поле']"
+            />
+          </div>
 
-        <q-input 
-          v-model="form.prompt" 
-          label="Метка" 
-          standout 
-          dense
-          class="q-mb-sm"
-        />
+          <div class="col-12 q-mb-xs">
+            <q-input 
+              v-model="form.prompt" 
+              label="Метка" 
+              standout 
+              dense
+            />
+          </div>
 
-        <q-input 
-          v-model="form.promptSingle" 
-          label="Метка единственного числа" 
-          standout 
-          dense
-          class="q-mb-sm"
-        />
+          <div class="col-12 q-mb-xs">
+            <q-input 
+              v-model="form.promptSingle" 
+              label="Метка единственного числа" 
+              standout 
+              dense
+            />
+          </div>
 
-        <q-input 
-          v-model="form.description" 
-          label="Описание" 
-          type="textarea" 
-          standout 
-          dense
-          class="q-mb-sm"
-        />
+          <div class="col-12 q-mb-xs">
+            <q-input 
+              v-model="form.description" 
+              label="Описание" 
+              type="textarea" 
+              standout 
+              dense
+            />
+          </div>
 
-        <q-input 
-          v-model="form.icon" 
-          label="Иконка" 
-          standout 
-          dense
-          class="q-mb-sm"
-        >
-          <template v-slot:append>
-            <q-icon :name="form.icon" />
-          </template>
-        </q-input>
+          <div class="col-12 q-mb-xs">
+            <q-input 
+              v-model="form.icon" 
+              label="Иконка" 
+              standout 
+              dense
+            >
+              <template v-slot:append>
+                <q-icon :name="form.icon" />
+              </template>
+            </q-input>
+          </div>
+        </div>
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
@@ -61,60 +68,80 @@
   </q-dialog>
 </template>
 
-<script setup>
+<script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 
-const props = defineProps({
-  collection: {
-    type: Object,
-    default: () => ({})
-  },
-  isEdit: {
-    type: Boolean,
-    default: false
-  }
-})
+export default {
+  name: 'CollectionDialog',
 
-const emit = defineEmits([...useDialogPluginComponent.emits])
+  emits: [
+    ...useDialogPluginComponent.emits
+  ],
 
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
+  setup() {
+    console.log('[CollectionDialog] Setup started')
+    const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 
-const form = ref({
-  name: '',
-  prompt: '',
-  promptSingle: '',
-  description: '',
-  icon: ''
-})
+    const form = ref({
+      name: '',
+      prompt: '',
+      promptSingle: '',
+      description: '',
+      icon: ''
+    })
 
-const isEdit = ref(false)
+    const isEdit = ref(false)
 
-const isFormValid = computed(() => {
-  return !!form.value.name
-})
+    const isFormValid = computed(() => {
+      return !!form.value.name
+    })
 
-function onOKClick () {
-  if (isFormValid.value) {
-    onDialogOK(form.value)
+    function onOKClick () {
+      console.log('[CollectionDialog] OK clicked')
+      if (isFormValid.value) {
+        onDialogOK(form.value)
+      }
+    }
+
+    function show(collection = null) {
+      console.log('[CollectionDialog] Show called with:', collection)
+      try {
+        if (!dialogRef.value) {
+          console.error('[CollectionDialog] Dialog ref is not initialized')
+          return
+        }
+        
+        if (collection) {
+          console.log('[CollectionDialog] Setting form data for edit')
+          form.value = { ...collection }
+          isEdit.value = true
+        } else {
+          console.log('[CollectionDialog] Setting empty form for new collection')
+          form.value = { name: '', prompt: '', promptSingle: '', description: '', icon: '' }
+          isEdit.value = false
+        }
+        
+        console.log('[CollectionDialog] Opening dialog')
+        dialogRef.value.show()
+      } catch (error) {
+        console.error('[CollectionDialog] Error in show method:', error)
+        console.error('[CollectionDialog] Error details:', error.stack)
+      }
+    }
+
+    console.log('[CollectionDialog] Setup completed')
+    return {
+      dialogRef,
+      onDialogHide,
+      onOKClick,
+      form,
+      isEdit,
+      isFormValid,
+      show
+    }
   }
 }
-
-defineExpose({
-  show(collection = null) {
-    if (collection) {
-      form.value = { ...collection }
-      isEdit.value = true
-    } else {
-      form.value = { name: '', prompt: '', promptSingle: '', description: '', icon: '' }
-      isEdit.value = false
-    }
-    dialogRef.value.show()
-  },
-  hide() {
-    dialogRef.value.hide()
-  }
-})
 </script>
 
 <style lang="sass">

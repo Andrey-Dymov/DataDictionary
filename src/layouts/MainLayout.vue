@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, watch } from 'vue'
+import { defineComponent, ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EssentialLink from '../components/EssentialLink.vue'
 import CollectionDialog from '../components/CollectionDialog.vue'
@@ -127,7 +127,7 @@ export default defineComponent({
       }))
     })
 
-    // Следим за изменением маршрута
+    // Следим за изменением ��аршрта
     watch(() => route.params.name, (newName) => {
       console.log('[Layout] Route collection changed:', newName)
       if (newName && newName !== selectedCollectionName.value) {
@@ -174,10 +174,25 @@ export default defineComponent({
       collectionDialog.value.show()
     }
 
-    const showEditCollectionDialog = (collectionName) => {
+    const showEditCollectionDialog = async (collectionName) => {
+      console.log('[MainLayout] Showing edit dialog for collection:', collectionName)
       const collection = schemaStore.getCollectionByName(collectionName)
       if (collection) {
-        collectionDialog.value.show(collection)
+        console.log('[MainLayout] Collection found:', collection)
+        // Добавляем небольшую задержку для уверенности, что компонент полностью инициализирован
+        await nextTick()
+        if (collectionDialog.value) {
+          console.log('[MainLayout] Dialog ref exists, showing dialog')
+          try {
+            await collectionDialog.value.show(collection)
+          } catch (error) {
+            console.error('[MainLayout] Error showing dialog:', error)
+          }
+        } else {
+          console.error('[MainLayout] Dialog ref is null')
+        }
+      } else {
+        console.warn('[MainLayout] Collection not found:', collectionName)
       }
     }
 
