@@ -3,7 +3,8 @@
     <q-card-section>
       <div class="row items-center q-mb-md">
         <div class="text-h6 q-mr-auto">Связи</div>
-        <q-btn flat round dense color="primary" icon="add" @click="$emit('addRelation')">
+        <!-- Изменим вызов на более безопасный -->
+        <q-btn flat round dense color="primary" icon="add" @click="onAddRelation">
           <q-tooltip>Добавить связь</q-tooltip>
         </q-btn>
       </div>
@@ -14,7 +15,7 @@
           :key="name"
           class="q-py-xs"
           clickable
-          @click="$emit('editRelation', { name, ...relation })"
+          @click="onEditRelation(name, relation)"
         >
           <q-item-section>
             <div class="text-subtitle1 text-weight-medium text-center q-mb-sm">{{ name }}</div>
@@ -48,7 +49,7 @@
             </div>
           </q-item-section>
           <q-item-section side>
-            <q-btn flat round color="grey" icon="delete" @click.stop="$emit('deleteRelation', name)">
+            <q-btn flat round color="grey" icon="delete" @click.stop="confirmDelete(name)">
               <q-tooltip>Удалить связь</q-tooltip>
             </q-btn>
           </q-item-section>
@@ -62,6 +63,7 @@
 import { defineComponent } from 'vue'
 import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
 import { useSchemaStore } from '../stores/schema'
+import { useQuasar } from 'quasar'
 
 export default defineComponent({
   name: 'RelationsList',
@@ -83,8 +85,9 @@ export default defineComponent({
 
   emits: ['editRelation', 'deleteRelation', 'addRelation'],
 
-  setup(props) {
+  setup(props, { emit }) {
     const schemaStore = useSchemaStore()
+    const $q = useQuasar()
 
     const getSourceRole = (type) => {
       switch (type) {
@@ -165,6 +168,25 @@ export default defineComponent({
       }
     }
 
+    const onAddRelation = () => {
+      emit('addRelation')
+    }
+
+    const onEditRelation = (name, relation) => {
+      emit('editRelation', { name, ...relation })
+    }
+
+    const confirmDelete = (name) => {
+      $q.dialog({
+        title: 'Подтверждение',
+        message: `Вы уверены, что хотите удалить связь "${name}"?`,
+        cancel: true,
+        persistent: true
+      }).onOk(() => {
+        emit('deleteRelation', name)
+      })
+    }
+
     return {
       getSourceRole,
       getTargetRole,
@@ -172,7 +194,10 @@ export default defineComponent({
       getTargetPrompt,
       getSourceField,
       getTargetField,
-      getRelationTypeText
+      getRelationTypeText,
+      onAddRelation,
+      onEditRelation,
+      confirmDelete
     }
   }
 })

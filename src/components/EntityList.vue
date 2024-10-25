@@ -8,7 +8,7 @@
         dense
         color="primary"
         icon="add"
-        @click="$emit('addEntity')"
+        @click="onAddEntity"
       >
         <q-tooltip>Добавить сущность</q-tooltip>
       </q-btn>
@@ -25,7 +25,7 @@
         >
           <div 
             class="row full-width items-center cursor-pointer"
-            @click="$emit('selectEntity', entity.name)"
+            @click="onSelectEntity(entity.name)"
           >
             <q-item-section
               v-if="entity.icon"
@@ -48,7 +48,7 @@
                 dense
                 color="grey-6"
                 icon="edit"
-                @click.stop="$emit('editEntity', entity.name)"
+                @click.stop="onEditEntity(entity)"
               >
                 <q-tooltip>Редактировать сущность</q-tooltip>
               </q-btn>
@@ -58,7 +58,7 @@
                 dense
                 color="grey-6"
                 icon="delete"
-                @click.stop="$emit('deleteEntity', entity.name)"
+                @click.stop="confirmDelete(entity)"
               >
                 <q-tooltip>Удалить сущность</q-tooltip>
               </q-btn>
@@ -77,6 +77,7 @@
 
 <script>
 import { defineComponent } from 'vue'
+import { useQuasar } from 'quasar'
 
 export default defineComponent({
   name: 'EntityList',
@@ -94,14 +95,47 @@ export default defineComponent({
 
   emits: ['addEntity', 'selectEntity', 'deleteEntity', 'editEntity'],
 
-  setup() {
-    // Здесь может быть дополнительная логика, если потребуется
-    return {}
+  setup(props, { emit }) {
+    const $q = useQuasar()
+
+    const onAddEntity = () => {
+      console.log('[EntityList] Add entity clicked')
+      emit('addEntity')
+    }
+
+    const onSelectEntity = (name) => {
+      console.log('[EntityList] Select entity:', name)
+      emit('selectEntity', name)
+    }
+
+    const onEditEntity = (entity) => {
+      console.log('[EntityList] Edit entity:', entity.name)
+      emit('editEntity', entity)
+    }
+
+    const confirmDelete = (entity) => {
+      $q.dialog({
+        title: 'Подтверждение',
+        message: `Вы уверены, что хотите удалить сущность "${entity.prompt || entity.name}"?`,
+        cancel: true,
+        persistent: true
+      }).onOk(() => {
+        console.log('[EntityList] Delete entity confirmed:', entity.name)
+        emit('deleteEntity', entity.name)
+      })
+    }
+
+    return {
+      onAddEntity,
+      onSelectEntity,
+      onEditEntity,
+      confirmDelete
+    }
   }
 })
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .entity-list
   .q-item
     transition: all 0.3s ease

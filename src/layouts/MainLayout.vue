@@ -56,7 +56,7 @@
       </router-view>
     </q-page-container>
 
-    <CollectionDialog ref="collectionDialog" @ok="handleCollectionSave" />
+    <CollectionForm ref="collectionForm" @ok="handleCollectionSave" />
   </q-layout>
 </template>
 
@@ -64,7 +64,7 @@
 import { defineComponent, ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EntityList from '../components/EntityList.vue'
-import CollectionDialog from '../components/CollectionDialog.vue'
+import CollectionForm from '../components/CollectionForm.vue'
 import { useSchemaStore } from '../stores/schema'
 import { useQuasar } from 'quasar'
 
@@ -73,7 +73,7 @@ export default defineComponent({
 
   components: {
     EntityList,
-    CollectionDialog
+    CollectionForm
   },
 
   setup() {
@@ -82,7 +82,7 @@ export default defineComponent({
     const schemaStore = useSchemaStore()
     const router = useRouter()
     const route = useRoute()
-    const collectionDialog = ref(null)
+    const collectionForm = ref(null)  // Изменено от collectionDialog
     const $q = useQuasar()
 
     const currentDictionary = computed({
@@ -144,14 +144,13 @@ export default defineComponent({
     }
 
     const showAddCollectionDialog = () => {
-      collectionDialog.value.show()
+      console.log('[MainLayout] Showing add collection dialog')
+      collectionForm.value.show()
     }
 
-    const showEditCollectionDialog = (collectionName) => {
-      const collection = schemaStore.getCollectionByName(collectionName)
-      if (collection) {
-        collectionDialog.value.show(collection)
-      }
+    const showEditCollectionDialog = (collection) => {
+      console.log('[MainLayout] Showing edit collection dialog:', collection)
+      collectionForm.value.show(collection)
     }
 
     const handleCollectionSave = async (collectionData) => {
@@ -169,7 +168,7 @@ export default defineComponent({
         console.error('Error saving collection:', error)
         $q.notify({
           type: 'negative',
-          message: `Ошибка при ${collectionData.name ? 'обновлении' : 'добавлении'} сущности`
+          message: `Ошибка при ${collectionData.name ? 'обновлени' : 'добавлении'} сущности`
         })
       }
     }
@@ -206,7 +205,7 @@ export default defineComponent({
       showEditCollectionDialog,
       handleCollectionSave,
       deleteCollection,
-      collectionDialog
+      collectionForm  // Изменено от collectionDialog
     }
   }
 })
@@ -236,3 +235,4 @@ export default defineComponent({
 .q-drawer
   border-right: 1px solid rgba(0,0,0,0.1)
 </style>
+

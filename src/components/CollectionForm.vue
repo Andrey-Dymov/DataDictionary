@@ -73,14 +73,13 @@ import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 
 export default {
-  name: 'CollectionDialog',
+  name: 'CollectionForm',
 
   emits: [
     ...useDialogPluginComponent.emits
   ],
 
   setup() {
-    console.log('[CollectionDialog] Setup started')
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 
     const form = ref({
@@ -97,40 +96,34 @@ export default {
       return !!form.value.name
     })
 
-    function onOKClick () {
-      console.log('[CollectionDialog] OK clicked')
+    const onOKClick = () => {
+      console.log('[CollectionForm] OK clicked')
       if (isFormValid.value) {
         onDialogOK(form.value)
       }
     }
 
-    function show(collection = null) {
-      console.log('[CollectionDialog] Show called with:', collection)
-      try {
-        if (!dialogRef.value) {
-          console.error('[CollectionDialog] Dialog ref is not initialized')
-          return
+    // Добавляем метод show
+    const show = (collection = null) => {
+      console.log('[CollectionForm] Show called with:', collection)
+      if (collection) {
+        console.log('[CollectionForm] Setting form data for edit')
+        form.value = { ...collection }
+        isEdit.value = true
+      } else {
+        console.log('[CollectionForm] Setting empty form for new collection')
+        form.value = { 
+          name: '', 
+          prompt: '', 
+          promptSingle: '', 
+          description: '', 
+          icon: '' 
         }
-        
-        if (collection) {
-          console.log('[CollectionDialog] Setting form data for edit')
-          form.value = { ...collection }
-          isEdit.value = true
-        } else {
-          console.log('[CollectionDialog] Setting empty form for new collection')
-          form.value = { name: '', prompt: '', promptSingle: '', description: '', icon: '' }
-          isEdit.value = false
-        }
-        
-        console.log('[CollectionDialog] Opening dialog')
-        dialogRef.value.show()
-      } catch (error) {
-        console.error('[CollectionDialog] Error in show method:', error)
-        console.error('[CollectionDialog] Error details:', error.stack)
+        isEdit.value = false
       }
+      dialogRef.value.show()
     }
 
-    console.log('[CollectionDialog] Setup completed')
     return {
       dialogRef,
       onDialogHide,
@@ -138,7 +131,7 @@ export default {
       form,
       isEdit,
       isFormValid,
-      show
+      show // Добавляем show в return
     }
   }
 }

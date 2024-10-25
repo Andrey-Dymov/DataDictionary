@@ -99,9 +99,15 @@
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { useSchemaStore } from '../stores/schema'
+import { 
+  dataTypeOptions, 
+  sectionOptions, 
+  listTypeOptions, 
+  inputTypeOptions 
+} from '../dictionaries/fieldTypes'
 
 export default {
-  name: 'FieldDialog',
+  name: 'FieldForm',  // было FieldDialog
 
   emits: [
     ...useDialogPluginComponent.emits
@@ -121,46 +127,6 @@ export default {
       prompt: '',
       required: false
     })
-
-    const dataTypeOptions = [
-      { label: 'number - Число', value: 'number' },
-      { label: 'string - Строка', value: 'string' },
-      { label: 'reference - Ссылка', value: 'reference' },
-      { label: 'textarea - Текстовое поле', value: 'textarea' },
-      { label: 'date - Дата', value: 'date' },
-      { label: 'time - Время', value: 'time' },
-      { label: 'checkbox - Флажок', value: 'checkbox' },
-      { label: 'email - Электронная почта', value: 'email' },
-      { label: 'numbers - Массив чисел', value: 'numbers' }
-    ]
-
-    const sectionOptions = [
-      { label: 'Avatar', value: 'avatar' },
-      { label: 'Main', value: 'main' },
-      { label: 'Data', value: 'data' }
-    ]
-
-    const listTypeOptions = [
-      { label: 'title - Заголовок', value: 'title' },
-      { label: 'subtitle - Подзаголовок', value: 'subtitle' },
-      { label: 'content - Содержание', value: 'content' },
-      { label: 'label - Метка', value: 'label' },
-      { label: 'chips - Чипы', value: 'chips' },
-      { label: 'count - Счетчик', value: 'count' },
-      { label: 'date - Дата', value: 'date' },
-      { label: 'switch - Переключатель', value: 'switch' }
-    ]
-
-    const inputTypeOptions = [
-      { label: 'select - Выбор', value: 'select' },
-      { label: 'string - Строка', value: 'string' },
-      { label: 'textarea - Текстовое поле', value: 'textarea' },
-      { label: 'date - Дата', value: 'date' },
-      { label: 'numbers - Массив чисел', value: 'numbers' },
-      { label: 'checkbox - Флажок', value: 'checkbox' },
-      { label: 'email - Электронная почта', value: 'email' },
-      { label: 'time - Время', value: 'time' }
-    ]
 
     const isFormValid = computed(() => {
       return form.value.name && 

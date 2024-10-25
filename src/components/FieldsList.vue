@@ -3,13 +3,14 @@
         <q-card-section>
             <div class="row items-center q-mb-md">
                 <div class="text-h6 q-mr-auto">Поля</div>
-                <q-btn flat round dense color="primary" icon="add" @click="$emit('addField')">
+                <!-- Изменим вызов на более безопасный с подтверждением -->
+                <q-btn flat round dense color="primary" icon="add" @click="onAddField">
                     <q-tooltip>Добавить поле</q-tooltip>
                 </q-btn>
             </div>
             <q-list dense separator>
                 <q-item v-for="field in fields" :key="field.name" class="q-py-xs" clickable
-                    @click="$emit('editField', field)">
+                    @click="onEditField(field)">
                     <q-item-section avatar>
                         <q-avatar class="relative-position">
                             <q-icon :name="getFieldIcon(field.type)" color="primary">
@@ -64,6 +65,7 @@
 <script>
 import { defineComponent } from 'vue'
 import { useQuasar } from 'quasar'
+import { getFieldIcon, getInputIcon, getFieldTypeLabel } from '../dictionaries/fieldTypes'
 
 export default defineComponent({
     name: 'FieldsList',
@@ -77,55 +79,12 @@ export default defineComponent({
     setup(props, { emit }) {
         const $q = useQuasar()
 
-        const getFieldIcon = (type) => {
-            switch (type) {
-                case 'string': return 'text_fields'
-                case 'number': return 'numbers'
-                case 'date': return 'calendar_today'
-                case 'time': return 'schedule'
-                case 'checkbox': return 'check_box'
-                case 'object': return 'code'
-                case 'array': return 'view_list'
-                case 'email': return 'email'
-                case 'reference': return 'link'
-                case 'numbers': return 'filter_9_plus'
-                case 'textarea': return 'subject'
-                default: return 'help'
-            }
+        const onAddField = () => {
+            emit('addField')
         }
 
-        const getInputIcon = (type) => {
-            switch (type) {
-                case 'text': return 'text_fields'
-                case 'textarea': return 'subject'
-                case 'select': return 'arrow_drop_down_circle'
-                case 'number': return 'numbers'
-                case 'checkbox': return 'check_box'
-                case 'file': return 'upload_file'
-                case 'path': return 'folder_open'
-                case 'icon-select': return 'format_list_bulleted'
-                case 'email': return 'email'
-                case 'reference': return 'link'
-                case 'numbers': return 'filter_9_plus'
-                default: return 'text_fields'
-            }
-        }
-
-        const getFieldTypeLabel = (type) => {
-            switch (type) {
-                case 'string': return 'Строка'
-                case 'number': return 'Число'
-                case 'date': return 'Дата'
-                case 'time': return 'Время'
-                case 'checkbox': return 'Флажок'
-                case 'object': return 'Объект'
-                case 'array': return 'Массив'
-                case 'email': return 'Email'
-                case 'reference': return 'Ссылка'
-                case 'numbers': return 'Массив чисел'
-                case 'textarea': return 'Многострочный текст'
-                default: return 'Неизвестный тип'
-            }
+        const onEditField = (field) => {
+            emit('editField', field)
         }
 
         const confirmDelete = (field) => {
@@ -143,6 +102,8 @@ export default defineComponent({
             getFieldIcon,
             getInputIcon,
             getFieldTypeLabel,
+            onAddField,
+            onEditField,
             confirmDelete
         }
     }

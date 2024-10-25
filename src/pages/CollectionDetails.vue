@@ -29,12 +29,12 @@
       <h5 class="text-grey-7">Выберите сущность из списка слева</h5>
     </div>
 
-    <FieldDialog 
-      ref="fieldDialog" 
+    <FieldForm 
+      ref="fieldForm" 
       @ok="handleFieldSave"
     />
-    <RelationDialog 
-      ref="relationDialog" 
+    <RelationForm 
+      ref="relationForm" 
       :source-name="collection?.name"
       :source-prompt="collection?.prompt"
       :source-field="collection?.fields[0]?.name"
@@ -50,8 +50,8 @@ import { useQuasar } from 'quasar'
 import { useSchemaStore } from '../stores/schema'
 import FieldsList from '../components/FieldsList.vue'
 import RelationsList from '../components/RelationsList.vue'
-import FieldDialog from '../components/FieldDialog.vue'
-import RelationDialog from '../components/RelationDialog.vue'
+import FieldForm from '../components/FieldForm.vue'
+import RelationForm from '../components/RelationForm.vue'
 
 export default defineComponent({
   name: 'CollectionDetails',
@@ -59,8 +59,8 @@ export default defineComponent({
   components: {
     FieldsList,
     RelationsList,
-    FieldDialog,
-    RelationDialog
+    FieldForm,
+    RelationForm
   },
 
   setup() {
@@ -68,8 +68,8 @@ export default defineComponent({
     const route = useRoute()
     const $q = useQuasar()
     const schemaStore = useSchemaStore()
-    const fieldDialog = ref(null)
-    const relationDialog = ref(null)
+    const fieldForm = ref(null)
+    const relationForm = ref(null)
     const editingFieldName = ref(null)
     const editingRelationName = ref(null)
 
@@ -95,7 +95,7 @@ export default defineComponent({
         })
         $q.notify({
           type: 'positive',
-          message: 'Поле успешно удалено'
+          message: 'Пол успешно удалено'
         })
       } catch (error) {
         console.error('[CollectionDetails] Error deleting field:', error)
@@ -130,25 +130,25 @@ export default defineComponent({
     const showAddFieldDialog = () => {
       console.log('[CollectionDetails] Showing add field dialog')
       editingFieldName.value = null
-      fieldDialog.value.show()
+      fieldForm.value.show()
     }
 
     const showEditFieldDialog = (field) => {
       console.log('[CollectionDetails] Showing edit field dialog:', field.name)
       editingFieldName.value = field.name
-      fieldDialog.value.show(field)
+      fieldForm.value.show(field)
     }
 
     const showAddRelationDialog = () => {
       console.log('[CollectionDetails] Showing add relation dialog')
       editingRelationName.value = null
-      relationDialog.value.show()
+      relationForm.value.show()
     }
 
     const showEditRelationDialog = (relation) => {
       console.log('[CollectionDetails] Showing edit relation dialog:', relation.name)
       editingRelationName.value = relation.name
-      relationDialog.value.show({
+      relationForm.value.show({
         ...relation,
         sourceField: collection.value.fields.find(f => f.name === relation.foreignKey)?.name
       })
@@ -210,7 +210,7 @@ export default defineComponent({
         console.error('[CollectionDetails] Error saving relation:', error)
         $q.notify({
           type: 'negative',
-          message: `Ошибка при ${editingRelationName.value ? 'обновлении' : 'добавлении'} связи`
+          message: `Ошибка при ${editingRelationName.value ? 'обнолении' : 'добавлении'} связи`
         })
       }
     }
@@ -227,8 +227,8 @@ export default defineComponent({
       showEditRelationDialog,
       handleFieldSave,
       handleRelationSave,
-      fieldDialog,
-      relationDialog
+      fieldForm,
+      relationForm
     }
   }
 })
