@@ -143,13 +143,13 @@
           </q-btn-toggle>
         </div>
 
-        <div class="q-mb-sm row items-center">
+        <div class="relation-name-row q-mb-sm">
           <q-input 
             v-model="form.name" 
             label="Название связи" 
             standout 
             dense
-            class="col"
+            class="col relation-name-input"
             :rules="[val => !!val || 'Обязательное поле']"
           />
           <q-btn
@@ -159,7 +159,7 @@
             icon="arrow_left"
             :label="suggestedName"
             @click="form.name = suggestedName"
-            class="q-ml-sm"
+            class="q-ml-sm suggested-name-btn"
           />
         </div>
       </q-card-section>
@@ -582,6 +582,35 @@ export default {
     border-radius: 4px
     font-size: 0.7rem
     padding: 2px 6px
+
+.q-input
+  margin-bottom: 0 // Убираем нижний отступ у input
+
+.q-btn
+  height: 40px // Устанавливаем высоту кнопки равной высоте input
+  align-self: flex-end // Выравниваем кнопку по нижнему краю
+
+.relation-name-row
+  display: flex
+  align-items: flex-end
+
+  .q-input
+    flex-grow: 1
+
+  .suggested-name-btn
+    height: 40px
+    align-self: flex-end
+
+.relation-name-input.q-field--with-bottom
+  padding-bottom: 0 !important
+
+.q-field--dense .q-field__control, .q-field--dense .q-field__marginal
+  height: 40px
+
+.q-field--dense.q-field--labeled .q-field__native, .q-field--dense.q-field--labeled .q-field__prefix, .q-field--dense.q-field--labeled .q-field__suffix
+  padding-top: 20px
+
+.q-btn.suggested-name-btn
+  padding: 0 8px
+  min-height: 40px
 </style>
-
-

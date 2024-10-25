@@ -6,25 +6,28 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <q-input 
-          v-model="form.name" 
-          label="Название" 
-          standout 
-          dense
-          class="q-mb-sm"
-          :rules="[val => !!val || 'Обязательное поле']"
-        />
-
-        <q-select
-          v-model="form.dataType"
-          :options="dataTypeOptions"
-          label="Тип данных"
-          standout
-          dense
-          class="q-mb-sm"
-          emit-value
-          map-options
-        />
+        <div class="row q-col-gutter-md q-mb-sm">
+          <div class="col-6">
+            <q-input 
+              v-model="form.name" 
+              label="Название" 
+              standout 
+              dense
+              :rules="[val => !!val || 'Обязательное поле']"
+            />
+          </div>
+          <div class="col-6">
+            <q-select
+              v-model="form.dataType"
+              :options="dataTypeOptions"
+              label="Тип данных"
+              standout
+              dense
+              emit-value
+              map-options
+            />
+          </div>
+        </div>
 
         <div class="q-mb-sm">
           <div class="text-subtitle2 q-mb-xs">Секция</div>
@@ -38,44 +41,50 @@
           />
         </div>
 
-        <q-select
-          v-model="form.listType"
-          :options="listTypeOptions"
-          label="Тип в списке"
-          standout
-          dense
-          class="q-mb-sm"
-          emit-value
-          map-options
-        />
+        <div class="row q-col-gutter-md q-mb-sm">
+          <div class="col-6">
+            <q-select
+              v-model="form.listType"
+              :options="listTypeOptions"
+              label="Тип в списке"
+              standout
+              dense
+              emit-value
+              map-options
+            />
+          </div>
+          <div class="col-6">
+            <q-select
+              v-model="form.inputType"
+              :options="inputTypeOptions"
+              label="Тип ввода в форме"
+              standout
+              dense
+              emit-value
+              map-options
+            />
+          </div>
+        </div>
 
-        <q-select
-          v-model="form.inputType"
-          :options="inputTypeOptions"
-          label="Тип ввода в форме"
-          standout
-          dense
-          class="q-mb-sm"
-          emit-value
-          map-options
-        />
-
-        <q-input 
-          v-model="form.prompt" 
-          label="Метка" 
-          standout 
-          dense
-          class="q-mb-sm"
-        />
-
-        <q-toggle
-          v-model="form.required"
-          label="Обязательное"
-          left-label
-          color="green"
-          dense
-          class="q-mb-sm"
-        />
+        <div class="row q-col-gutter-md items-center">
+          <div class="col-6">
+            <q-input 
+              v-model="form.prompt" 
+              label="Метка" 
+              standout 
+              dense
+            />
+          </div>
+          <div class="col-6">
+            <q-toggle
+              v-model="form.required"
+              label="Обязательное"
+              left-label
+              color="green"
+              dense
+            />
+          </div>
+        </div>
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
