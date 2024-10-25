@@ -1,3 +1,4 @@
+<!-- Переименовываем из CollectionForm.vue -->
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card class="q-dialog-plugin" style="min-width: 500px">
@@ -73,7 +74,7 @@ import { ref, computed } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 
 export default {
-  name: 'CollectionForm',
+  name: 'EntityForm',  // Меняем имя компонента
 
   emits: [
     ...useDialogPluginComponent.emits
@@ -97,21 +98,20 @@ export default {
     })
 
     const onOKClick = () => {
-      console.log('[CollectionForm] OK clicked')
+      console.log('[EntityForm] OK clicked')
       if (isFormValid.value) {
         onDialogOK(form.value)
       }
     }
 
-    // Добавляем метод show
-    const show = (collection = null) => {
-      console.log('[CollectionForm] Show called with:', collection)
-      if (collection) {
-        console.log('[CollectionForm] Setting form data for edit')
-        form.value = { ...collection }
+    const show = (entity = null) => {
+      console.log('[EntityForm] Show called with:', entity)
+      if (entity) {
+        console.log('[EntityForm] Setting form data for edit')
+        form.value = { ...entity }
         isEdit.value = true
       } else {
-        console.log('[CollectionForm] Setting empty form for new collection')
+        console.log('[EntityForm] Setting empty form for new entity')
         form.value = { 
           name: '', 
           prompt: '', 
@@ -131,7 +131,7 @@ export default {
       form,
       isEdit,
       isFormValid,
-      show // Добавляем show в return
+      show
     }
   }
 }

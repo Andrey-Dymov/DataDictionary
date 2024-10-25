@@ -40,10 +40,10 @@
         <EntityList
           :entities="collections"
           :selectedEntityName="selectedCollectionName"
-          @addEntity="showAddCollectionDialog"
-          @selectEntity="setSelectedCollection"
-          @deleteEntity="deleteCollection"
-          @editEntity="showEditCollectionDialog"
+          @addEntity="showAddEntityDialog"
+          @selectEntity="setSelectedEntity"
+          @deleteEntity="deleteEntity"
+          @editEntity="showEditEntityDialog"
         />
       </q-scroll-area>
     </q-drawer>
@@ -56,7 +56,7 @@
       </router-view>
     </q-page-container>
 
-    <CollectionForm ref="collectionForm" @ok="handleCollectionSave" />
+    <EntityForm ref="entityForm" @ok="handleEntitySave" />
   </q-layout>
 </template>
 
@@ -64,7 +64,7 @@
 import { defineComponent, ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EntityList from '../components/EntityList.vue'
-import CollectionForm from '../components/CollectionForm.vue'
+import EntityForm from '../components/EntityForm.vue'
 import { useSchemaStore } from '../stores/schema'
 import { useQuasar } from 'quasar'
 
@@ -73,7 +73,7 @@ export default defineComponent({
 
   components: {
     EntityList,
-    CollectionForm
+    EntityForm
   },
 
   setup() {
@@ -82,7 +82,7 @@ export default defineComponent({
     const schemaStore = useSchemaStore()
     const router = useRouter()
     const route = useRoute()
-    const collectionForm = ref(null)  // Изменено от collectionDialog
+    const entityForm = ref(null)  // Изменено от collectionForm
     const $q = useQuasar()
 
     const currentDictionary = computed({
@@ -138,50 +138,50 @@ export default defineComponent({
       }
     }
 
-    const setSelectedCollection = (name) => {
-      console.log('[Layout] Setting selected collection:', name)
+    const setSelectedEntity = (name) => {
+      console.log('[Layout] Setting selected entity:', name)
       schemaStore.setSelectedCollection(name)
     }
 
-    const showAddCollectionDialog = () => {
-      console.log('[MainLayout] Showing add collection dialog')
-      collectionForm.value.show()
+    const showAddEntityDialog = () => {
+      console.log('[MainLayout] Showing add entity dialog')
+      entityForm.value.show()
     }
 
-    const showEditCollectionDialog = (collection) => {
-      console.log('[MainLayout] Showing edit collection dialog:', collection)
-      collectionForm.value.show(collection)
+    const showEditEntityDialog = (entity) => {
+      console.log('[MainLayout] Showing edit entity dialog:', entity)
+      entityForm.value.show(entity)
     }
 
-    const handleCollectionSave = async (collectionData) => {
+    const handleEntitySave = async (entityData) => {
       try {
-        if (collectionData.name) {
-          await schemaStore.updateCollection(collectionData.name, collectionData)
+        if (entityData.name) {
+          await schemaStore.updateEntity(entityData.name, entityData)
         } else {
-          await schemaStore.addCollection(collectionData)
+          await schemaStore.addEntity(entityData)
         }
         $q.notify({
           type: 'positive',
-          message: `Сущность успешно ${collectionData.name ? 'обновлена' : 'добавлена'}`
+          message: `Сущность успешно ${entityData.name ? 'обновлена' : 'добавлена'}`
         })
       } catch (error) {
-        console.error('Error saving collection:', error)
+        console.error('Error saving entity:', error)
         $q.notify({
           type: 'negative',
-          message: `Ошибка при ${collectionData.name ? 'обновлени' : 'добавлении'} сущности`
+          message: `Ошибка при ${entityData.name ? 'обновлени' : 'добавлении'} сущности`
         })
       }
     }
 
-    const deleteCollection = async (collectionName) => {
+    const deleteEntity = async (entityName) => {
       try {
-        await schemaStore.deleteCollection(collectionName)
+        await schemaStore.deleteCollection(entityName)
         $q.notify({
           type: 'positive',
           message: 'Сущность успешно удалена'
         })
       } catch (error) {
-        console.error('Error deleting collection:', error)
+        console.error('Error deleting entity:', error)
         $q.notify({
           type: 'negative',
           message: 'Ошибка при удалении сущности'
@@ -200,12 +200,12 @@ export default defineComponent({
       currentDictionary,
       dictionaryOptions,
       changeDictionary,
-      setSelectedCollection,
-      showAddCollectionDialog,
-      showEditCollectionDialog,
-      handleCollectionSave,
-      deleteCollection,
-      collectionForm  // Изменено от collectionDialog
+      setSelectedEntity,
+      showAddEntityDialog,
+      showEditEntityDialog,
+      handleEntitySave,
+      deleteEntity,
+      entityForm
     }
   }
 })
@@ -235,4 +235,3 @@ export default defineComponent({
 .q-drawer
   border-right: 1px solid rgba(0,0,0,0.1)
 </style>
-
