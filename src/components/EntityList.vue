@@ -143,19 +143,35 @@ export default defineComponent({
     margin: 4px 8px
 
     &:hover
-      background-color: rgba($primary, 0.1)
+      // Изменяем поведение при наведении для ��ктивного элемента
+      &.q-item--active
+        background: lighten($primary, 10%) !important
+      // Для неактивных элементов оставляем прежнее поведение
+      &:not(.q-item--active)
+        background-color: rgba($primary, 0.1)
 
-    &.q-router-link--active
-      font-weight: 600
-
-    .q-item__section--side
-      .q-btn
-        transition: opacity 0.3s ease
-
-    &.q-router-link--active
+    // Стили для активного элемента
+    &.q-item--active
+      background: $primary
+      color: white
       .q-item__section--side
         .q-btn
           color: white
+          opacity: 0.8
+          &:hover
+            opacity: 1
+      .q-icon
+        color: white !important
+      .q-item-label--caption
+        color: rgba(255,255,255,0.7)
+
+    // Стили для кнопок действий
+    .q-item__section--side
+      .q-btn
+        transition: opacity 0.3s ease
+        opacity: 0.7
+        &:hover
+          opacity: 1
 
 .cursor-pointer
   cursor: pointer

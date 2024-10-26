@@ -15,11 +15,6 @@
         </div>
 
         <div class="row items-center">
-          <!-- Информация о текущем словаре -->
-          <div v-if="currentDictionary" class="text-caption q-mr-md text-grey-8">
-            {{ getDictionaryInfo }}
-          </div>
-
           <!-- Выбор словаря -->
           <q-select
             v-model="currentDictionary"
@@ -31,8 +26,46 @@
             emit-value
             map-options
             class="dictionary-select"
-            @update:model-value="changeDictionary"
-          />
+            @update:model-value="onDictionaryChange"
+          >
+            <!-- Добавим обработку клика в опциях -->
+            <template v-slot:option="{ opt, selected, toggleOption }">
+              <q-item
+                v-ripple
+                :active="selected"
+                clickable
+                @click="toggleOption(opt)"
+              >
+                <q-item-section>
+                  <div class="column">
+                    <div class="text-weight-medium">{{ opt.name }}</div>
+                    <div class="text-caption text-grey-7">{{ opt.fileName }}</div>
+                    <div class="text-caption text-grey-7 ellipsis">{{ opt.filePath }}</div>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
+          <!-- Информация о текущем словаре -->
+          <q-btn
+            v-if="currentDictionary"
+            flat
+            dense
+            icon="info"
+            class="q-ml-sm"
+          >
+            <q-tooltip anchor="bottom middle" self="top middle" max-width="300px">
+              <div class="text-body2">
+                <div class="text-weight-medium">{{ getCurrentDictionaryInfo?.name }}</div>
+                <div class="text-caption">Файл: {{ getCurrentDictionaryInfo?.fileName }}</div>
+                <div class="text-caption">Путь: {{ getCurrentDictionaryInfo?.filePath }}</div>
+                <div v-if="getCurrentDictionaryInfo?.description" class="text-caption q-mt-sm">
+                  {{ getCurrentDictionaryInfo?.description }}
+                </div>
+              </div>
+            </q-tooltip>
+          </q-btn>
 
           <!-- Кнопки управления словарями -->
           <q-btn-group flat class="q-ml-sm">
@@ -124,22 +157,66 @@ export default defineComponent({
     console.log('[Layout] Setup started')
     const leftDrawerOpen = ref(false)
     const schemaStore = useSchemaStore()
+    const dictionaryStore = useDictionaryStore()
     const router = useRouter()
     const route = useRoute()
-    const entityForm = ref(null)  // Изменено от collectionForm
+    const entityForm = ref(null)
     const $q = useQuasar()
-    const dictionaryStore = useDictionaryStore()  // Добавляем dictionaryStore
 
+    // Объявляем changeDictionary до его использования
+    const changeDictionary = async (id) => {
+      console.log('[Layout] Dictionary changed:', id)
+      try {
+        await dictionaryStore.setCurrentDictionary(id)
+        await schemaStore.loadSchema(id)
+        
+        if (schemaStore.collections?.length > 0) {
+          const savedCollection = localStorage.getItem('selectedCollectionName')
+          const collectionToSelect = savedCollection && 
+            schemaStore.collections.find(c => c.name === savedCollection) 
+              ? savedCollection 
+              : schemaStore.collections[0].name
+
+          console.log('[Layout] Selecting collection:', collectionToSelect)
+          schemaStore.setSelectedCollection(collectionToSelect)
+          router.push(`/collection/${collectionToSelect}`)
+        } else {
+          schemaStore.setSelectedCollection('')
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('[Layout] Error changing dictionary:', error)
+        $q.notify({
+          type: 'negative',
+          message: 'Ошибка при смене словаря'
+        })
+      }
+    }
+
+    // Тепер можем использовать changeDictionary в computed
     const currentDictionary = computed({
       get: () => dictionaryStore.currentDictionaryId,
-      set: (value) => dictionaryStore.setCurrentDictionary(value)
+      set: (value) => {
+        console.log('[Layout] Setting dictionary:', value)
+        changeDictionary(value)
+      }
+    })
+
+    // Получаем информацию о текущем словаре
+    const getCurrentDictionaryInfo = computed(() => dictionaryStore.getCurrentDictionaryInfo)
+
+    // Получаем опции для выпадающего списка
+    const dictionaryOptions = computed(() => {
+      return dictionaryStore.dictionaries.map(dict => ({
+        label: dict.name,
+        value: dict.id,
+        ...dict
+      }))
     })
 
     const collections = computed(() => schemaStore.collections || [])
     const selectedCollectionName = computed(() => schemaStore.selectedCollectionName)
     
-    const dictionaryOptions = computed(() => dictionaryStore.dictionaryOptions)
-
     // Следим за изменением аршрта
     watch(() => route.params.name, (newName) => {
       console.log('[Layout] Route collection changed:', newName)
@@ -157,38 +234,6 @@ export default defineComponent({
         router.push(`/collection/${newName}`)
       }
     })
-
-    const changeDictionary = async (id) => {
-      console.log('[Layout] Dictionary changed:', id)
-      try {
-        await dictionaryStore.setCurrentDictionary(id)
-        // Загружаем данные словаря в schemaStore
-        await schemaStore.loadSchema(id)
-        
-        // Выбираем первую сущность из нового словаря
-        if (schemaStore.collections?.length > 0) {
-          const savedCollection = localStorage.getItem('selectedCollectionName')
-          const collectionToSelect = savedCollection && 
-            schemaStore.collections.find(c => c.name === savedCollection) 
-              ? savedCollection 
-              : schemaStore.collections[0].name
-
-          console.log('[Layout] Selecting collection:', collectionToSelect)
-          schemaStore.setSelectedCollection(collectionToSelect)
-          router.push(`/collection/${collectionToSelect}`)
-        } else {
-          // Если сущностей нет, очищаем выбор
-          schemaStore.setSelectedCollection('')
-          router.push('/')
-        }
-      } catch (error) {
-        console.error('[Layout] Error changing dictionary:', error)
-        $q.notify({
-          type: 'negative',
-          message: 'Ошибка при смене словаря'
-        })
-      }
-    }
 
     const setSelectedEntity = (name) => {
       console.log('[Layout] Setting selected entity:', name)
@@ -311,6 +356,29 @@ export default defineComponent({
       }
     }
 
+    // Добавляем геттер для отображения имени словаря
+    const getCurrentDictionaryName = computed(() => {
+      const dict = dictionaryStore.getCurrentDictionaryInfo
+      if (!dict) return ''
+      return dict.name
+    })
+
+    // Добавляем метод обработки выбора словаря
+    const onDictionaryChange = async (value) => {
+      console.log('[Layout] Dictionary selected:', value)
+      if (value) {
+        try {
+          await changeDictionary(value)
+        } catch (error) {
+          console.error('[Layout] Error changing dictionary:', error)
+          $q.notify({
+            type: 'negative',
+            message: 'Ошибка при смене словаря'
+          })
+        }
+      }
+    }
+
     console.log('[Layout] Setup completed')
     return {
       leftDrawerOpen,
@@ -332,7 +400,10 @@ export default defineComponent({
       showAddDictionaryDialog,
       showEditDictionaryDialog,
       confirmDeleteDictionary,
-      handleDictionarySave
+      handleDictionarySave,
+      getCurrentDictionaryName,
+      getCurrentDictionaryInfo,
+      onDictionaryChange
     }
   }
 })
@@ -350,7 +421,7 @@ export default defineComponent({
       white-space: nowrap
 
 .dictionary-select
-  width: 300px  // Увеличиваем ширину для отображения полной информации
+  width: 200px  // Уменьшаем ширину
   .q-field__control
     height: 40px
   .q-field__native
@@ -359,6 +430,42 @@ export default defineComponent({
   &.q-field--labeled .q-field__native
     padding-top: 0
 
-.q-drawer
-  border-right: 1px solid rgba(0,0,0,0.1)
+// Добавляем стили для опций
+.q-menu
+  .q-item
+    min-height: unset
+    padding: 8px 16px
+    
+    .column
+      width: 100%
+      
+    .text-caption
+      line-height: 1.2
+      
+    .ellipsis
+      white-space: nowrap
+      overflow: hidden
+      text-overflow: ellipsis
+      max-width: 300px
+
+// Добавляем стили для опций выпадающего списка
+.q-menu
+  .q-item
+    cursor: pointer
+    transition: all 0.3s ease
+    
+    &:hover
+      // Изменяем поведение при наведении для активного элемента
+      &.q-item--active
+        background: lighten($primary, 10%) !important
+      // Для неактивных элементов оставляем прежнее поведение
+      &:not(.q-item--active)
+        background-color: rgba($primary, 0.1)
+
+    // Стили для активного элемента
+    &.q-item--active
+      background: $primary
+      color: white
+      .text-grey-7
+        color: rgba(255,255,255,0.7) !important
 </style>
