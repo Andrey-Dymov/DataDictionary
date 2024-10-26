@@ -2,7 +2,7 @@ import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api'
+  baseURL: 'http://localhost:3001'  // Меняем порт на тот же, что в server.js
 })
 
 export default boot(({ app }) => {

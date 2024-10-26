@@ -17,12 +17,14 @@ import { defineComponent, onMounted } from 'vue'
 import { useSchemaStore } from './stores/schema'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useDictionaryStore } from './stores/dictionary'
 
 export default defineComponent({
   name: 'App',
   setup() {
     console.log('[App] Setup started')
     const schemaStore = useSchemaStore()
+    const dictionaryStore = useDictionaryStore()
     const router = useRouter()
     const $q = useQuasar()
 
@@ -30,39 +32,24 @@ export default defineComponent({
       console.log('[App] Starting data load')
       try {
         console.log('[App] Loading dictionaries')
-        await schemaStore.loadDictionaries()
-        console.log('[App] Dictionaries loaded')
-        
-        const currentDict = schemaStore.getCurrentDictionary
-        console.log('[App] Current dictionary:', currentDict)
-        
-        if (!currentDict) {
-          throw new Error('Словарь не выбран')
-        }
-        
-        console.log('[App] Loading schema for dictionary:', currentDict)
-        await schemaStore.loadSchema(currentDict)
-        console.log('[App] Schema loaded successfully')
+        await dictionaryStore.loadDictionariesMeta()
+        console.log('[App] Data loaded successfully')
 
-        // Восстанавливаем выбранную сущность
-        const savedCollection = localStorage.getItem('selectedCollectionName')
-        console.log('[App] Saved collection:', savedCollection)
-        
-        if (savedCollection && schemaStore.collections.find(c => c.name === savedCollection)) {
-          console.log('[App] Restoring saved collection:', savedCollection)
-          schemaStore.setSelectedCollection(savedCollection)
-          router.push(`/collection/${savedCollection}`)
-        } else if (schemaStore.collections.length > 0) {
-          console.log('[App] Using first collection:', schemaStore.collections[0].name)
-          schemaStore.setSelectedCollection(schemaStore.collections[0].name)
-          router.push(`/collection/${schemaStore.collections[0].name}`)
-        } else {
-          console.log('[App] No collections available')
-          router.push('/')
+        // Если есть текущий словарь, загружаем его данные
+        if (dictionaryStore.currentDictionaryId) {
+          console.log('[App] Loading current dictionary data')
+          await schemaStore.loadSchema(dictionaryStore.currentDictionaryId)
         }
       } catch (error) {
         console.error('[App] Error loading data:', error)
         schemaStore.error = error.message
+        if ($q) {  // Проверяем наличие $q перед использованием
+          $q.notify({
+            type: 'negative',
+            message: error.message || 'Ошибка загрузки данных',
+            position: 'top'
+          })
+        }
       }
     }
 

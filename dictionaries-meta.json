@@ -2,10 +2,17 @@
   "dictionaries": [
     {
       "id": "dict_001",
-      "name": "Оригинальный словарь",
+      "name": "Проекты",
       "fileName": "original.json",
-      "filePath": "/path/to/original/dictionary",
-      "description": "Основной словарь системы"
+      "filePath": "/Users/smoke/Documents/Development/DataDictionary/schemas",
+      "description": "Проекты"
+    }, 
+    {
+      "id": "dict_002",
+      "name": "Решения СД",
+      "fileName": "new.json",
+      "filePath": "/Users/smoke/Documents/Development/DataDictionary/schemas",
+      "description": "Решения СД"
     }
   ]
 }

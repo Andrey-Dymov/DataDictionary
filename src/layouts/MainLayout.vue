@@ -162,19 +162,31 @@ export default defineComponent({
       console.log('[Layout] Dictionary changed:', id)
       try {
         await dictionaryStore.setCurrentDictionary(id)
-        if (dictionaryStore.currentDictionary?.collections?.length > 0) {
+        // Загружаем данные словаря в schemaStore
+        await schemaStore.loadSchema(id)
+        
+        // Выбираем первую сущность из нового словаря
+        if (schemaStore.collections?.length > 0) {
           const savedCollection = localStorage.getItem('selectedCollectionName')
           const collectionToSelect = savedCollection && 
-            dictionaryStore.currentDictionary.collections.find(c => c.name === savedCollection) 
+            schemaStore.collections.find(c => c.name === savedCollection) 
               ? savedCollection 
-              : dictionaryStore.currentDictionary.collections[0].name
+              : schemaStore.collections[0].name
 
           console.log('[Layout] Selecting collection:', collectionToSelect)
           schemaStore.setSelectedCollection(collectionToSelect)
           router.push(`/collection/${collectionToSelect}`)
+        } else {
+          // Если сущностей нет, очищаем выбор
+          schemaStore.setSelectedCollection('')
+          router.push('/')
         }
       } catch (error) {
         console.error('[Layout] Error changing dictionary:', error)
+        $q.notify({
+          type: 'negative',
+          message: 'Ошибка при смене словаря'
+        })
       }
     }
 
