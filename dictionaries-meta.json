@@ -1,0 +1,11 @@
+{
+  "dictionaries": [
+    {
+      "id": "dict_001",
+      "name": "Оригинальный словарь",
+      "fileName": "original.json",
+      "filePath": "/path/to/original/dictionary",
+      "description": "Основной словарь системы"
+    }
+  ]
+}

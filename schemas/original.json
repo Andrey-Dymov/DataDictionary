@@ -1,103 +1,13 @@
 {
   "collections": [
     {
-      "name": "projects", "description": "Информация о проектах",
-      "icon": "work", "prompt": "Проекты", "promptSingle": "Проект",
-      "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "description", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Описание"},
-        {"name": "schemaType", "type": "string", "inputType": "select", "displayType": "string", "prompt": "Тип схемы", "req": true},
-        {"name": "schemaFileOld", "type": "string", "inputType": "file", "displayType": "path", "prompt": "Старый файл схемы"},
-        {"name": "schemaFile", "type": "string", "inputType": "file", "displayType": "path", "prompt": "Файл схемы"},
-        {"name": "filter", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Фильтр"},
-        {"name": "maska", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Маска", "mask" :"AAAA - #### - #### - SSS"},
-        {"name": "output", "type": "string", "inputType": "file", "displayType": "code", "prompt": "Выходной файл"},
-        {"name": "ui", "type": "string", "inputType": "file", "displayType": "string", "prompt": "Файл интерфейса"}
-      ],
-      "relations": {
-        "subProjects": { "type": "hasMany", "target": "sub_projects", "foreignKey": "projectId" },
-        "views": { "type": "hasMany", "target": "views", "foreignKey": "projectId" }
-      }
-    },
-    {
-      "name": "sub_projects", "description": "Подпроекты для разных слоев стека",
-      "icon": "folder", "prompt": "Подпроекты", "promptSingle": "Подпроект",
-      "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "projectId", "type": "number", "inputType": "reference", "displayType": "number", "prompt": "Проект", "req": true},
-        {"name": "templates_path", "type": "string", "inputType": "path", "displayType": "path", "prompt": "Путь к шаблонам", "req": true},
-        {"name": "files_path", "type": "string", "inputType": "path", "displayType": "path", "prompt": "Путь к файлам", "req": true},
-        {"name": "api", "type": "object", "inputType": "textarea", "displayType": "json", "prompt": "API"}
-      ],
-      "relations": {
-        "project": { "type": "belongsTo", "target": "projects", "foreignKey": "projectId" },
-        "files": { "type": "hasMany", "target": "files", "foreignKey": "subProjectId" }
-      }
-    },
-    {
-      "name": "files", "description": "Файлы для генерации",
-      "icon": "insert_drive_file", "prompt": "Файлы", "promptSingle": "Файл",
-      "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "subProjectId", "type": "number", "inputType": "reference", "displayType": "reference", "prompt": "Подпроект", "req": true},
-        {"name": "templateId", "type": "number", "inputType": "reference", "displayType": "reference", "prompt": "Шаблон"},
-        {"name": "isActive", "type": "bool", "inputType": "checkbox", "displayType": "boolean", "prompt": "Активный"},
-        {"name": "subpath", "type": "string", "inputType": "path", "displayType": "path", "prompt": "Подпуть"},
-        {"name": "file", "type": "string", "inputType": "file", "displayType": "path", "prompt": "Файл", "req": true},
-        {"name": "comment", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Комментарий"},
-        {"name": "separate", "type": "bool", "inputType": "checkbox", "displayType": "boolean", "prompt": "Записывать раздельно"}
-      ],
-      "relations": {
-        "subProject": { "type": "belongsTo", "target": "sub_projects", "foreignKey": "subProjectId" },
-        "template": { "type": "belongsTo", "target": "templates", "foreignKey": "templateId" }
-      }
-    },
-    {
-      "name": "view_types", "description": "Шаблоны и параметры типов страниц",
-      "icon": "category", "prompt": "Типы страниц",
-      "promptSingle": "Тип страницы", "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "icon", "type": "string", "inputType": "icon-select", "displayType": "icon", "prompt": "Иконка"},
-        {"name": "description", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Описание"},
-        {"name": "contentFile", "type": "string", "inputType": "file", "displayType": "path", "prompt": "Файл контента"}
-      ],
-      "relations": {
-        "views": { "type": "hasMany", "target": "views", "foreignKey": "viewTypeId" }
-      }
-    },
-    {
-      "name": "views", "description": "Список страниц",
-      "icon": "pageview", "prompt": "Страницы",
-      "promptSingle": "Страница", "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "projectId", "type": "number", "inputType": "reference", "displayType": "number", "prompt": "Проект", "req": true},
-        {"name": "viewTypeId", "type": "number", "inputType": "reference", "displayType": "reference", "prompt": "Тип страницы"},
-        {"name": "description", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Описание"},
-        {"name": "data", "type": "object", "inputType": "textarea", "displayType": "string", "prompt": "Сохраненные данные"}
-      ],
-      "relations": {
-        "viewType": { "type": "belongsTo", "target": "view_types", "foreignKey": "viewTypeId" },
-        "project": { "type": "belongsTo", "target": "projects", "foreignKey": "projectId" }
-
-      }
-    },
-    {
-      "name": "templates", "description": "Шаблоны для генерации",
-      "icon": "description", "prompt": "Шаблоны", "promptSingle": "Шаблон",
-      "fields": [
-        {"name": "id", "type": "number", "inputType": "number", "displayType": "number"},
-        {"name": "name", "type": "string", "inputType": "text", "displayType": "string", "prompt": "Название", "req": true},
-        {"name": "description", "type": "string", "inputType": "textarea", "displayType": "string", "prompt": "Описание"},
-        {"name": "contentFile", "type": "string", "inputType": "text", "displayType": "path", "prompt": "Файл контента"}
-      ],
-      "relations": {
-        "files": { "type": "hasMany", "target": "files", "foreignKey": "templateId" }
-      }
+      "name": "meetings",
+      "prompt": "Встречи",
+      "promptSingle": "Встреча",
+      "description": "Информация о встречах",
+      "icon": "event",
+      "fields": [],
+      "relations": {}
     }
   ]
 }

@@ -1,12 +1,14 @@
 const express = require('express')
 const fs = require('fs').promises
 const path = require('path')
+const { v4: uuidv4 } = require('uuid')
 const app = express()
 
 app.use(express.json())
 
 const SCHEMAS_DIR = path.join(__dirname, 'schemas')
 const BACKUPS_DIR = path.join(SCHEMAS_DIR, 'backups')
+const META_FILE = path.join(__dirname, 'dictionaries-meta.json')
 
 // Security middleware
 app.use((req, res, next) => {
@@ -158,4 +160,294 @@ initializeData().then(() => {
   app.listen(port, () => {
     console.log(`[Server] API server running on port ${port}`)
   })
+})
+
+// Обновленные API routes
+app.get('/api/dictionaries/meta', async (req, res) => {
+  console.log('[API] Loading dictionaries metadata')
+  try {
+    const data = await fs.readFile(META_FILE, 'utf8')
+    const parsed = JSON.parse(data)
+    console.log('[API] Successfully loaded dictionaries metadata:', parsed)
+    res.json(parsed)
+  } catch (error) {
+    console.error('[API] Error loading dictionaries metadata:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.get('/api/dictionaries/:id', async (req, res) => {
+  const { id } = req.params
+  console.log(`[API] Loading dictionary: ${id}`)
+  
+  try {
+    // Получаем метаданные словаря
+    const metaData = await fs.readFile(META_FILE, 'utf8')
+    const { dictionaries } = JSON.parse(metaData)
+    const dictionary = dictionaries.find(d => d.id === id)
+    
+    if (!dictionary) {
+      throw new Error('Dictionary not found')
+    }
+
+    // Читаем файл словаря
+    const filePath = path.join(dictionary.filePath, dictionary.fileName)
+    const data = await fs.readFile(filePath, 'utf8')
+    const parsed = JSON.parse(data)
+    
+    console.log(`[API] Successfully loaded dictionary ${id}:`, parsed)
+    res.json(parsed)
+  } catch (error) {
+    console.error(`[API] Error reading dictionary ${id}:`, error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.post('/api/dictionaries/:id', async (req, res) => {
+  const { id } = req.params
+  const { data } = req.body
+  console.log(`[API] Saving dictionary: ${id}`)
+  
+  try {
+    // Получаем метаданные словаря
+    const metaData = await fs.readFile(META_FILE, 'utf8')
+    const { dictionaries } = JSON.parse(metaData)
+    const dictionary = dictionaries.find(d => d.id === id)
+    
+    if (!dictionary) {
+      throw new Error('Dictionary not found')
+    }
+
+    // Сохраняем данные в файл
+    const filePath = path.join(dictionary.filePath, dictionary.fileName)
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2))
+    
+    console.log(`[API] Successfully saved dictionary ${id}`)
+    res.json({ success: true })
+  } catch (error) {
+    console.error(`[API] Error saving dictionary ${id}:`, error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Новые endpoints для работы с меаданными словарей
+app.post('/api/dictionaries', async (req, res) => {
+  const { name, fileName, filePath, description } = req.body
+  console.log('[API] Adding new dictionary')
+  
+  try {
+    const metaData = await fs.readFile(META_FILE, 'utf8')
+    const data = JSON.parse(metaData)
+    
+    const newDictionary = {
+      id: `dict_${uuidv4()}`,
+      name,
+      fileName,
+      filePath,
+      description
+    }
+    
+    data.dictionaries.push(newDictionary)
+    await fs.writeFile(META_FILE, JSON.stringify(data, null, 2))
+    
+    console.log('[API] Successfully added new dictionary:', newDictionary)
+    res.json(newDictionary)
+  } catch (error) {
+    console.error('[API] Error adding dictionary:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.delete('/api/dictionaries/:id', async (req, res) => {
+  const { id } = req.params
+  console.log(`[API] Deleting dictionary: ${id}`)
+  
+  try {
+    const metaData = await fs.readFile(META_FILE, 'utf8')
+    const data = JSON.parse(metaData)
+    
+    data.dictionaries = data.dictionaries.filter(d => d.id !== id)
+    await fs.writeFile(META_FILE, JSON.stringify(data, null, 2))
+    
+    console.log(`[API] Successfully deleted dictionary ${id}`)
+    res.json({ success: true })
+  } catch (error) {
+    console.error(`[API] Error deleting dictionary ${id}:`, error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Импортируем дополнительные модули для работы с файловой системой
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
+
+// API для работы с файловой системой
+app.get('/api/filesystem/directories', async (req, res) => {
+  console.log('[API] Getting directories list')
+  try {
+    let command
+    if (process.platform === 'win32') {
+      // Для Windows
+      command = 'dir /AD /B'
+    } else {
+      // Для Unix-подобных систем
+      command = 'find / -type d -maxdepth 3 2>/dev/null'
+    }
+
+    const { stdout } = await exec(command)
+    const directories = stdout
+      .split('\n')
+      .filter(Boolean)
+      .filter(dir => !dir.startsWith('.'))
+      .map(dir => ({
+        label: dir,
+        value: dir
+      }))
+
+    console.log('[API] Found directories:', directories.length)
+    res.json(directories)
+  } catch (error) {
+    console.error('[API] Error getting directories:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.get('/api/filesystem/files', async (req, res) => {
+  const { path: dirPath } = req.query
+  console.log('[API] Getting files list for path:', dirPath)
+
+  try {
+    if (!dirPath) {
+      throw new Error('Path is required')
+    }
+
+    // Проверяем существование директории
+    await fs.access(dirPath)
+
+    // Читаем содержимое директории
+    const files = await fs.readdir(dirPath)
+    
+    // Получаем информацию о каждом файле
+    const fileStats = await Promise.all(
+      files.map(async file => {
+        const filePath = path.join(dirPath, file)
+        const stats = await fs.stat(filePath)
+        return {
+          name: file,
+          path: filePath,
+          isDirectory: stats.isDirectory(),
+          size: stats.size,
+          modified: stats.mtime
+        }
+      })
+    )
+
+    // Фильтруем только файлы (не директории) и форматируем для выпадающего списка
+    const fileOptions = fileStats
+      .filter(file => !file.isDirectory)
+      .map(file => ({
+        label: `${file.name} (${formatFileSize(file.size)})`,
+        value: file.name,
+        ...file
+      }))
+
+    console.log('[API] Found files:', fileOptions.length)
+    res.json(fileOptions)
+  } catch (error) {
+    console.error('[API] Error getting files:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Вспомогательная функция для форматирования размера файла
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Проверка доступности пути
+app.get('/api/filesystem/check-path', async (req, res) => {
+  const { path: checkPath } = req.query
+  console.log('[API] Checking path:', checkPath)
+
+  try {
+    if (!checkPath) {
+      throw new Error('Path is required')
+    }
+
+    await fs.access(checkPath)
+    const stats = await fs.stat(checkPath)
+    
+    res.json({
+      exists: true,
+      isDirectory: stats.isDirectory(),
+      isFile: stats.isFile(),
+      size: stats.size,
+      modified: stats.mtime
+    })
+  } catch (error) {
+    console.error('[API] Error checking path:', error)
+    res.json({
+      exists: false,
+      error: error.message
+    })
+  }
+})
+
+// Обновление словаря
+app.put('/api/dictionaries/:id', async (req, res) => {
+  const { id } = req.params
+  const dictionaryData = req.body
+  console.log(`[API] Updating dictionary: ${id}`)
+  
+  try {
+    // Читаем текущие метаданные
+    const metaData = await fs.readFile(META_FILE, 'utf8')
+    const data = JSON.parse(metaData)
+    
+    // Находим индекс обновляемого словаря
+    const index = data.dictionaries.findIndex(d => d.id === id)
+    if (index === -1) {
+      throw new Error('Dictionary not found')
+    }
+
+    // Проверяем доступность нового пути/файла
+    const newPath = path.join(dictionaryData.filePath, dictionaryData.fileName)
+    try {
+      await fs.access(newPath)
+    } catch {
+      // Если файл не существует, создаем пустой словарь
+      await fs.writeFile(newPath, JSON.stringify({ collections: [] }, null, 2))
+    }
+
+    // Если путь или имя файла изменились, копируем данные
+    const oldDict = data.dictionaries[index]
+    if (oldDict.filePath !== dictionaryData.filePath || 
+        oldDict.fileName !== dictionaryData.fileName) {
+      const oldPath = path.join(oldDict.filePath, oldDict.fileName)
+      try {
+        const content = await fs.readFile(oldPath, 'utf8')
+        await fs.writeFile(newPath, content)
+      } catch (error) {
+        console.warn(`[API] Could not copy dictionary data: ${error.message}`)
+      }
+    }
+
+    // Обновляем метаданные
+    data.dictionaries[index] = {
+      ...data.dictionaries[index],
+      ...dictionaryData
+    }
+    
+    await fs.writeFile(META_FILE, JSON.stringify(data, null, 2))
+    
+    console.log(`[API] Successfully updated dictionary ${id}`)
+    res.json(data.dictionaries[index])
+  } catch (error) {
+    console.error(`[API] Error updating dictionary ${id}:`, error)
+    res.status(500).json({ error: error.message })
+  }
 })
