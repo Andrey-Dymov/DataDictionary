@@ -1,197 +1,631 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin" style="min-width: 500px">
-      <q-card-section>
-        <div class="text-h6">{{ isEdit ? 'Редактировать' : 'Добавить' }} связь</div>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none">
-        <div class="row q-col-gutter-md q-mb-sm">
-          <div class="col-6">
+    <q-dialog ref="dialogRef" @hide="onDialogHide">
+      <q-card class="q-dialog-plugin" style="min-width: 500px">
+        <q-card-section>
+          <div class="text-h6">{{ isEdit ? 'Редактировать' : 'Добавить' }} связь</div>
+        </q-card-section>
+  
+        <!-- Обновленная информационная панель -->
+        <q-card-section class="q-pa-none">
+          <div class="relation-info bg-yellow-2 q-ma-md q-pa-sm rounded-borders">
+            <div class="row items-center justify-between q-col-gutter-md">
+              <div class="col-4 text-center">
+                <div class="text-caption text-grey-7">{{ sourceRole }}</div>
+                <div class="text-subtitle2">{{ sourceName }} - {{ sourcePrompt }}</div>
+                <q-badge
+                  color="primary"
+                  text-color="white"
+                  class="q-mt-xs field-badge"
+                >
+                  {{ sourceField }}
+                </q-badge>
+              </div>
+              <div class="col-4 text-center">
+                <div class="relation-icon" v-html="getRelationIcon"></div>
+                <div class="text-caption q-mt-xs">{{ getRelationTypeText }}</div>
+              </div>
+              <div class="col-4 text-center">
+                <div class="text-caption text-grey-7">{{ targetRole }}</div>
+                <div class="text-subtitle2">{{ form.target }} - {{ targetPrompt }}</div>
+                <q-badge
+                  v-if="form.foreignKey"
+                  color="primary"
+                  text-color="white"
+                  class="q-mt-xs field-badge"
+                >
+                  {{ getTargetField }}
+                </q-badge>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+  
+        <q-card-section class="q-pt-none">
+          <div class="relation-type q-mb-sm">
+            <div class="text-subtitle2 q-mb-xs">Тип связи</div>
+            <q-btn-toggle
+              v-model="form.type"
+              spread
+              no-caps
+              unelevated
+              dense
+              toggle-color="primary"
+              class="relation-buttons"
+              :options="[
+                { value: 'hasMany', slot: 'hasMany' },
+                { value: 'belongsTo', slot: 'belongsTo' },
+                { value: 'belongsToMany', slot: 'belongsToMany' }
+              ]"
+            >
+              <template #hasMany>
+                <div class="relation-btn-content">
+                  <div class="relation-icon" v-html="oneToManySvg"></div>
+                  <div class="relation-label">Один ко многим</div>
+                </div>
+              </template>
+  
+              <template #belongsTo>
+                <div class="relation-btn-content">
+                  <div class="relation-icon" v-html="manyToOneSvg"></div>
+                  <div class="relation-label">Многие к одному</div>
+                </div>
+              </template>
+  
+              <template #belongsToMany>
+                <div class="relation-btn-content">
+                  <div class="relation-icon" v-html="manyToManySvg"></div>
+                  <div class="relation-label">Многие ко многим</div>
+                </div>
+              </template>
+            </q-btn-toggle>
+          </div>
+  
+          <q-select
+            v-model="form.target"
+            :options="collectionOptions"
+            label="Связанная сущность"
+            standout
+            dense
+            class="q-mb-sm"
+            emit-value
+            map-options
+            @update:model-value="updateForeignKeyOptions"
+          />
+  
+          <q-input 
+            v-model="form.foreignKey"
+            :label="foreignKeyLabel"
+            standout 
+            dense
+            class="q-mb-sm"
+            :rules="[val => !!val || 'Обязательное поле']"
+          />
+  
+          <div class="restriction-type q-mb-sm">
+            <div class="text-subtitle2 q-mb-xs">Ограничения на удаление</div>
+            <q-btn-toggle
+              v-model="form.restriction"
+              spread
+              no-caps
+              unelevated
+              dense
+              toggle-color="primary"
+              class="restriction-buttons"
+              :options="[
+                { value: 'restrict', slot: 'restrict' },
+                { value: 'cascade', slot: 'cascade' },
+                { value: 'setnull', slot: 'setnull' }
+              ]"
+            >
+              <template #restrict>
+                <div class="restriction-btn-content">
+                  <q-icon name="block" color="negative" size="24px" />
+                  <div class="restriction-label">Запрет</div>
+                  <q-tooltip>Запрещает удаление записи, если есть связанные записи</q-tooltip>
+                </div>
+              </template>
+  
+              <template #cascade>
+                <div class="restriction-btn-content">
+                  <q-icon name="delete_sweep" color="warning" size="24px" />
+                  <div class="restriction-label">Каскад</div>
+                  <q-tooltip>Удаляет все связанные записи при удалении основной записи</q-tooltip>
+                </div>
+              </template>
+  
+              <template #setnull>
+                <div class="restriction-btn-content">
+                  <q-icon name="remove_circle_outline" color="info" size="24px" />
+                  <div class="restriction-label">Обнуление</div>
+                  <q-tooltip>Устанавливает null в связанных записях при далении основной записи</q-tooltip>
+                </div>
+              </template>
+            </q-btn-toggle>
+          </div>
+  
+          <div class="q-mb-sm row items-center">
             <q-input 
               v-model="form.name" 
-              label="Название" 
+              label="Название связи" 
               standout 
               dense
+              class="col"
               :rules="[val => !!val || 'Обязательное поле']"
             />
-          </div>
-          <div class="col-6">
-            <q-select
-              v-model="form.type"
-              :options="relationTypeOptions"
-              label="Тип связи"
-              standout
+            <q-btn
+              no-caps
               dense
-              emit-value
-              map-options
+              color="green"
+              icon="arrow_left"
+              :label="suggestedName"
+              @click="form.name = suggestedName"
+              class="q-ml-sm"
             />
           </div>
-        </div>
-
-        <div class="row q-col-gutter-md q-mb-sm">
-          <div class="col-6">
-            <q-select
-              v-model="form.target"
-              :options="targetCollections"
-              label="Целевая сущность"
-              standout
-              dense
-              emit-value
-              map-options
-            />
-          </div>
-          <div class="col-6">
-            <q-select
-              v-model="form.foreignKey"
-              :options="targetFields"
-              label="Внешний ключ"
-              standout
-              dense
-              emit-value
-              map-options
-            />
-          </div>
-        </div>
-
-        <div class="row q-col-gutter-md">
-          <div class="col-12">
-            <q-input 
-              v-model="form.restriction" 
-              label="Ограничение" 
-              standout 
-              dense
-            />
-          </div>
-        </div>
-      </q-card-section>
-
-      <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Отмена" v-close-popup />
-        <q-btn flat label="OK" @click="onOKClick" :disable="!isFormValid" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
-
-<script>
-import { ref, computed } from 'vue'
-import { useDialogPluginComponent } from 'quasar'
-import { useSchemaStore } from '../stores/schema'
-
-export default {
-  name: 'RelationForm',
-
-  props: {
-    sourceName: {
-      type: String,
-      required: true
-    },
-    sourcePrompt: {
-      type: String,
-      required: true
-    },
-    sourceField: {
-      type: String,
-      default: ''
-    }
-  },
-
-  emits: [
-    ...useDialogPluginComponent.emits
-  ],
-
-  setup(props) {
-    const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
-    const schemaStore = useSchemaStore()
-    
-    const form = ref({
-      name: '',
-      type: '',
-      target: '',
-      foreignKey: '',
-      restriction: ''
-    })
-
-    const isEdit = ref(false)
-
-    const relationTypeOptions = [
-      { label: 'Один ко многим', value: 'hasMany' },
-      { label: 'Многие к одному', value: 'belongsTo' },
-      { label: 'Многие ко многим', value: 'belongsToMany' }
-    ]
-
-    const targetCollections = computed(() => {
-      return schemaStore.collections
-        .filter(c => c.name !== props.sourceName)
-        .map(c => ({
-          label: `${c.name} - ${c.prompt}`,
-          value: c.name
-        }))
-    })
-
-    const targetFields = computed(() => {
-      if (!form.value.target) return []
-      const targetCollection = schemaStore.getCollectionByName(form.value.target)
-      return targetCollection?.fields.map(f => ({
-        label: f.name,
-        value: f.name
-      })) || []
-    })
-
-    const isFormValid = computed(() => {
-      return form.value.name && 
-             form.value.type && 
-             form.value.target && 
-             form.value.foreignKey
-    })
-
-    const show = (relation = null) => {
-      if (relation) {
-        form.value = {
-          name: relation.name,
-          type: relation.type,
-          target: relation.target,
-          foreignKey: relation.foreignKey,
-          restriction: relation.restriction || ''
-        }
-        isEdit.value = true
-      } else {
-        form.value = {
-          name: '',
-          type: '',
-          target: '',
-          foreignKey: '',
-          restriction: ''
-        }
-        isEdit.value = false
+        </q-card-section>
+  
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat dense label="Отмена" v-close-popup />
+          <q-btn flat dense label="OK" @click="onOKClick" :disable="!isFormValid" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </template>
+  
+  <script>
+  import { ref, computed, watch } from 'vue'
+  import { useDialogPluginComponent } from 'quasar'
+  import { useSchemaStore } from '../stores/schema'
+  import { useDictionaryStore } from '../stores/dictionary' // Добавляем store словарей
+  import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
+  
+  export default {
+    name: 'RelationDialog',
+  
+    props: {
+      sourceName: {
+        type: String,
+        required: true
+      },
+      sourcePrompt: {
+        type: String,
+        default: ''
+      },
+      sourceField: {
+        type: String,
+        default: ''
       }
-      dialogRef.value.show()
-    }
-
-    const onOKClick = () => {
-      if (isFormValid.value) {
-        onDialogOK(form.value)
+    },
+  
+    emits: [
+      ...useDialogPluginComponent.emits
+    ],
+  
+    setup (props) {
+      const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
+      const schemaStore = useSchemaStore()
+      const dictionaryStore = useDictionaryStore() // Добавляем store словарей
+      const isEdit = ref(false)
+      const foreignKeyOptions = ref([])
+  
+      // Создаем реактивную переменную для sourceName
+      const sourceName = ref(props.sourceName)
+  
+      // Следим за изменениями пропа sourceName
+      watch(() => props.sourceName, (newSourceName) => {
+        sourceName.value = newSourceName
+      })
+  
+      const form = ref({
+        name: '',
+        type: 'hasMany',
+        target: '',
+        foreignKey: '',
+        restriction: 'restrict'
+      })
+  
+      // Обновляем получение списка коллекций с учетом текущего словаря
+      const collectionOptions = computed(() => {
+        const collections = schemaStore.collections || []
+        return collections
+          .filter(collection => collection.name !== props.sourceName) // Исключаем текущую сущность
+          .map(collection => ({
+            label: `${collection.name} - ${collection.prompt}`,
+            value: collection.name
+          }))
+      })
+  
+      const foreignKeyLabel = computed(() => {
+        if (!form.value.target) return 'Внешний ключ'
+        const collections = schemaStore.collections || []
+        const sourceCollection = collections.find(c => c.name === props.sourceName)
+        const targetCollection = collections.find(c => c.name === form.value.target)
+        if (form.value.type === 'belongsTo') {
+          return `Внешний ключ (${sourceCollection?.name} - ${sourceCollection?.prompt})`
+        } else {
+          return `Внешний ключ (${targetCollection?.name} - ${targetCollection?.prompt})`
+        }
+      })
+  
+      const isValidForeignKey = (fieldName) => {
+        const lowercaseName = fieldName.toLowerCase()
+        return lowercaseName.endsWith('id') || 
+               lowercaseName.endsWith('ids') || 
+               lowercaseName.endsWith('_id') || 
+               lowercaseName.endsWith('_ids')
       }
-    }
+  
+      const updateForeignKeyOptions = () => {
+        if (form.value.target) {
+          const collections = schemaStore.collections || []
+          const sourceCollection = collections.find(c => c.name === props.sourceName)
+          const targetCollection = collections.find(c => c.name === form.value.target)
+          
+          if (form.value.type === 'hasMany') {
+            // Для "один ко многим" выбираем поля из целевой сущности с оончанием на Id
+            foreignKeyOptions.value = targetCollection.fields
+              .filter(field => field.name.toLowerCase().endsWith('id'))
+              .map(field => ({
+                label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
+                value: field.name
+              }))
+          } else if (form.value.type === 'belongsTo') {
+            // Для "многие к одному" выбираем поля из исходной сущности с окончанием на Id
+            foreignKeyOptions.value = sourceCollection.fields
+              .filter(field => field.name.toLowerCase().endsWith('id'))
+              .map(field => ({
+                label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
+                value: field.name
+              }))
+          } else if (form.value.type === 'belongsToMany') {
+            // Для "многие ко многим" выбираем поля из исходной сущности с окончанием на Ids
+            foreignKeyOptions.value = sourceCollection.fields
+              .filter(field => field.name.toLowerCase().endsWith('ids'))
+              .map(field => ({
+                label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
+                value: field.name
+              }))
+          }
+          
+          // Автоматически заполняем название связи
+          form.value.name = targetCollection.name
+        } else {
+          foreignKeyOptions.value = []
+          form.value.name = ''
+        }
+      }
+  
+      const filterForeignKeys = (val, update) => {
+        if (!form.value.target) {
+          update(() => { foreignKeyOptions.value = [] })
+          return
+        }
+  
+        update(() => {
+          const needle = val.toLowerCase()
+          let filteredOptions = foreignKeyOptions.value.filter(
+            option => option.label.toLowerCase().includes(needle)
+          )
+          foreignKeyOptions.value = filteredOptions
+        })
+      }
+  
+      const isFormValid = computed(() => {
+        return form.value.name && 
+               form.value.type && 
+               form.value.target && 
+               form.value.foreignKey &&
+               form.value.restriction
+      })
+  
+      // Обновляем метод сохранения
+      const onOKClick = async () => {
+        if (isFormValid.value) {
+          try {
+            // Формируем данные связи
+            const relationData = {
+              type: form.value.type,
+              target: form.value.target,
+              foreignKey: form.value.foreignKey,
+              restriction: form.value.restriction
+            }
 
-    return {
-      dialogRef,
-      onDialogHide,
-      onOKClick,
-      form,
-      isEdit,
-      relationTypeOptions,
-      targetCollections,
-      targetFields,
-      isFormValid,
-      show
+            // Возвращаем данные через диалог
+            onDialogOK({
+              name: form.value.name,
+              ...relationData
+            })
+          } catch (error) {
+            console.error('Error saving relation:', error)
+            // Можно добавить уведомление об ошибке
+          }
+        }
+      }
+  
+      // Обновляем метод show для поддержки редактирования
+      const show = async (relation = null) => {
+        if (relation) {
+          form.value = { 
+            ...relation,
+            restriction: relation.restriction || 'restrict'
+          }
+          updateForeignKeyOptions()
+          isEdit.value = true
+        } else {
+          form.value = {
+            name: '',
+            type: 'hasMany',
+            target: '',
+            foreignKey: '',
+            restriction: 'restrict'
+          }
+          foreignKeyOptions.value = []
+          isEdit.value = false
+        }
+        sourceName.value = props.sourceName
+        dialogRef.value.show()
+      }
+  
+      const sourceRole = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return 'Родитель'
+          case 'belongsTo':
+          case 'belongsToMany':
+            return 'Ребенок'
+          default:
+            return ''
+        }
+      })
+  
+      const targetRole = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return 'Ребенок'
+          case 'belongsTo':
+          case 'belongsToMany':
+            return 'Родитель'
+          default:
+            return ''
+        }
+      })
+  
+      const getRelationIcon = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return oneToManySvg
+          case 'belongsTo':
+            return manyToOneSvg
+          case 'belongsToMany':
+            return manyToManySvg
+          default:
+            return ''
+        }
+      })
+  
+      const targetPrompt = computed(() => {
+        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+        return targetCollection ? targetCollection.prompt : ''
+      })
+  
+      const getRelationTypeText = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return 'Один ко многим'
+          case 'belongsTo':
+            return 'Многие к одному'
+          case 'belongsToMany':
+            return 'Многие ко многим'
+          default:
+            return ''
+        }
+      })
+  
+      const sourceField = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return 'id'
+          case 'belongsTo':
+          case 'belongsToMany':
+            return form.value.foreignKey
+          default:
+            return ''
+        }
+      })
+  
+      const getTargetField = computed(() => {
+        switch (form.value.type) {
+          case 'hasMany':
+            return form.value.foreignKey
+          case 'belongsTo':
+          case 'belongsToMany':
+            return 'id'
+          default:
+            return ''
+        }
+      })
+  
+      const updateForeignKey = () => {
+        if (form.value.target && form.value.type) {
+          const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
+          const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+          
+          if (form.value.type === 'hasMany') {
+            form.value.foreignKey = `${sourceCollection.name.toLowerCase()}Id`
+          } else if (form.value.type === 'belongsTo') {
+            form.value.foreignKey = `${targetCollection.name.toLowerCase()}Id`
+          } else if (form.value.type === 'belongsToMany') {
+            form.value.foreignKey = `${targetCollection.name.toLowerCase()}Ids`
+          }
+        } else {
+          form.value.foreignKey = ''
+        }
+      }
+  
+      watch(() => form.value.type, updateForeignKey)
+      watch(() => form.value.target, updateForeignKey)
+  
+      const suggestedName = computed(() => {
+        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+        if (!targetCollection) return ''
+  
+        let name = targetCollection.name
+        if (form.value.type === 'belongsTo') {
+          // Убираем окончание 's' или 'es' для 'Многие ко одному'
+          if (name.endsWith('es')) {
+            name = name.slice(0, -2)
+          } else if (name.endsWith('s')) {
+            name = name.slice(0, -1)
+          }
+        }
+        return name
+      })
+  
+      return {
+        dialogRef,
+        onDialogHide,
+        onOKClick,
+        form,
+        isEdit,
+        collectionOptions,
+        foreignKeyOptions,
+        foreignKeyLabel,
+        isFormValid,
+        show,
+        filterForeignKeys,
+        updateForeignKeyOptions,
+        manyToManySvg,
+        oneToManySvg,
+        manyToOneSvg,
+        sourceRole,
+        targetRole,
+        getRelationIcon,
+        sourceName,
+        sourcePrompt: props.sourcePrompt,
+        targetPrompt,
+        getRelationTypeText,
+        sourceField,
+        getTargetField,
+        updateForeignKey,
+        suggestedName
+      }
     }
   }
-}
-</script>
+  </script>
+  
+  <style lang="scss">
+  .q-dialog-plugin {
+    max-width: 95vw;
+  }
 
-<style lang="sass">
-.q-dialog-plugin
-  max-width: 95vw
-</style>
+  .relation-type,
+  .restriction-type {
+    .q-btn-toggle {
+      width: 100%;
+      .q-btn {
+        padding: 8px;
+        min-height: 72px;
+      }
+    }
+  }
+
+  .relation-btn-content,
+  .restriction-btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px;
+    width: 100%;
+  }
+
+  .relation-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .relation-label,
+  .restriction-label {
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .q-btn-toggle {
+    .q-btn {
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      &.q-btn--active {
+        border-color: var(--q-primary);
+      }
+      &:not(.q-btn--active) {
+        .relation-icon,
+        .q-icon {
+          opacity: 0.5;
+        }
+      }
+    }
+  }
+
+  .custom-input {
+    border-radius: 8px;
+    .q-field__control {
+      height: 56px;
+      border-radius: 8px;
+    }
+    .q-field__marginal {
+      height: 56px;
+    }
+  }
+
+  .relation-buttons,
+  .restriction-buttons {
+    .q-btn {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .relation-info {
+    padding: 12px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 0, 0.1);
+    
+    .text-caption {
+      font-size: 0.75rem;
+      line-height: 1.2;
+    }
+    
+    .text-grey-7 {
+      opacity: 0.7;
+    }
+    
+    .field-badge {
+      border-radius: 4px;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+    }
+
+    .relation-icon {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto;
+      
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+  </style>
+

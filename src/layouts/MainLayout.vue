@@ -72,14 +72,6 @@
             <q-btn
               flat
               dense
-              icon="add"
-              @click="showAddDictionaryDialog"
-            >
-              <q-tooltip>Добавить словарь</q-tooltip>
-            </q-btn>
-            <q-btn
-              flat
-              dense
               icon="edit"
               :disable="!currentDictionary"
               @click="showEditDictionaryDialog"
@@ -94,6 +86,14 @@
               @click="confirmDeleteDictionary"
             >
               <q-tooltip>Удалить словарь</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              dense
+              icon="add"
+              @click="showAddDictionaryDialog"
+            >
+              <q-tooltip>Добавить словарь</q-tooltip>
             </q-btn>
           </q-btn-group>
         </div>
@@ -161,6 +161,7 @@ export default defineComponent({
     const router = useRouter()
     const route = useRoute()
     const entityForm = ref(null)
+    const dictionaryForm = ref(null)  // Добавляем ref для формы словаря
     const $q = useQuasar()
 
     // Объявляем changeDictionary до его использования
@@ -301,7 +302,7 @@ export default defineComponent({
     const showEditDictionaryDialog = () => {
       const currentDict = dictionaryStore.getCurrentDictionaryInfo
       if (currentDict) {
-        dictionaryForm.value.show(currentDict)
+        dictionaryForm.value.show(currentDict)  // Теперь это будет работать
       }
     }
 
@@ -310,7 +311,7 @@ export default defineComponent({
       if (!currentDict) return
 
       $q.dialog({
-        title: 'Подтверждение',
+        title: '��одтверждение',
         message: `Вы уверены, что хотите удалить словарь "${currentDict.name}"?`,
         cancel: true,
         persistent: true
@@ -403,7 +404,9 @@ export default defineComponent({
       handleDictionarySave,
       getCurrentDictionaryName,
       getCurrentDictionaryInfo,
-      onDictionaryChange
+      onDictionaryChange,
+      dictionaryForm,  // Добавляем в return
+      showEditDictionaryDialog,
     }
   }
 })
