@@ -174,22 +174,10 @@ export default defineComponent({
         await dictionaryStore.setCurrentDictionary(id)
         await schemaStore.loadSchema(id)
         
-        if (schemaStore.collections?.length > 0) {
-          // Получаем сохраненные выборы для всех словарей
-          const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
-          // Получаем сохраненную сущность для текущего словаря
-          const savedCollection = savedSelections[id]
-          
-          const collectionToSelect = savedCollection && 
-            schemaStore.collections.find(c => c.name === savedCollection) 
-              ? savedCollection 
-              : schemaStore.collections[0].name
-
-          console.log('[Layout] Selecting collection:', collectionToSelect)
-          schemaStore.setSelectedCollection(collectionToSelect)
-          router.push(`/collection/${collectionToSelect}`)
+        // Теперь selectedCollectionName уже установлен в loadSchema
+        if (schemaStore.selectedCollectionName) {
+          router.push(`/collection/${schemaStore.selectedCollectionName}`)
         } else {
-          schemaStore.setSelectedCollection('')
           router.push('/')
         }
       } catch (error) {
@@ -498,6 +486,7 @@ export default defineComponent({
   .q-field__native
     padding-top: 0 !important
 </style>
+
 
 
 
