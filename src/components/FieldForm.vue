@@ -97,7 +97,7 @@
 
 <script>
 import { ref, computed } from 'vue'
-import { useDialogPluginComponent } from 'quasar'
+import { useDialogPluginComponent, useQuasar } from 'quasar'
 import { useSchemaStore } from '../stores/schema'
 import { 
   dataTypeOptions, 
@@ -107,16 +107,25 @@ import {
 } from '../dictionaries/fieldTypes'
 
 export default {
-  name: 'FieldForm',  // было FieldDialog
+  name: 'FieldForm',
+
+  props: {
+    entityName: {  // Добавляем проп с именем сущности
+      type: String,
+      required: true
+    }
+  },
 
   emits: [
     ...useDialogPluginComponent.emits
   ],
 
-  setup () {
+  setup(props) {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     const schemaStore = useSchemaStore()
+    const $q = useQuasar()
     const isEdit = ref(false)
+    const editingFieldName = ref(null)
 
     const form = ref({
       name: '',
@@ -165,15 +174,44 @@ export default {
 
     const onOKClick = () => {
       if (isFormValid.value) {
-        const fieldData = {
-          name: form.value.name,
-          type: form.value.dataType,
-          list: `${form.value.section}-${form.value.listType}`,
-          input: form.value.inputType,
-          prompt: form.value.prompt,
-          req: form.value.required
+        saveField(form.value)
+      }
+    }
+
+    const saveField = async (fieldData) => {
+      try {
+        const entity = schemaStore.getCollectionByName(props.entityName)
+        const updatedFields = [...entity.fields]
+
+        if (editingFieldName.value) {
+          // Если редактируем существующее поле
+          const index = updatedFields.findIndex(f => f.name === editingFieldName.value)
+          if (index !== -1) {
+            updatedFields[index] = fieldData
+          }
+        } else {
+          // Если добавляем новое поле
+          updatedFields.push(fieldData)
         }
-        onDialogOK(fieldData)
+
+        // Обновляем сущность с новыми полями
+        await schemaStore.updateCollection(props.entityName, {
+          ...entity,
+          fields: updatedFields
+        })
+
+        $q.notify({
+          type: 'positive',
+          message: `Поле успешно ${editingFieldName.value ? 'обновлено' : 'добавлено'}`
+        })
+
+        onDialogOK(fieldData) // Закрываем диалог
+      } catch (error) {
+        console.error('Error saving field:', error)
+        $q.notify({
+          type: 'negative',
+          message: `Ошибка при ${editingFieldName.value ? 'обновлении' : 'добавлении'} поля`
+        })
       }
     }
 
@@ -188,7 +226,8 @@ export default {
       listTypeOptions,
       inputTypeOptions,
       isFormValid,
-      show
+      show,
+      saveField
     }
   }
 }

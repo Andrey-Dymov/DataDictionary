@@ -178,6 +178,7 @@
   import { useSchemaStore } from '../stores/schema'
   import { useDictionaryStore } from '../stores/dictionary' // Добавляем store словарей
   import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
+  import { useQuasar } from 'quasar'
   
   export default {
     name: 'RelationDialog',
@@ -207,6 +208,8 @@
       const dictionaryStore = useDictionaryStore() // Добавляем store словарей
       const isEdit = ref(false)
       const foreignKeyOptions = ref([])
+      const $q = useQuasar()
+      const editingRelationName = ref(null)
   
       // Создаем реактивную переменную для sourceName
       const sourceName = ref(props.sourceName)
@@ -318,38 +321,58 @@
                form.value.restriction
       })
   
-      // Обновляем метод сохранения
-      const onOKClick = async () => {
-        if (isFormValid.value) {
-          try {
-            // Формируем данные связи
-            const relationData = {
-              type: form.value.type,
-              target: form.value.target,
-              foreignKey: form.value.foreignKey,
-              restriction: form.value.restriction
-            }
+      const saveRelation = async (relationData) => {
+        try {
+          const entity = schemaStore.getCollectionByName(props.sourceName)
+          const updatedRelations = { ...entity.relations }
 
-            // Возвращаем данные через диалог
-            onDialogOK({
-              name: form.value.name,
-              ...relationData
-            })
-          } catch (error) {
-            console.error('Error saving relation:', error)
-            // Можно добавить уведомление об ошибке
+          if (editingRelationName.value) {
+            // Если редактируем существующую связь
+            delete updatedRelations[editingRelationName.value]
           }
+
+          updatedRelations[relationData.name] = {
+            type: relationData.type,
+            target: relationData.target,
+            foreignKey: relationData.foreignKey,
+            restriction: relationData.restriction
+          }
+
+          // Обновляем сущность с новыми связями
+          await schemaStore.updateCollection(props.sourceName, {
+            ...entity,
+            relations: updatedRelations
+          })
+
+          $q.notify({
+            type: 'positive',
+            message: `Связь успешно ${editingRelationName.value ? 'обновлена' : 'добавлена'}`
+          })
+
+          onDialogOK(relationData) // Закрываем диалог
+        } catch (error) {
+          console.error('Error saving relation:', error)
+          $q.notify({
+            type: 'negative',
+            message: `Ошибка при ${editingRelationName.value ? 'обновлении' : 'добавлении'} связи`
+          })
+        }
+      }
+  
+      const onOKClick = () => {
+        if (isFormValid.value) {
+          saveRelation(form.value)
         }
       }
   
       // Обновляем метод show для поддержки редактирования
-      const show = async (relation = null) => {
+      const show = (relation = null) => {
         if (relation) {
           form.value = { 
             ...relation,
             restriction: relation.restriction || 'restrict'
           }
-          updateForeignKeyOptions()
+          editingRelationName.value = relation.name
           isEdit.value = true
         } else {
           form.value = {
@@ -359,7 +382,7 @@
             foreignKey: '',
             restriction: 'restrict'
           }
-          foreignKeyOptions.value = []
+          editingRelationName.value = null
           isEdit.value = false
         }
         sourceName.value = props.sourceName
@@ -507,7 +530,8 @@
         sourceField,
         getTargetField,
         updateForeignKey,
-        suggestedName
+        suggestedName,
+        saveRelation
       }
     }
   }
@@ -628,4 +652,5 @@
     }
   }
   </style>
+
 

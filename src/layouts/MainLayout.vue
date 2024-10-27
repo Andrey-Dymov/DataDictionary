@@ -130,7 +130,7 @@
       </router-view>
     </q-page-container>
 
-    <EntityForm ref="entityForm" @ok="handleEntitySave" />
+    <EntityForm ref="entityForm" />
 
     <!-- Добавляем форму словаря -->
     <DictionaryForm ref="dictionaryForm" @ok="handleDictionarySave" />
@@ -244,26 +244,6 @@ export default defineComponent({
     const showEditEntityDialog = (entity) => {
       console.log('[MainLayout] Showing edit entity dialog:', entity)
       entityForm.value.show(entity)
-    }
-
-    const handleEntitySave = async (entityData) => {
-      try {
-        if (entityData.name) {
-          await schemaStore.updateEntity(entityData.name, entityData)
-        } else {
-          await schemaStore.addEntity(entityData)
-        }
-        $q.notify({
-          type: 'positive',
-          message: `Сущность успешно ${entityData.name ? 'обновлена' : 'добавлена'}`
-        })
-      } catch (error) {
-        console.error('Error saving entity:', error)
-        $q.notify({
-          type: 'negative',
-          message: `Ошибка при ${entityData.name ? 'обновлени' : 'добавлении'} сущности`
-        })
-      }
     }
 
     const deleteEntity = async (entityName) => {
@@ -389,7 +369,6 @@ export default defineComponent({
       setSelectedEntity,
       showAddEntityDialog,
       showEditEntityDialog,
-      handleEntitySave,
       deleteEntity,
       entityForm,
       getDictionaryInfo,
@@ -486,6 +465,7 @@ export default defineComponent({
   .q-field__native
     padding-top: 0 !important
 </style>
+
 
 
 

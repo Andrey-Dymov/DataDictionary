@@ -130,15 +130,14 @@
         </div>
 
         <FieldForm 
-            ref="fieldForm" 
-            @ok="handleFieldSave"
+            ref="fieldForm"
+            :entity-name="entity.name"
         />
         <RelationForm 
             ref="relationForm" 
             :source-name="entity?.name"
             :source-prompt="entity?.prompt"
             :source-field="entity?.fields[0]?.name"
-            @ok="handleRelationSave"
         />
     </q-page>
 </template>
@@ -246,92 +245,20 @@ export default defineComponent({
 
         // Методы для форм
         const showAddFieldDialog = () => {
-            console.log('[EntityInfo] Showing add field dialog')
-            editingFieldName.value = null
             fieldForm.value.show()
         }
 
         const showEditFieldDialog = (field) => {
-            console.log('[EntityInfo] Showing edit field dialog:', field.name)
-            editingFieldName.value = field.name
             fieldForm.value.show(field)
         }
 
+        // Методы для форм связей
         const showAddRelationDialog = () => {
-            console.log('[EntityInfo] Showing add relation dialog')
-            editingRelationName.value = null
             relationForm.value.show()
         }
 
         const showEditRelationDialog = (relation) => {
-            console.log('[EntityInfo] Showing edit relation dialog:', relation.name)
-            editingRelationName.value = relation.name
-            relationForm.value.show({
-                ...relation,
-                sourceField: entity.value.fields.find(f => f.name === relation.foreignKey)?.name
-            })
-        }
-
-        // Методы сохранения
-        const handleFieldSave = async (fieldData) => {
-            try {
-                const updatedFields = [...entity.value.fields]
-                if (editingFieldName.value) {
-                    const index = updatedFields.findIndex(f => f.name === editingFieldName.value)
-                    if (index !== -1) {
-                        updatedFields[index] = fieldData
-                    }
-                } else {
-                    updatedFields.push(fieldData)
-                }
-                
-                await schemaStore.updateCollection(entity.value.name, {
-                    ...entity.value,
-                    fields: updatedFields
-                })
-                
-                $q.notify({
-                    type: 'positive',
-                    message: `Поле успешно ${editingFieldName.value ? 'обновлено' : 'добавлено'}`
-                })
-            } catch (error) {
-                console.error('[EntityInfo] Error saving field:', error)
-                $q.notify({
-                    type: 'negative',
-                    message: `Ошибка при ${editingFieldName.value ? 'обновлении' : 'добавлении'} поля`
-                })
-            }
-        }
-
-        const handleRelationSave = async (relationData) => {
-            try {
-                const updatedRelations = { ...entity.value.relations }
-                if (editingRelationName.value) {
-                    delete updatedRelations[editingRelationName.value]
-                }
-                updatedRelations[relationData.name] = {
-                    type: relationData.type,
-                    target: relationData.target,
-                    foreignKey: relationData.foreignKey,
-                    restriction: relationData.restriction
-                }
-                
-                await schemaStore.updateCollection(entity.value.name, {
-                    ...entity.value,
-                    relations: updatedRelations
-                })
-                
-                $q.notify({
-                    type: 'positive',
-                    message: `Связь успешно ${editingRelationName.value ? 'обновлена' : 'добавлена'}`
-                })
-            } catch (error) {
-                console.error('[EntityInfo] Error saving relation:', error)
-                $q.notify({
-                    type: 'negative',
-                    message: `Ошибка при ${editingRelationName.value ? 'обновлении' : 'добавлении'} связи`
-                })
-            }
+            relationForm.value.show(relation)
         }
 
         // Возвращаем все необходимые методы и свойства
@@ -344,8 +271,6 @@ export default defineComponent({
             showEditFieldDialog,
             showAddRelationDialog,
             showEditRelationDialog,
-            handleFieldSave,
-            handleRelationSave,
             fieldForm,
             relationForm,
             entityFields,
@@ -398,3 +323,4 @@ export default defineComponent({
   &__native, &__prefix, &__suffix
     color: rgba(0,0,0,0.87)
 </style>
+

@@ -71,10 +71,11 @@
 
 <script>
 import { ref, computed } from 'vue'
-import { useDialogPluginComponent } from 'quasar'
+import { useDialogPluginComponent, useQuasar } from 'quasar'
+import { useSchemaStore } from '../stores/schema'
 
 export default {
-  name: 'EntityForm',  // Меняем имя компонента
+  name: 'EntityForm',
 
   emits: [
     ...useDialogPluginComponent.emits
@@ -82,6 +83,10 @@ export default {
 
   setup() {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
+    const schemaStore = useSchemaStore()
+    const $q = useQuasar()
+    const isEdit = ref(false)
+    const editingEntityName = ref(null)
 
     const form = ref({
       name: '',
@@ -91,16 +96,38 @@ export default {
       icon: ''
     })
 
-    const isEdit = ref(false)
-
     const isFormValid = computed(() => {
       return !!form.value.name
     })
 
+    const saveEntity = async (entityData) => {
+      try {
+        if (editingEntityName.value) {
+          // Если редактируем существующую сущность
+          await schemaStore.updateCollection(editingEntityName.value, entityData)
+        } else {
+          // Если добавляем новую сущность
+          await schemaStore.addCollection(entityData)
+        }
+
+        $q.notify({
+          type: 'positive',
+          message: `Сущность успешно ${editingEntityName.value ? 'обновлена' : 'добавлена'}`
+        })
+
+        onDialogOK(entityData) // Закрываем диалог
+      } catch (error) {
+        console.error('Error saving entity:', error)
+        $q.notify({
+          type: 'negative',
+          message: `Ошибка при ${editingEntityName.value ? 'обновлении' : 'добавлении'} сущности`
+        })
+      }
+    }
+
     const onOKClick = () => {
-      console.log('[EntityForm] OK clicked')
       if (isFormValid.value) {
-        onDialogOK(form.value)
+        saveEntity(form.value)
       }
     }
 
@@ -109,6 +136,7 @@ export default {
       if (entity) {
         console.log('[EntityForm] Setting form data for edit')
         form.value = { ...entity }
+        editingEntityName.value = entity.name
         isEdit.value = true
       } else {
         console.log('[EntityForm] Setting empty form for new entity')
@@ -117,8 +145,11 @@ export default {
           prompt: '', 
           promptSingle: '', 
           description: '', 
-          icon: '' 
+          icon: '',
+          fields: [],    // Добавляем пустые массивы для полей и связей
+          relations: {}  // для новой сущности
         }
+        editingEntityName.value = null
         isEdit.value = false
       }
       dialogRef.value.show()
@@ -131,7 +162,8 @@ export default {
       form,
       isEdit,
       isFormValid,
-      show
+      show,
+      saveEntity
     }
   }
 }
