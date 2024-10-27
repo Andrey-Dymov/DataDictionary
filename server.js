@@ -137,7 +137,7 @@ app.put('/api/dictionaries/:id', async (req, res) => {
       const oldPath = path.join(oldDictionary.filePath, oldDictionary.fileName)
       const newPath = path.join(dictionaryData.filePath, dictionaryData.fileName)
       
-      // Копируем содержимое в новый файл
+      // Копируем содержимое в новый ��йл
       const content = await fs.readFile(oldPath, 'utf8')
       await fs.writeFile(newPath, content)
     }
@@ -207,6 +207,154 @@ app.post('/api/dictionaries/:id/data', async (req, res) => {
     res.json({ success: true })
   } catch (error) {
     console.error(`[API] Error saving dictionary data ${id}:`, error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// API для работы с файловой системой
+app.get('/api/filesystem/directories', async (req, res) => {
+  console.log('[API] Getting directories list')
+  try {
+    // Получаем список предопределенных каталогов
+    const baseDir = path.join(__dirname)
+    const publicDir = path.join(__dirname, 'public')
+    
+    const directories = [
+      {
+        label: 'Schemas',
+        value: path.join(baseDir, 'schemas'),
+      },
+      {
+        label: 'Public Schemas',
+        value: path.join(publicDir, 'schemas'),
+      }
+    ]
+
+    // Проверяем существование каталогов
+    for (const dir of directories) {
+      try {
+        await fs.access(dir.value)
+      } catch {
+        // Если каталог не существует, создаем его
+        await fs.mkdir(dir.value, { recursive: true })
+      }
+    }
+
+    console.log('[API] Available directories:', directories)
+    res.json(directories)
+  } catch (error) {
+    console.error('[API] Error getting directories:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.get('/api/filesystem/files', async (req, res) => {
+  console.log('[API] Getting files list')
+  const dirPath = req.query.path
+  
+  try {
+    if (!dirPath) {
+      throw new Error('Path is required')
+    }
+
+    // Проверяем существование каталога
+    try {
+      await fs.access(dirPath)
+    } catch {
+      throw new Error(`Directory not found: ${dirPath}`)
+    }
+
+    console.log('[API] Reading directory:', dirPath)
+    const files = await fs.readdir(dirPath)
+    
+    // Получаем информацию о каждом файле
+    const fileInfos = await Promise.all(
+      files
+        .filter(file => file.endsWith('.json')) // Фильтруем только JSON файлы
+        .map(async file => {
+          const filePath = path.join(dirPath, file)
+          const stats = await fs.stat(filePath)
+          return {
+            name: file,
+            label: file,
+            value: file,
+            size: formatFileSize(stats.size),
+            modified: stats.mtime.toLocaleString()
+          }
+        })
+    )
+
+    console.log('[API] Files found:', fileInfos)
+    res.json(fileInfos)
+  } catch (error) {
+    console.error('[API] Error getting files:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Вспомогательная функция для форматирования размера файла
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Добавляем новые endpoints для работы с системными диалогами
+// Удаляем неиспользуемый код Electron
+// const { dialog } = require('electron').remote // Удаляем эту строку
+
+// Изменяем API endpoints для работы с файловой системой
+app.post('/api/filesystem/select-directory', async (req, res) => {
+  try {
+    // Возвращаем список доступных каталогов
+    const directories = [
+      {
+        label: 'Schemas',
+        value: path.join(__dirname, 'schemas'),
+      },
+      {
+        label: 'Public Schemas',
+        value: path.join(__dirname, 'public', 'schemas'),
+      }
+    ]
+
+    // Проверяем и создаем каталоги если их нет
+    for (const dir of directories) {
+      await fs.mkdir(dir.value, { recursive: true })
+    }
+
+    res.json(directories)
+  } catch (error) {
+    console.error('[API] Error getting directories:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.post('/api/filesystem/select-file', async (req, res) => {
+  const { directory } = req.body
+  
+  try {
+    const files = await fs.readdir(directory)
+    const jsonFiles = files.filter(file => file.endsWith('.json'))
+    
+    const fileInfos = await Promise.all(
+      jsonFiles.map(async file => {
+        const filePath = path.join(directory, file)
+        const stats = await fs.stat(filePath)
+        return {
+          name: file,
+          path: filePath,
+          size: formatFileSize(stats.size),
+          modified: stats.mtime.toLocaleString()
+        }
+      })
+    )
+    
+    res.json(fileInfos)
+  } catch (error) {
+    console.error('[API] Error getting files:', error)
     res.status(500).json({ error: error.message })
   }
 })

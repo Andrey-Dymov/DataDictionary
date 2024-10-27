@@ -6,15 +6,53 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-sm">
           <div class="col-12">
             <q-input 
               v-model="form.name" 
               label="Название словаря" 
               standout 
               dense
+              class="q-mb-xs"
               :rules="[val => !!val || 'Обязательное поле']"
             />
+          </div>
+
+          <div class="col-12">
+            <q-input
+              v-model="form.filePath"
+              label="Каталог"
+              standout
+              dense
+              class="q-mb-xs"
+              :rules="[val => !!val || 'Обязательное поле']"
+            />
+          </div>
+
+          <div class="col-12">
+            <q-input
+              v-model="form.fileName"
+              label="Файл словаря"
+              standout
+              dense
+              readonly
+              class="q-mb-xs"
+              :rules="[val => !!val || 'Обязательное поле']"
+              :disable="!form.filePath"
+            >
+              <template v-slot:append>
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="description"
+                  @click="showFileSelector"
+                  :disable="!form.filePath"
+                >
+                  <q-tooltip>{{ form.filePath ? 'Выбрать файл' : 'Сначала укажите каталог' }}</q-tooltip>
+                </q-btn>
+              </template>
+            </q-input>
           </div>
 
           <div class="col-12">
@@ -24,87 +62,58 @@
               type="textarea" 
               standout 
               dense
+              autogrow
+              class="q-mb-xs"
             />
-          </div>
-
-          <div class="col-12">
-            <q-input 
-              v-model="form.filePath" 
-              label="Путь к файлу" 
-              standout 
-              dense
-              :rules="[val => !!val || 'Обязательное поле']"
-              readonly
-            >
-              <template v-slot:append>
-                <q-btn 
-                  flat 
-                  round 
-                  dense 
-                  icon="folder" 
-                  @click="selectDirectory"
-                >
-                  <q-tooltip>Выбрать каталог</q-tooltip>
-                </q-btn>
-              </template>
-            </q-input>
-          </div>
-
-          <div class="col-12">
-            <q-input 
-              v-model="form.fileName" 
-              label="Имя файла" 
-              standout 
-              dense
-              :rules="[val => !!val || 'Обязательное поле']"
-              readonly
-            >
-              <template v-slot:append>
-                <q-btn 
-                  flat 
-                  round 
-                  dense 
-                  icon="description" 
-                  @click="selectFile"
-                  :disable="!form.filePath"
-                >
-                  <q-tooltip>{{ form.filePath ? 'Выбрать файл' : 'Сначала выберите каталог' }}</q-tooltip>
-                </q-btn>
-              </template>
-            </q-input>
           </div>
         </div>
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Отмена" v-close-popup />
-        <q-btn flat label="OK" @click="onOKClick" :disable="!isFormValid" />
+        <q-btn flat dense label="Отмена" v-close-popup />
+        <q-btn flat dense label="OK" @click="onOKClick" :disable="!isFormValid" />
       </q-card-actions>
-    </q-card>
 
-    <!-- Диалоги выбора -->
-    <DirectorySelectDialog ref="directoryDialog" @ok="onDirectorySelected" />
-    <FileSelectDialog 
-      ref="fileDialog" 
-      :path="form.filePath"
-      @ok="onFileSelected" 
-    />
+      <q-dialog v-model="fileDialogOpen">
+        <q-card style="min-width: 350px">
+          <q-card-section class="row items-center">
+            <div class="text-h6">Выберите файл</div>
+            <q-space />
+            <q-btn icon="close" flat round dense v-close-popup />
+          </q-card-section>
+
+          <q-card-section class="q-pa-none">
+            <q-list separator>
+              <q-item
+                v-for="file in availableFiles"
+                :key="file.name"
+                clickable
+                v-ripple
+                dense
+                @click="selectFileFromList(file)"
+              >
+                <q-item-section>
+                  <q-item-label>{{ file.name }}</q-item-label>
+                  <q-item-label caption>
+                    {{ file.size }} - Изменен: {{ file.modified }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+    </q-card>
   </q-dialog>
 </template>
 
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import DirectorySelectDialog from './DirectorySelectDialog.vue'
-import FileSelectDialog from './FileSelectDialog.vue'
+import { api } from '../boot/axios'
 
 export default {
   name: 'DictionaryForm',
-
-  components: {
-    DirectorySelectDialog,
-    FileSelectDialog
-  },
 
   emits: [
     ...useDialogPluginComponent.emits
@@ -113,8 +122,9 @@ export default {
   setup() {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     const $q = useQuasar()
-    const directoryDialog = ref(null)
-    const fileDialog = ref(null)
+    const fileInput = ref(null)
+    const fileDialogOpen = ref(false)  // Добавляем ref для диалога
+    const availableFiles = ref([])     // Добавляем ref для списка файлов
 
     const form = ref({
       name: '',
@@ -131,45 +141,40 @@ export default {
              !!form.value.fileName
     })
 
-    const selectDirectory = async () => {
-      try {
-        directoryDialog.value.show()
-      } catch (error) {
-        console.error('Error showing directory dialog:', error)
-        $q.notify({
-          type: 'negative',
-          message: 'Ошибка при открытии диалога выбора каталога'
-        })
-      }
-    }
-
-    const selectFile = async () => {
+    const showFileSelector = async () => {
       if (!form.value.filePath) {
         $q.notify({
           type: 'warning',
-          message: 'Сначала выберите каталог'
+          message: 'Сначала укажите каталог'
         })
         return
       }
 
       try {
-        fileDialog.value.show()
+        // Получаем список файлов из указанного каталога
+        const response = await api.post('/api/filesystem/select-file', {
+          directory: form.value.filePath
+        })
+        availableFiles.value = response.data
+        fileDialogOpen.value = true
       } catch (error) {
-        console.error('Error showing file dialog:', error)
+        console.error('Error loading files:', error)
         $q.notify({
           type: 'negative',
-          message: 'Ошибка при открытии диалога выбора файла'
+          message: 'Ошибка при загрузке списка файлов'
         })
       }
     }
 
-    const onDirectorySelected = (directory) => {
-      form.value.filePath = directory.value
-      form.value.fileName = '' // Сбрасываем имя файла при смене каталога
-    }
-
-    const onFileSelected = (file) => {
+    const selectFileFromList = (file) => {
       form.value.fileName = file.name
+      
+      // Если название словаря не задано, используем имя файла без расширения
+      if (!form.value.name) {
+        form.value.name = file.name.replace('.json', '')
+      }
+      
+      fileDialogOpen.value = false
     }
 
     const show = (dictionary = null) => {
@@ -202,12 +207,11 @@ export default {
       isEdit,
       isFormValid,
       show,
-      selectDirectory,
-      selectFile,
-      onDirectorySelected,
-      onFileSelected,
-      directoryDialog,
-      fileDialog
+      fileInput,
+      showFileSelector,
+      selectFileFromList,
+      fileDialogOpen,     // Добавляем в return
+      availableFiles      // Добавляем в return
     }
   }
 }
@@ -216,4 +220,11 @@ export default {
 <style lang="sass">
 .q-dialog-plugin
   max-width: 95vw
+
+.q-field
+  &.q-mb-xs
+    margin-bottom: 4px
+
+.q-card__section + .q-card__section
+  padding-top: 0
 </style>

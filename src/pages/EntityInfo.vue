@@ -17,8 +17,9 @@
                 <!-- Основная информация о сущности -->
                 <q-card flat bordered>
                     <q-card-section>
-                        <div class="row q-col-gutter-md">
-                            <div class="col-12 col-md-6">
+                        <div class="row wrap q-col-gutter-xs">
+                            <!-- Название - всегда первое и шире остальных -->
+                            <div class="entity-field-item" style="min-width: 250px">
                                 <q-field
                                     label="Название"
                                     stack-label
@@ -26,23 +27,15 @@
                                     borderless
                                 >
                                     <template v-slot:control>
-                                        <div class="self-center full-width no-outline text-primary">{{ entity.name }}</div>
-                                    </template>
-                                </q-field>
-
-                                <q-field
-                                    label="Описание"
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline">{{ entity.description || 'Нет описания' }}</div>
+                                        <div class="self-center full-width no-outline text-primary">
+                                            {{ entity.name }}
+                                        </div>
                                     </template>
                                 </q-field>
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            <!-- Метка -->
+                            <div class="entity-field-item" style="min-width: 200px">
                                 <q-field
                                     label="Метка"
                                     stack-label
@@ -50,21 +43,31 @@
                                     borderless
                                 >
                                     <template v-slot:control>
-                                        <div class="self-center full-width no-outline">{{ entity.prompt }}</div>
+                                        <div class="self-center full-width no-outline">
+                                            {{ entity.prompt || '-' }}
+                                        </div>
                                     </template>
                                 </q-field>
+                            </div>
 
+                            <!-- Метка ед.ч. -->
+                            <div class="entity-field-item" style="min-width: 200px">
                                 <q-field
-                                    label="Метка единственного числа"
+                                    label="Метка ед.ч."
                                     stack-label
                                     dense
                                     borderless
                                 >
                                     <template v-slot:control>
-                                        <div class="self-center full-width no-outline">{{ entity.promptSingle }}</div>
+                                        <div class="self-center full-width no-outline">
+                                            {{ entity.promptSingle || '-' }}
+                                        </div>
                                     </template>
                                 </q-field>
+                            </div>
 
+                            <!-- Иконка -->
+                            <div class="entity-field-item" style="min-width: 150px">
                                 <q-field
                                     label="Иконка"
                                     stack-label
@@ -74,7 +77,23 @@
                                     <template v-slot:control>
                                         <div class="self-center full-width no-outline">
                                             <q-icon :name="entity.icon" size="1.2em" class="q-mr-sm" />
-                                            {{ entity.icon }}
+                                            {{ entity.icon || '-' }}
+                                        </div>
+                                    </template>
+                                </q-field>
+                            </div>
+
+                            <!-- Описание - если есть -->
+                            <div v-if="entity.description" class="entity-field-item" style="min-width: 300px">
+                                <q-field
+                                    label="Описание"
+                                    stack-label
+                                    dense
+                                    borderless
+                                >
+                                    <template v-slot:control>
+                                        <div class="self-center full-width no-outline">
+                                            {{ entity.description }}
                                         </div>
                                     </template>
                                 </q-field>
@@ -159,6 +178,28 @@ export default defineComponent({
             console.log('[EntityInfo] Getting entity:', name)  // Обновляем логи
             return name ? schemaStore.getCollectionByName(name) : null
         })
+
+        // Вычисляем поля для отображения
+        const entityFields = computed(() => {
+            if (!entity.value) return []
+            
+            return [
+                { label: 'Название', value: entity.value.name, isPrimary: true },
+                { label: 'Метка', value: entity.value.prompt || '-' },
+                { label: 'Метка ед.ч.', value: entity.value.promptSingle || '-' },
+                { label: 'Иконка', value: entity.value.icon || '-' },
+                { label: 'Описание', value: entity.value.description || '-' }
+            ].filter(field => field.value !== '-') // Убираем пустые поля
+        })
+
+        // Определяем класс для колонок
+        const getColumnClass = (fields) => {
+            const count = fields.length
+            if (count <= 2) return 'col-12 col-sm-6'
+            if (count <= 3) return 'col-12 col-sm-4'
+            if (count <= 4) return 'col-12 col-sm-3'
+            return 'col-12 col-sm-2'
+        }
 
         // Добавляем методы обработки полей
         const handleDeleteField = async (fieldName) => {
@@ -306,7 +347,9 @@ export default defineComponent({
             handleFieldSave,
             handleRelationSave,
             fieldForm,
-            relationForm
+            relationForm,
+            entityFields,
+            getColumnClass
         }
     }
 })
