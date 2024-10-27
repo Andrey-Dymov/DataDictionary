@@ -32,6 +32,21 @@ export const useSchemaStore = defineStore('schema', {
         this.collections = data.collections
         this.isLoaded = true
         console.log('[Store/Action] Schema loaded:', data)
+
+        // После загрузки схемы восстанавливаем сохраненную сущность
+        const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
+        const savedCollection = savedSelections[dictionaryId]
+        
+        // Если есть сохраненная сущность и она существует в текущем словаре
+        if (savedCollection && this.collections.find(c => c.name === savedCollection)) {
+          console.log('[Store/Action] Restoring saved collection:', savedCollection)
+          this.selectedCollectionName = savedCollection
+        } else if (this.collections.length > 0) {
+          // Если нет сохраненной сущности, выбираем первую
+          console.log('[Store/Action] Selecting first collection:', this.collections[0].name)
+          this.selectedCollectionName = this.collections[0].name
+        }
+
       } catch (error) {
         console.error('[Store/Action] Error loading schema:', error)
         this.error = error.message
