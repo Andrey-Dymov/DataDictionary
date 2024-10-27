@@ -42,9 +42,19 @@ export const useSchemaStore = defineStore('schema', {
     },
 
     setSelectedCollection(name) {
-      console.log('[Store/Action] Setting selected collection:', name)
+      console.log('[SchemaStore] Setting selected collection:', name)
       this.selectedCollectionName = name
-      localStorage.setItem('selectedCollectionName', name)
+      
+      // Получаем текущий словарь
+      const dictionaryStore = useDictionaryStore()
+      const currentDictionaryId = dictionaryStore.currentDictionaryId
+      
+      if (currentDictionaryId) {
+        // Сохраняем выбранную сущность для конкретного словаря
+        const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
+        savedSelections[currentDictionaryId] = name
+        localStorage.setItem('selectedCollections', JSON.stringify(savedSelections))
+      }
     },
 
     async updateCollection(name, data) {

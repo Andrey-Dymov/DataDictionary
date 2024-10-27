@@ -15,6 +15,20 @@
         </div>
 
         <div class="row items-center">
+          <!-- Информация о текущем словаре -->
+          <div v-if="getCurrentDictionaryInfo" class="dictionary-info">
+            <div class="dictionary-title">
+              {{ getCurrentDictionaryInfo.name }}
+              <span v-if="getCurrentDictionaryInfo.fileName !== getCurrentDictionaryInfo.name" 
+                    class="text-grey-7">({{ getCurrentDictionaryInfo.fileName }})</span>
+              <span v-if="getCurrentDictionaryInfo.description && getCurrentDictionaryInfo.description !== getCurrentDictionaryInfo.name" 
+                    class="text-grey-7"> - {{ getCurrentDictionaryInfo.description }}</span>
+            </div>
+            <div class="dictionary-path text-grey-7">
+              {{ getCurrentDictionaryInfo.filePath }}
+            </div>
+          </div>
+
           <!-- Выбор словаря -->
           <q-select
             v-model="currentDictionary"
@@ -25,10 +39,10 @@
             outlined
             emit-value
             map-options
-            class="dictionary-select"
+            class="dictionary-select q-ml-md"
             @update:model-value="onDictionaryChange"
           >
-            <!-- Добавим обработку клика в опциях -->
+            <!-- Изменяем слот для опций в q-select -->
             <template v-slot:option="{ opt, selected, toggleOption }">
               <q-item
                 v-ripple
@@ -37,38 +51,27 @@
                 @click="toggleOption(opt)"
               >
                 <q-item-section>
-                  <div class="column">
-                    <div class="text-weight-medium">{{ opt.name }}</div>
-                    <div class="text-caption text-grey-7">{{ opt.fileName }}</div>
-                    <div class="text-caption text-grey-7 ellipsis">{{ opt.filePath }}</div>
+                  <div class="dictionary-option">
+                    <div class="dictionary-title">
+                      {{ opt.name }}
+                      <template v-if="opt.fileName !== opt.name || (opt.description && opt.description !== opt.name)">
+                        ({{ opt.fileName }}
+                        <template v-if="opt.description && opt.description !== opt.name">
+                          - {{ opt.description }}
+                        </template>)
+                      </template>
+                    </div>
+                    <div class="dictionary-path text-grey-7">
+                      {{ opt.filePath }}
+                    </div>
                   </div>
                 </q-item-section>
               </q-item>
             </template>
           </q-select>
 
-          <!-- Информация о текущем словаре -->
-          <q-btn
-            v-if="currentDictionary"
-            flat
-            dense
-            icon="info"
-            class="q-ml-sm"
-          >
-            <q-tooltip anchor="bottom middle" self="top middle" max-width="300px">
-              <div class="text-body2">
-                <div class="text-weight-medium">{{ getCurrentDictionaryInfo?.name }}</div>
-                <div class="text-caption">Файл: {{ getCurrentDictionaryInfo?.fileName }}</div>
-                <div class="text-caption">Путь: {{ getCurrentDictionaryInfo?.filePath }}</div>
-                <div v-if="getCurrentDictionaryInfo?.description" class="text-caption q-mt-sm">
-                  {{ getCurrentDictionaryInfo?.description }}
-                </div>
-              </div>
-            </q-tooltip>
-          </q-btn>
-
           <!-- Кнопки управления словарями -->
-          <q-btn-group flat class="q-ml-sm">
+          <q-btn-group flat class="q-ml-md">
             <q-btn
               flat
               dense
@@ -172,7 +175,11 @@ export default defineComponent({
         await schemaStore.loadSchema(id)
         
         if (schemaStore.collections?.length > 0) {
-          const savedCollection = localStorage.getItem('selectedCollectionName')
+          // Получаем сохраненные выборы для всех словарей
+          const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
+          // Получаем сохраненную сущность для текущего словаря
+          const savedCollection = savedSelections[id]
+          
           const collectionToSelect = savedCollection && 
             schemaStore.collections.find(c => c.name === savedCollection) 
               ? savedCollection 
@@ -311,7 +318,7 @@ export default defineComponent({
       if (!currentDict) return
 
       $q.dialog({
-        title: '��одтверждение',
+        title: 'одтверждение',
         message: `Вы уверены, что хотите удалить словарь "${currentDict.name}"?`,
         cancel: true,
         persistent: true
@@ -424,7 +431,7 @@ export default defineComponent({
       white-space: nowrap
 
 .dictionary-select
-  width: 200px  // Уменьшаем ширину
+  width: 200px
   .q-field__control
     height: 40px
   .q-field__native
@@ -433,11 +440,12 @@ export default defineComponent({
   &.q-field--labeled .q-field__native
     padding-top: 0
 
-// Добавляем стили для опций
 .q-menu
   .q-item
     min-height: unset
     padding: 8px 16px
+    cursor: pointer
+    transition: all 0.3s ease
     
     .column
       width: 100%
@@ -450,25 +458,47 @@ export default defineComponent({
       overflow: hidden
       text-overflow: ellipsis
       max-width: 300px
-
-// Добавляем стили для опций выпадающего списка
-.q-menu
-  .q-item
-    cursor: pointer
-    transition: all 0.3s ease
     
     &:hover
-      // Изменяем поведение при наведении для активного элемента
       &.q-item--active
         background: lighten($primary, 10%) !important
-      // Для неактивных элементов оставляем прежнее поведение
       &:not(.q-item--active)
         background-color: rgba($primary, 0.1)
 
-    // Стили для активного элемента
     &.q-item--active
       background: $primary
       color: white
       .text-grey-7
         color: rgba(255,255,255,0.7) !important
+
+.dictionary-info
+  min-width: 200px
+  max-width: 500px
+  line-height: 1.2
+
+  .dictionary-title
+    font-size: 0.9rem
+    font-weight: 500
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
+
+  .dictionary-path
+    font-size: 0.8rem
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
+
+.dictionary-select
+  width: 200px
+  
+  .q-field__control
+    height: 40px
+  
+  .q-field__native
+    padding-top: 0 !important
 </style>
+
+
+
+
