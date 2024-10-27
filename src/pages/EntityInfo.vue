@@ -129,15 +129,16 @@
             <h5 class="text-grey-7">Выберите сущность из списка слева</h5>
         </div>
 
+        <!-- Исправляем передачу пропсов в формы -->
         <FieldForm 
             ref="fieldForm"
-            :entity-name="entity.name"
+            :entity-name="entityName"
         />
         <RelationForm 
             ref="relationForm" 
-            :source-name="entity?.name"
-            :source-prompt="entity?.prompt"
-            :source-field="entity?.fields[0]?.name"
+            :source-name="entityName"
+            :source-prompt="entityPrompt"
+            :source-field="entityFields[0]?.name"
         />
     </q-page>
 </template>
@@ -178,8 +179,15 @@ export default defineComponent({
             return name ? schemaStore.getCollectionByName(name) : null
         })
 
+        // Добавляем вычисляемые свойства для безопасного доступа
+        const entityName = computed(() => entity.value?.name || '')
+        const entityPrompt = computed(() => entity.value?.prompt || '')
+        const entityFields = computed(() => entity.value?.fields || [])
+        const entityRelations = computed(() => entity.value?.relations || {})
+        const entityIcon = computed(() => entity.value?.icon || '')
+
         // Вычисляем поля для отображения
-        const entityFields = computed(() => {
+        const entityFieldsForDisplay = computed(() => {
             if (!entity.value) return []
             
             return [
@@ -265,6 +273,11 @@ export default defineComponent({
         return {
             schemaStore,
             entity,  // Переименовываем из collection
+            entityName,      // Добавляем в return
+            entityPrompt,    // Добавляем в return
+            entityFields,    // Добавляем в return
+            entityRelations, // Добавляем в return
+            entityIcon,      // Добавляем в return
             handleDeleteField,
             handleDeleteRelation,
             showAddFieldDialog,
@@ -272,9 +285,7 @@ export default defineComponent({
             showAddRelationDialog,
             showEditRelationDialog,
             fieldForm,
-            relationForm,
-            entityFields,
-            getColumnClass
+            relationForm
         }
     }
 })
@@ -323,4 +334,3 @@ export default defineComponent({
   &__native, &__prefix, &__suffix
     color: rgba(0,0,0,0.87)
 </style>
-

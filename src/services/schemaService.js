@@ -1,53 +1,182 @@
 import { api } from '../boot/axios'
 
+// Единая конфигурация типов данных
+const ENTITY_CONFIG = {
+  dictionaries: {
+    path: '/api/dictionaries/meta',
+    requiresParent: false,
+    identifyBy: 'id',
+    methods: {
+      list: { available: true },
+      get: { available: true },
+      create: { available: true },
+      update: { 
+        available: true,
+        path: '/api/dictionaries/{id}'  // Добавляем правильный путь для обновления
+      },
+      delete: { available: true }
+    }
+  },
+  dictionary: {
+    path: '/api/dictionaries',
+    requiresParent: false,
+    identifyBy: 'id',
+    methods: {
+      list: { available: false },
+      get: { available: true },
+      create: { available: false },
+      update: { 
+        available: true,
+        path: '/api/dictionaries/{id}/data' 
+      },
+      delete: { available: false }
+    }
+  },
+  entity: {
+    path: '/api/entities',
+    requiresParent: false,
+    identifyBy: 'name',
+    methods: {
+      list: { available: true },
+      get: { available: true },
+      create: { available: true },
+      update: { available: true },
+      delete: { available: true }
+    }
+  },
+  field: {
+    path: '/api/fields',
+    requiresParent: true,
+    identifyBy: 'name',
+    methods: {
+      list: { available: true },
+      get: { available: true },
+      create: { available: true },
+      update: { path: '/api/fields/{parentName}/{id}' },
+      delete: { path: '/api/fields/{parentName}/{id}' }
+    }
+  },
+  relation: {
+    path: '/api/relations',
+    requiresParent: true,
+    identifyBy: 'name',
+    methods: {
+      list: { available: true },
+      get: { available: true },
+      create: { available: true },
+      update: { path: '/api/relations/{parentName}/{id}' },
+      delete: { path: '/api/relations/{parentName}/{id}' }
+    }
+  },
+  files: {
+    path: '/api/filesystem/select-file',
+    requiresParent: true,
+    identifyBy: 'name',
+    methods: {
+      list: { available: true },
+      get: { available: false },
+      create: { available: false },
+      update: { available: false },
+      delete: { available: false }
+    }
+  }
+}
+
 export default {
-  async loadSchema(name) {
-    console.log('[Service] Loading schema')
-    console.log('[Service] Input name:', name)
-    console.log('[Service] Input type:', typeof name)
-    console.log('[Service] Input value:', JSON.stringify(name))
+  async getList(type, parentName = null) {
+    const config = ENTITY_CONFIG[type]
+    if (!config) throw new Error(`Unknown entity type: ${type}`)
+    if (!config.methods.list.available) throw new Error(`List not available for ${type}`)
+
+    const url = config.requiresParent && parentName
+      ? `${config.path}/${parentName}`
+      : config.path
 
     try {
-      // Изменяем URL для работы с новым API
-      const url = `/api/dictionaries/${name}`  // Добавляем /api/
-
-      console.log('[Service] Request URL:', url)
-      console.log('[Service] Sending request')
-      
       const response = await api.get(url)
-      
-      console.log('[Service] Response received')
-      console.log('[Service] Status:', response.status)
-      console.log('[Service] Headers:', response.headers)
-      console.log('[Service] Data:', response.data)
-
       return response.data
     } catch (error) {
-      console.log('[Service] Error loading schema:', error)
-      console.log('[Service] Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      })
-      throw new Error(`Ошибка HTTP: ${error.response?.status || error.message}`)
+      console.error(`Error getting ${type} list:`, error)
+      throw error
     }
   },
 
-  async saveSchema(name, data) {
-    console.log('[Service] Saving schema')
-    console.log('[Service] Name:', name)
-    console.log('[Service] Data:', data)
+  async getOne(type, identifier) {
+    const config = ENTITY_CONFIG[type]
+    if (!config) throw new Error(`Unknown entity type: ${type}`)
+    if (!config.methods.get.available) throw new Error(`Get not available for ${type}`)
+
+    const url = `${config.path}/${identifier}`
 
     try {
-      // Изменяем URL для работы с новым API
-      const url = `/api/dictionaries/${name}/data`  // Добавляем /api/
-      const response = await api.post(url, { data })
-      
-      console.log('[Service] Schema saved successfully')
+      const response = await api.get(url)
       return response.data
     } catch (error) {
-      console.error('[Service] Error saving schema:', error)
-      throw new Error(`Ошибка сохранения: ${error.message}`)
+      console.error(`Error getting ${type}:`, error)
+      throw error
+    }
+  },
+
+  async create(type, data, parentName = null) {
+    const config = ENTITY_CONFIG[type]
+    if (!config) throw new Error(`Unknown entity type: ${type}`)
+    if (!config.methods.create.available) throw new Error(`Create not available for ${type}`)
+    if (config.requiresParent && !parentName) throw new Error(`Parent name is required for ${type}`)
+
+    const url = config.requiresParent
+      ? `${config.path}/${parentName}`
+      : config.path
+
+    try {
+      const response = await api.post(url, data)
+      return response.data
+    } catch (error) {
+      console.error(`Error creating ${type}:`, error)
+      throw error
+    }
+  },
+
+  async update(type, identifier, data, parentName = null) {
+    const config = ENTITY_CONFIG[type]
+    if (!config) throw new Error(`Unknown entity type: ${type}`)
+    if (!config.methods.update.available) throw new Error(`Update not available for ${type}`)
+
+    const methodConfig = config.methods.update
+    let url = methodConfig.path || `${config.path}/${identifier}`
+    
+    // Заменяем параметры в URL
+    url = url
+      .replace('{id}', identifier)
+      .replace('{parentName}', parentName || '')
+
+    try {
+      const response = await api.put(url, data)
+      return response.data
+    } catch (error) {
+      console.error(`Error updating ${type}:`, error)
+      throw error
+    }
+  },
+
+  async delete(type, identifier, parentName = null) {
+    const config = ENTITY_CONFIG[type]
+    if (!config) throw new Error(`Unknown entity type: ${type}`)
+    if (!config.methods.delete.available) throw new Error(`Delete not available for ${type}`)
+
+    const methodConfig = config.methods.delete
+    let url = methodConfig.path || `${config.path}/${identifier}`
+    
+    // Заменяем параметры в URL
+    url = url
+      .replace('{id}', identifier)
+      .replace('{parentName}', parentName || '')
+
+    try {
+      const response = await api.delete(url)
+      return response.data
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error)
+      throw error
     }
   }
 }

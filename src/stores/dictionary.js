@@ -1,30 +1,26 @@
 import { defineStore } from 'pinia'
-import { api } from '../boot/axios'
+import schemaService from '../services/schemaService'
 
 export const useDictionaryStore = defineStore('dictionary', {
   state: () => ({
-    dictionaries: [],        // список всех словарей из метаинформации
-    currentDictionary: null, // текущий выбранный словарь (полная информация)
-    currentDictionaryId: '', // id текущего словаря
+    dictionaries: [],
+    currentDictionary: null,
+    currentDictionaryId: '',
     isLoading: false,
     error: null
   }),
 
   getters: {
-    // Получение списка словарей для выпадающего списка
     dictionaryOptions: (state) => state.dictionaries.map(dict => ({
       label: `${dict.name} (${dict.fileName} - ${dict.filePath})`,
       value: dict.id,
       ...dict
     })),
-
-    // Получение текущего словаря
+    
     getCurrentDictionary: (state) => state.currentDictionary,
     
-    // Проверка загрузки
     getIsLoading: (state) => state.isLoading,
 
-    // Получение информации о текущем словаре
     getCurrentDictionaryInfo: (state) => {
       const dict = state.dictionaries.find(d => d.id === state.currentDictionaryId)
       return dict ? {
@@ -38,21 +34,18 @@ export const useDictionaryStore = defineStore('dictionary', {
   },
 
   actions: {
-    // Загрузка метаинформации о словарях
     async loadDictionariesMeta() {
       this.isLoading = true
       try {
         console.log('[Dictionary Store] Loading dictionaries metadata...')
-        const response = await api.get('/api/dictionaries/meta')
-        console.log('[Dictionary Store] Received metadata:', response.data)
-        this.dictionaries = response.data.dictionaries
+        const data = await schemaService.getList('dictionaries')
+        this.dictionaries = data.dictionaries
         
         if (!this.dictionaries?.length) {
           console.warn('[Dictionary Store] No dictionaries found')
           return
         }
         
-        // Восстанавливаем последний выбранный словарь
         const savedId = localStorage.getItem('currentDictionaryId')
         console.log('[Dictionary Store] Saved dictionary ID:', savedId)
         
@@ -72,7 +65,6 @@ export const useDictionaryStore = defineStore('dictionary', {
       }
     },
 
-    // Установка текущего словаря
     async setCurrentDictionary(id) {
       this.isLoading = true
       try {
@@ -80,9 +72,8 @@ export const useDictionaryStore = defineStore('dictionary', {
         localStorage.setItem('currentDictionaryId', id)
         this.currentDictionaryId = id
 
-        const response = await api.get(`/api/dictionaries/${id}`)
-        console.log('[Dictionary Store] Loaded dictionary data:', response.data)
-        this.currentDictionary = response.data
+        const data = await schemaService.getOne('dictionary', id)
+        this.currentDictionary = data
       } catch (error) {
         console.error('[Dictionary Store] Error setting current dictionary:', error)
         this.error = error.message
@@ -91,15 +82,14 @@ export const useDictionaryStore = defineStore('dictionary', {
       }
     },
 
-    // Добавление нового словаря
     async addDictionary(dictionaryData) {
       this.isLoading = true
       try {
-        const response = await api.post('/api/dictionaries', dictionaryData)
-        this.dictionaries.push(response.data)
-        return response.data
+        const newDictionary = await schemaService.create('dictionaries', dictionaryData)
+        this.dictionaries.push(newDictionary)
+        return newDictionary
       } catch (error) {
-        console.error('Error adding dictionary:', error)
+        console.error('[Dictionary Store] Error adding dictionary:', error)
         this.error = error.message
         throw error
       } finally {
@@ -107,21 +97,20 @@ export const useDictionaryStore = defineStore('dictionary', {
       }
     },
 
-    // Обновление словаря
     async updateDictionary(id, dictionaryData) {
       this.isLoading = true
       try {
-        const response = await api.put(`/api/dictionaries/${id}`, dictionaryData)
+        const updatedDictionary = await schemaService.update('dictionaries', id, dictionaryData)
         const index = this.dictionaries.findIndex(d => d.id === id)
         if (index !== -1) {
-          this.dictionaries[index] = response.data
+          this.dictionaries[index] = updatedDictionary
         }
         if (id === this.currentDictionaryId) {
           await this.setCurrentDictionary(id)
         }
-        return response.data
+        return updatedDictionary
       } catch (error) {
-        console.error('Error updating dictionary:', error)
+        console.error('[Dictionary Store] Error updating dictionary:', error)
         this.error = error.message
         throw error
       } finally {
@@ -129,19 +118,17 @@ export const useDictionaryStore = defineStore('dictionary', {
       }
     },
 
-    // Удаление словаря
     async deleteDictionary(id) {
       this.isLoading = true
       try {
-        await api.delete(`/api/dictionaries/${id}`)
+        await schemaService.delete('dictionaries', id)
         this.dictionaries = this.dictionaries.filter(d => d.id !== id)
         
-        // Если удалили текущий словарь, выбираем первый доступный
         if (id === this.currentDictionaryId && this.dictionaries.length > 0) {
           await this.setCurrentDictionary(this.dictionaries[0].id)
         }
       } catch (error) {
-        console.error('Error deleting dictionary:', error)
+        console.error('[Dictionary Store] Error deleting dictionary:', error)
         this.error = error.message
         throw error
       } finally {
@@ -149,16 +136,15 @@ export const useDictionaryStore = defineStore('dictionary', {
       }
     },
 
-    // Сохранение изменений в словаре
     async saveDictionary(id, data) {
       this.isLoading = true
       try {
-        await api.post(`/api/dictionaries/${id}/data`, { data })
+        await schemaService.update('dictionary', id, data)
         if (id === this.currentDictionaryId) {
           this.currentDictionary = data
         }
       } catch (error) {
-        console.error('Error saving dictionary:', error)
+        console.error('[Dictionary Store] Error saving dictionary:', error)
         this.error = error.message
         throw error
       } finally {

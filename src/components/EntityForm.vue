@@ -72,7 +72,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { useSchemaStore } from '../stores/schema'
+import schemaService from '../services/schemaService'
 
 export default {
   name: 'EntityForm',
@@ -83,7 +83,6 @@ export default {
 
   setup() {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
-    const schemaStore = useSchemaStore()
     const $q = useQuasar()
     const isEdit = ref(false)
     const editingEntityName = ref(null)
@@ -93,7 +92,9 @@ export default {
       prompt: '',
       promptSingle: '',
       description: '',
-      icon: ''
+      icon: '',
+      fields: [],
+      relations: {}
     })
 
     const isFormValid = computed(() => {
@@ -103,19 +104,22 @@ export default {
     const saveEntity = async (entityData) => {
       try {
         if (editingEntityName.value) {
-          // Если редактируем существующую сущность
-          await schemaStore.updateCollection(editingEntityName.value, entityData)
+          // Обновляем существующую сущность через единый интерфейс
+          await schemaService.update('entity', editingEntityName.value, entityData)
+          $q.notify({
+            type: 'positive',
+            message: 'Сущность успешно обновлена'
+          })
         } else {
-          // Если добавляем новую сущность
-          await schemaStore.addCollection(entityData)
+          // Создаем новую сущность через единый интерфейс
+          await schemaService.create('entity', entityData)
+          $q.notify({
+            type: 'positive',
+            message: 'Сущность успешно добавлена'
+          })
         }
 
-        $q.notify({
-          type: 'positive',
-          message: `Сущность успешно ${editingEntityName.value ? 'обновлена' : 'добавлена'}`
-        })
-
-        onDialogOK(entityData) // Закрываем диалог
+        onDialogOK(entityData)
       } catch (error) {
         console.error('Error saving entity:', error)
         $q.notify({
@@ -146,8 +150,8 @@ export default {
           promptSingle: '', 
           description: '', 
           icon: '',
-          fields: [],    // Добавляем пустые массивы для полей и связей
-          relations: {}  // для новой сущности
+          fields: [],
+          relations: {}
         }
         editingEntityName.value = null
         isEdit.value = false

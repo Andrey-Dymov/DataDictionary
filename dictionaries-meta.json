@@ -2,11 +2,11 @@
   "dictionaries": [
     {
       "id": "dict_001",
-      "name": "Проекты",
+      "name": "Проекты 55",
       "fileName": "original.json",
       "filePath": "/Users/smoke/Documents/Development/DataDictionary/schemas",
       "description": "Проекты"
-    }, 
+    },
     {
       "id": "dict_002",
       "name": "Решения СД",

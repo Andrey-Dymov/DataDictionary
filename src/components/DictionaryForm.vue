@@ -110,7 +110,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { api } from '../boot/axios'
+import schemaService from '../services/schemaService'
 
 export default {
   name: 'DictionaryForm',
@@ -122,9 +122,8 @@ export default {
   setup() {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     const $q = useQuasar()
-    const fileInput = ref(null)
-    const fileDialogOpen = ref(false)  // Добавляем ref для диалога
-    const availableFiles = ref([])     // Добавляем ref для списка файлов
+    const fileDialogOpen = ref(false)
+    const availableFiles = ref([])
 
     const form = ref({
       name: '',
@@ -151,11 +150,9 @@ export default {
       }
 
       try {
-        // Получаем список файлов из указанного каталога
-        const response = await api.post('/api/filesystem/select-file', {
-          directory: form.value.filePath
-        })
-        availableFiles.value = response.data
+        // Используем новый сервис для получения списка файлов
+        const files = await schemaService.getList('files', form.value.filePath)
+        availableFiles.value = files
         fileDialogOpen.value = true
       } catch (error) {
         console.error('Error loading files:', error)
@@ -169,7 +166,6 @@ export default {
     const selectFileFromList = (file) => {
       form.value.fileName = file.name
       
-      // Если название словаря не задано, используем имя файла без расширения
       if (!form.value.name) {
         form.value.name = file.name.replace('.json', '')
       }
@@ -207,11 +203,10 @@ export default {
       isEdit,
       isFormValid,
       show,
-      fileInput,
       showFileSelector,
       selectFileFromList,
-      fileDialogOpen,     // Добавляем в return
-      availableFiles      // Добавляем в return
+      fileDialogOpen,
+      availableFiles
     }
   }
 }

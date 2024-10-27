@@ -98,7 +98,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { useSchemaStore } from '../stores/schema'
+import schemaService from '../services/schemaService'
 import { 
   dataTypeOptions, 
   sectionOptions, 
@@ -110,7 +110,7 @@ export default {
   name: 'FieldForm',
 
   props: {
-    entityName: {  // Добавляем проп с именем сущности
+    entityName: {
       type: String,
       required: true
     }
@@ -122,7 +122,6 @@ export default {
 
   setup(props) {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
-    const schemaStore = useSchemaStore()
     const $q = useQuasar()
     const isEdit = ref(false)
     const editingFieldName = ref(null)
@@ -156,6 +155,7 @@ export default {
           prompt: field.prompt,
           required: field.req || false
         }
+        editingFieldName.value = field.name
         isEdit.value = true
       } else {
         form.value = {
@@ -167,6 +167,7 @@ export default {
           prompt: '',
           required: false
         }
+        editingFieldName.value = null
         isEdit.value = false
       }
       dialogRef.value.show()
@@ -180,32 +181,23 @@ export default {
 
     const saveField = async (fieldData) => {
       try {
-        const entity = schemaStore.getCollectionByName(props.entityName)
-        const updatedFields = [...entity.fields]
-
         if (editingFieldName.value) {
-          // Если редактируем существующее поле
-          const index = updatedFields.findIndex(f => f.name === editingFieldName.value)
-          if (index !== -1) {
-            updatedFields[index] = fieldData
-          }
+          // Обновляем существующее поле через единый интерфейс
+          await schemaService.update('field', editingFieldName.value, fieldData, props.entityName)
+          $q.notify({
+            type: 'positive',
+            message: 'Поле успешно обновлено'
+          })
         } else {
-          // Если добавляем новое поле
-          updatedFields.push(fieldData)
+          // Создаем новое поле через единый интерфейс
+          await schemaService.create('field', fieldData, props.entityName)
+          $q.notify({
+            type: 'positive',
+            message: 'Поле успешно добавлено'
+          })
         }
 
-        // Обновляем сущность с новыми полями
-        await schemaStore.updateCollection(props.entityName, {
-          ...entity,
-          fields: updatedFields
-        })
-
-        $q.notify({
-          type: 'positive',
-          message: `Поле успешно ${editingFieldName.value ? 'обновлено' : 'добавлено'}`
-        })
-
-        onDialogOK(fieldData) // Закрываем диалог
+        onDialogOK(fieldData)
       } catch (error) {
         console.error('Error saving field:', error)
         $q.notify({

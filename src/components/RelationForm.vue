@@ -174,11 +174,10 @@
   
   <script>
   import { ref, computed, watch } from 'vue'
-  import { useDialogPluginComponent } from 'quasar'
+  import { useDialogPluginComponent, useQuasar } from 'quasar'
+  import schemaService from '../services/schemaService'
   import { useSchemaStore } from '../stores/schema'
-  import { useDictionaryStore } from '../stores/dictionary' // Добавляем store словарей
   import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
-  import { useQuasar } from 'quasar'
   
   export default {
     name: 'RelationDialog',
@@ -204,20 +203,12 @@
   
     setup (props) {
       const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
-      const schemaStore = useSchemaStore()
-      const dictionaryStore = useDictionaryStore() // Добавляем store словарей
-      const isEdit = ref(false)
-      const foreignKeyOptions = ref([])
       const $q = useQuasar()
+      const schemaStore = useSchemaStore()
+      const isEdit = ref(false)
       const editingRelationName = ref(null)
-  
-      // Создаем реактивную переменную для sourceName
-      const sourceName = ref(props.sourceName)
-  
-      // Следим за изменениями пропа sourceName
-      watch(() => props.sourceName, (newSourceName) => {
-        sourceName.value = newSourceName
-      })
+      const foreignKeyOptions = ref([])
+      const sourceName = ref('') // Добавляем объявление sourceName
   
       const form = ref({
         name: '',
@@ -227,11 +218,11 @@
         restriction: 'restrict'
       })
   
-      // Обновляем получение списка коллекций с учетом текущего словаря
+      // Теперь collectionOptions использует schemaStore
       const collectionOptions = computed(() => {
         const collections = schemaStore.collections || []
         return collections
-          .filter(collection => collection.name !== props.sourceName) // Исключаем текущую сущность
+          .filter(collection => collection.name !== props.sourceName)
           .map(collection => ({
             label: `${collection.name} - ${collection.prompt}`,
             value: collection.name
@@ -265,7 +256,6 @@
           const targetCollection = collections.find(c => c.name === form.value.target)
           
           if (form.value.type === 'hasMany') {
-            // Для "один ко многим" выбираем поля из целевой сущности с оончанием на Id
             foreignKeyOptions.value = targetCollection.fields
               .filter(field => field.name.toLowerCase().endsWith('id'))
               .map(field => ({
@@ -273,7 +263,6 @@
                 value: field.name
               }))
           } else if (form.value.type === 'belongsTo') {
-            // Для "многие к одному" выбираем поля из исходной сущности с окончанием на Id
             foreignKeyOptions.value = sourceCollection.fields
               .filter(field => field.name.toLowerCase().endsWith('id'))
               .map(field => ({
@@ -281,7 +270,6 @@
                 value: field.name
               }))
           } else if (form.value.type === 'belongsToMany') {
-            // Для "многие ко многим" выбираем поля из исходной сущности с окончанием на Ids
             foreignKeyOptions.value = sourceCollection.fields
               .filter(field => field.name.toLowerCase().endsWith('ids'))
               .map(field => ({
@@ -290,7 +278,6 @@
               }))
           }
           
-          // Автоматически заполняем название связи
           form.value.name = targetCollection.name
         } else {
           foreignKeyOptions.value = []
@@ -323,33 +310,23 @@
   
       const saveRelation = async (relationData) => {
         try {
-          const entity = schemaStore.getCollectionByName(props.sourceName)
-          const updatedRelations = { ...entity.relations }
-
           if (editingRelationName.value) {
-            // Если редактируем существующую связь
-            delete updatedRelations[editingRelationName.value]
+            // Обновляем существующую связь через единый интерфейс
+            await schemaService.update('relation', editingRelationName.value, relationData, props.sourceName)
+            $q.notify({
+              type: 'positive',
+              message: 'Связь успешно обновлена'
+            })
+          } else {
+            // Создаем новую связь через единый интерфейс
+            await schemaService.create('relation', relationData, props.sourceName)
+            $q.notify({
+              type: 'positive',
+              message: 'Связь успешно добавлена'
+            })
           }
 
-          updatedRelations[relationData.name] = {
-            type: relationData.type,
-            target: relationData.target,
-            foreignKey: relationData.foreignKey,
-            restriction: relationData.restriction
-          }
-
-          // Обновляем сущность с новыми связями
-          await schemaStore.updateCollection(props.sourceName, {
-            ...entity,
-            relations: updatedRelations
-          })
-
-          $q.notify({
-            type: 'positive',
-            message: `Связь успешно ${editingRelationName.value ? 'обновлена' : 'добавлена'}`
-          })
-
-          onDialogOK(relationData) // Закрываем диалог
+          onDialogOK(relationData)
         } catch (error) {
           console.error('Error saving relation:', error)
           $q.notify({
@@ -385,7 +362,7 @@
           editingRelationName.value = null
           isEdit.value = false
         }
-        sourceName.value = props.sourceName
+        sourceName.value = props.sourceName // Устанавливаем значение sourceName
         dialogRef.value.show()
       }
   
@@ -504,6 +481,22 @@
         return name
       })
   
+      const loadCollectionOptions = async () => {
+        try {
+          // Получаем список всех сущностей через единый интерфейс
+          const entities = await schemaService.getList('entity')
+          return entities
+            .filter(entity => entity.name !== props.sourceName)
+            .map(entity => ({
+              label: `${entity.name} - ${entity.prompt}`,
+              value: entity.name
+            }))
+        } catch (error) {
+          console.error('Error loading collections:', error)
+          return []
+        }
+      }
+  
       return {
         dialogRef,
         onDialogHide,
@@ -531,7 +524,8 @@
         getTargetField,
         updateForeignKey,
         suggestedName,
-        saveRelation
+        saveRelation,
+        loadCollectionOptions
       }
     }
   }
@@ -652,5 +646,9 @@
     }
   }
   </style>
+
+
+
+
 
 
