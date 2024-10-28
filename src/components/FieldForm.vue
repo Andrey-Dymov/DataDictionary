@@ -18,12 +18,78 @@
 
         <div class="row q-col-gutter-md q-mb-sm">
           <div class="col-6">
-            <q-select v-model="form.dataType" :options="dataTypeOptions" label="Тип данных" standout dense emit-value
-              map-options />
+            <q-select 
+              v-model="form.dataType" 
+              :options="dataTypeOptions" 
+              label="Тип данных" 
+              standout 
+              dense 
+              emit-value
+              map-options
+            >
+              <template v-slot:option="{ opt, selected }">
+                <q-item v-bind="opt.attrs">
+                  <q-item-section avatar style="width: 32px; min-width: 32px">
+                    <q-icon :name="getFieldIcon(opt.value)" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected>
+                <div class="row items-center no-wrap">
+                  <q-icon 
+                    :name="getFieldIcon(form.dataType)" 
+                    color="primary"
+                    size="24px"
+                    class="q-mr-sm"
+                    style="width: 24px; min-width: 24px"
+                  />
+                  <div class="ellipsis">
+                    {{ dataTypeOptions.find(opt => opt.value === form.dataType)?.label }}
+                  </div>
+                </div>
+              </template>
+            </q-select>
           </div>
           <div class="col-6">
-            <q-select v-model="form.listType" :options="listTypeOptions" label="Тип в списке" standout dense emit-value
-              map-options />
+            <q-select 
+              v-model="form.listType" 
+              :options="listTypeOptions" 
+              label="Тип в списке" 
+              standout 
+              dense 
+              emit-value
+              map-options
+            >
+              <template v-slot:option="{ opt, selected }">
+                <q-item v-bind="opt.attrs">
+                  <q-item-section avatar style="width: 32px; min-width: 32px">
+                    <q-icon :name="opt.icon" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected>
+                <div class="row items-center no-wrap">
+                  <q-icon 
+                    :name="listTypeOptions.find(opt => opt.value === form.listType)?.icon" 
+                    color="primary"
+                    size="24px"
+                    class="q-mr-sm"
+                    style="width: 24px; min-width: 24px"
+                  />
+                  <div class="ellipsis">
+                    {{ listTypeOptions.find(opt => opt.value === form.listType)?.label }}
+                  </div>
+                </div>
+              </template>
+            </q-select>
           </div>
 
         </div>
@@ -39,8 +105,41 @@
             <q-input v-model="form.prompt" label="Метка" standout dense />
           </div>
           <div class="col-6">
-            <q-select v-model="form.inputType" :options="inputTypeOptions" label="Тип ввода в форме" standout dense
-              emit-value map-options />
+            <q-select 
+              v-model="form.inputType" 
+              :options="inputTypeOptions" 
+              label="Тип ввода в форме" 
+              standout 
+              dense
+              emit-value
+              map-options
+            >
+              <template v-slot:option="{ opt, selected }">
+                <q-item v-bind="opt.attrs">
+                  <q-item-section avatar style="width: 32px; min-width: 32px">
+                    <q-icon :name="getInputIcon(opt.value)" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ opt.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected>
+                <div class="row items-center no-wrap">
+                  <q-icon 
+                    :name="getInputIcon(form.inputType)" 
+                    color="primary"
+                    size="24px"
+                    class="q-mr-sm"
+                    style="width: 24px; min-width: 24px"
+                  />
+                  <div class="ellipsis">
+                    {{ inputTypeOptions.find(opt => opt.value === form.inputType)?.label }}
+                  </div>
+                </div>
+              </template>
+            </q-select>
           </div>
 
         </div>
@@ -62,7 +161,9 @@ import {
   dataTypeOptions,
   sectionOptions,
   listTypeOptions,
-  inputTypeOptions
+  inputTypeOptions,
+  getFieldIcon,
+  getInputIcon
 } from '../dictionaries/fieldTypes'
 import { useSchemaStore } from '../stores/schema'
 
@@ -201,7 +302,9 @@ export default {
       inputTypeOptions,
       isFormValid,
       show,
-      saveField
+      saveField,
+      getFieldIcon,
+      getInputIcon
     }
   }
 }
@@ -210,4 +313,32 @@ export default {
 <style lang="sass">
 .q-dialog-plugin
   max-width: 95vw
+
+.q-select
+  .q-item
+    min-height: 40px
+    padding: 8px 16px
+
+  .q-item__section--avatar
+    width: 32px !important
+    min-width: 32px !important
+    padding-right: 12px !important
+
+  .q-item__section--main
+    flex: 1 !important
+    min-width: 0 !important
+    padding-left: 0 !important
+
+  .q-item__label
+    font-size: 14px
+    line-height: 1.2
+    white-space: normal
+    word-break: break-word
+
+.ellipsis
+  text-overflow: ellipsis
+  white-space: nowrap
+  overflow: hidden
+  flex: 1
+  min-width: 0
 </style>

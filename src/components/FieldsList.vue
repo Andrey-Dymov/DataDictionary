@@ -39,7 +39,7 @@
 
                                 <!-- Тип в списке -->
                                 <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                    <q-icon name="list" size="16px" class="q-mr-xs" />
+                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
                                     {{ field.list }}
                                 </q-badge>
 
@@ -68,7 +68,7 @@
 <script>
 import { defineComponent } from 'vue'
 import { useQuasar } from 'quasar'
-import { getFieldIcon, getInputIcon, getFieldTypeLabel, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
+import { getFieldIcon, getInputIcon, getFieldTypeLabel, getListTypeIcon, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
 
 export default defineComponent({
     name: 'FieldsList',
@@ -122,6 +122,7 @@ export default defineComponent({
             getFieldIcon,
             getInputIcon,
             getFieldTypeLabel,
+            getListTypeIcon,
             isValidDataType,
             isValidListType,
             isValidInputType,

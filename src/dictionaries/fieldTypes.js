@@ -20,20 +20,20 @@ export const sectionOptions = [
 ]
 
 export const listTypeOptions = [
-  { label: 'title - Заголовок', value: 'title' },
-  { label: 'subtitle - Подзаголовок', value: 'subtitle' },
-  { label: 'label - Метка', value: 'label' },
-  { label: 'highlite - Подсветка', value: 'highlite' },
-  { label: 'badge - Бэдж', value: 'badge' },
-  { label: 'toggle - Переключатель', value: 'toggle' },
-  { label: 'checkbox - Флажок', value: 'checkbox' },
-  { label: 'value - Значение', value: 'value' },
-  { label: 'order - Порядок', value: 'order' },
-  { label: 'count - Счетчик', value: 'count' },
-  { label: 'date - Дата', value: 'date' },
-  { label: 'content - Содержание', value: 'content' },
-  { label: 'code - Код', value: 'code' },
-  { label: 'inline - В строку', value: 'inline' }
+  { label: 'title - Заголовок', value: 'title', icon: 'title' },
+  { label: 'subtitle - Подзаголовок', value: 'subtitle', icon: 'subtitles' },
+  { label: 'label - Метка', value: 'label', icon: 'label' },
+  { label: 'highlite - Подсветка', value: 'highlite', icon: 'highlight' },
+  { label: 'badge - Бэдж', value: 'badge', icon: 'local_offer' },
+  { label: 'toggle - Переключатель', value: 'toggle', icon: 'toggle_on' },
+  { label: 'checkbox - Флажок', value: 'checkbox', icon: 'check_box' },
+  { label: 'value - Значение', value: 'value', icon: 'tag' },
+  { label: 'order - Порядок', value: 'order', icon: 'sort' },
+  { label: 'count - Счетчик', value: 'count', icon: 'filter_9_plus' },
+  { label: 'date - Дата', value: 'date', icon: 'event' },
+  { label: 'content - Содержание', value: 'content', icon: 'article' },
+  { label: 'code - Код', value: 'code', icon: 'code' },
+  { label: 'inline - В строку', value: 'inline', icon: 'short_text' }
 ]
 
 export const inputTypeOptions = [
@@ -57,18 +57,21 @@ export const getFieldIcon = (type) => {
   switch (type) {
     case 'string': return 'text_fields'
     case 'number': return 'numbers'
-    case 'float': return 'trending_up'
-    case 'date': return 'calendar_today'
-    case 'time': return 'schedule'
+    case 'float': return 'money'
+    case 'date': return 'event'
+    case 'time': return 'access_time'
     case 'checkbox': return 'check_box'
     case 'object': return 'code'
     case 'array': return 'view_list'
     case 'email': return 'email'
     case 'reference': return 'link'
-    case 'references': return 'link_off'
+    case 'references': return 'share'
     case 'numbers': return 'filter_9_plus'
     case 'textarea': return 'subject'
     case 'bool': return 'toggle_on'
+    case '': return 'radio_button_unchecked'
+    case null: return 'radio_button_unchecked'
+    case undefined: return 'radio_button_unchecked'
     default: return 'help'
   }
 }
@@ -84,12 +87,14 @@ export const getInputIcon = (type) => {
     case 'checkbox': return 'check_box'
     case 'file': return 'upload_file'
     case 'path': return 'folder_open'
-    case 'icon-select': return 'format_list_bulleted'
+    case 'icon-select': return 'emoji_symbols'
     case 'email': return 'email'
     case 'reference': return 'link'
     case 'numbers': return 'filter_9_plus'
     case 'enum': return 'list'
     case 'string': return 'text_fields'
+    case 'date': return 'event'
+    case 'time': return 'access_time'
     default: return 'text_fields'
   }
 }
@@ -108,5 +113,25 @@ export const getFieldTypeLabel = (type) => {
     case 'numbers': return 'Массив чисел'
     case 'textarea': return 'Многострочный текст'
     default: return 'Неизвестный тип'
+  }
+}
+
+export const getListTypeIcon = (type) => {
+  switch (type) {
+    case 'title': return 'title'
+    case 'subtitle': return 'subtitles'
+    case 'label': return 'label'
+    case 'highlite': return 'highlight'
+    case 'badge': return 'local_offer'
+    case 'toggle': return 'toggle_on'
+    case 'checkbox': return 'check_box'
+    case 'value': return 'tag'
+    case 'order': return 'sort'
+    case 'count': return 'filter_9_plus'
+    case 'date': return 'event'
+    case 'content': return 'article'
+    case 'code': return 'code'
+    case 'inline': return 'short_text'
+    default: return 'help'
   }
 }
