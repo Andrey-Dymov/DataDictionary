@@ -177,3 +177,4 @@ export default {
 .q-dialog-plugin
   max-width: 95vw
 </style>
+

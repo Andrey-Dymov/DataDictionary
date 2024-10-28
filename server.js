@@ -47,6 +47,7 @@ app.get('/api/dictionaries/meta', async (req, res) => {
 app.get('/api/dictionaries/:id', async (req, res) => {
   const { id } = req.params
   try {
+    console.log('[API] Getting dictionary:', id)
     const metaData = await fs.readFile(META_FILE, 'utf8')
     const { dictionaries } = JSON.parse(metaData)
     const dictionary = dictionaries.find(d => d.id === id)
@@ -56,8 +57,24 @@ app.get('/api/dictionaries/:id', async (req, res) => {
     }
 
     const filePath = path.join(dictionary.filePath, dictionary.fileName)
+    console.log('[API] Reading file:', filePath)
+    
     const data = await fs.readFile(filePath, 'utf8')
-    res.json(JSON.parse(data))
+    console.log('[API] Raw file data:', data)
+    
+    const dictionaryData = JSON.parse(data)
+    console.log('[API] Parsed dictionary data:', dictionaryData)
+    
+    // Конвертируем данные из старого формата в новый
+    const convertedData = {
+      ...dictionaryData,
+      entities: dictionaryData.collections || [],
+      version: dictionaryData.version || "1.0"
+    }
+    delete convertedData.collections
+    
+    console.log('[API] Converted data:', convertedData)
+    res.json(convertedData)
   } catch (error) {
     console.error(`[API] Error reading dictionary ${id}:`, error)
     res.status(500).json({ error: error.message })
@@ -79,7 +96,13 @@ app.post('/api/dictionaries', async (req, res) => {
     await fs.writeFile(META_FILE, JSON.stringify(data, null, 2))
     
     const filePath = path.join(newDictionary.filePath, newDictionary.fileName)
-    await fs.writeFile(filePath, JSON.stringify({ collections: [] }, null, 2))
+    // Создаем файл с начальной структурой
+    const initialData = {
+      entities: [],  // Массив сущностей
+      version: "1.0",
+      description: newDictionary.description || ""
+    }
+    await fs.writeFile(filePath, JSON.stringify(initialData, null, 2))
     
     res.json(newDictionary)
   } catch (error) {
@@ -154,8 +177,18 @@ app.post('/api/dictionaries/:id/data', async (req, res) => {
       throw new Error('Dictionary not found')
     }
 
+    // Конвертируем данные из старого формата в новый
+    const dataToSave = {
+      ...dictionaryData,
+      // Если есть collections, но нет entities - конвертируем
+      entities: dictionaryData.collections || dictionaryData.entities || [],
+      version: "1.0"
+    }
+    // Удаляем старое поле collections если оно есть
+    delete dataToSave.collections
+
     const filePath = path.join(dictionary.filePath, dictionary.fileName)
-    await fs.writeFile(filePath, JSON.stringify(dictionaryData, null, 2))
+    await fs.writeFile(filePath, JSON.stringify(dataToSave, null, 2))
     
     res.json({ success: true })
   } catch (error) {
@@ -174,8 +207,8 @@ app.get('/api/entities', async (req, res) => {
     for (const dict of dictionaries) {
       const filePath = path.join(dict.filePath, dict.fileName)
       const data = await fs.readFile(filePath, 'utf8')
-      const { collections } = JSON.parse(data)
-      allEntities.push(...collections)
+      const { entities } = JSON.parse(data)
+      allEntities.push(...entities)
     }
     
     res.json(allEntities)
@@ -216,7 +249,7 @@ app.post('/api/entities', async (req, res) => {
     const data = await fs.readFile(filePath, 'utf8')
     const dictionaryData = JSON.parse(data)
 
-    dictionaryData.collections.push(entityData)
+    dictionaryData.entities.push(entityData)
     await fs.writeFile(filePath, JSON.stringify(dictionaryData, null, 2))
 
     res.json(entityData)
@@ -235,8 +268,8 @@ app.put('/api/entities/:name', async (req, res) => {
       return res.status(404).json({ error: 'Entity not found' })
     }
 
-    const index = dictionary.collections.findIndex(e => e.name === name)
-    dictionary.collections[index] = entityData
+    const index = dictionary.entities.findIndex(e => e.name === name)
+    dictionary.entities[index] = entityData
 
     await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
     res.json(entityData)
@@ -254,7 +287,7 @@ app.delete('/api/entities/:name', async (req, res) => {
       return res.status(404).json({ error: 'Entity not found' })
     }
 
-    dictionary.collections = dictionary.collections.filter(e => e.name !== name)
+    dictionary.entities = dictionary.entities.filter(e => e.name !== name)
     await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
     res.json({ success: true })
   } catch (error) {
@@ -470,8 +503,8 @@ async function findEntityInDictionaries(entityName) {
   for (const dict of dictionaries) {
     const filePath = path.join(dict.filePath, dict.fileName)
     const data = await fs.readFile(filePath, 'utf8')
-    const { collections } = JSON.parse(data)
-    const entity = collections.find(c => c.name === entityName)
+    const { entities } = JSON.parse(data)  // Используем entities вместо collections
+    const entity = entities.find(e => e.name === entityName)
     if (entity) {
       return entity
     }
@@ -487,7 +520,7 @@ async function findEntityAndDictionary(entityName) {
     const filePath = path.join(dict.filePath, dict.fileName)
     const data = await fs.readFile(filePath, 'utf8')
     const dictionary = JSON.parse(data)
-    const entity = dictionary.collections.find(c => c.name === entityName)
+    const entity = dictionary.entities?.find(e => e.name === entityName)  // Используем entities вместо collections
     if (entity) {
       return { dictionary, entity, filePath }
     }

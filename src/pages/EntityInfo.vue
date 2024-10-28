@@ -176,7 +176,7 @@ export default defineComponent({
         const entity = computed(() => {  // Переименовываем из collection
             const name = route.params.name
             console.log('[EntityInfo] Getting entity:', name)  // Обновляем логи
-            return name ? schemaStore.getCollectionByName(name) : null
+            return name ? schemaStore.getEntityByName(name) : null
         })
 
         // Добавляем вычисляемые свойства для безопасного доступа

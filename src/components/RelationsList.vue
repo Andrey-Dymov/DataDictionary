@@ -127,8 +127,9 @@ export default defineComponent({
     }
 
     const getTargetPrompt = (targetName) => {
-      const targetCollection = schemaStore.collections.find(c => c.name === targetName)
-      return targetCollection ? targetCollection.prompt : ''
+      if (!schemaStore.entities?.length) return targetName
+      const targetEntity = schemaStore.entities.find(e => e.name === targetName)
+      return targetEntity?.prompt || targetName
     }
 
     const getSourceField = (relation) => {

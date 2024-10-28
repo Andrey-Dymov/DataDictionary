@@ -4,16 +4,24 @@ import { useDictionaryStore } from './dictionary'
 
 export const useSchemaStore = defineStore('schema', {
   state: () => ({
-    collections: [],
-    selectedCollectionName: '',
+    entities: [],
+    selectedEntityName: '',
     isLoading: false,
     isLoaded: false,
     error: null
   }),
 
   getters: {
-    getCollectionByName: (state) => (name) => {
-      return state.collections.find(c => c.name === name)
+    getEntityByName: (state) => (name) => {
+      console.log('[SchemaStore] Getting entity by name:', name)
+      console.log('[SchemaStore] Current entities:', state.entities)
+      if (!state.entities) {
+        console.log('[SchemaStore] No entities array')
+        return null
+      }
+      const entity = state.entities.find(e => e.name === name)
+      console.log('[SchemaStore] Found entity:', entity)
+      return entity
     }
   },
 
@@ -25,25 +33,37 @@ export const useSchemaStore = defineStore('schema', {
     },
 
     async loadSchema(dictionaryId) {
-      console.log('[Store] Loading schema for dictionary:', dictionaryId)
+      console.log('[SchemaStore] Starting loadSchema for dictionary:', dictionaryId)
       this.isLoading = true
       try {
-        // Используем новый метод getOne для получения словаря
+        console.log('[SchemaStore] Requesting dictionary data...')
         const data = await dictionaryService.getOne('dictionary', dictionaryId)
-        this.collections = data.collections
+        console.log('[SchemaStore] Received dictionary data:', data)
+        
+        // Используем entities из данных
+        this.entities = data.entities || []
+        console.log('[SchemaStore] Set entities:', this.entities)
+        
         this.isLoaded = true
 
         // Восстанавливаем сохраненную сущность
-        const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
-        const savedCollection = savedSelections[dictionaryId]
+        const savedSelections = JSON.parse(localStorage.getItem('selectedEntities') || '{}')
+        const savedEntity = savedSelections[dictionaryId]
+        console.log('[SchemaStore] Saved entity for dictionary:', savedEntity)
         
-        if (savedCollection && this.collections.find(c => c.name === savedCollection)) {
-          this.selectedCollectionName = savedCollection
-        } else if (this.collections.length > 0) {
-          this.selectedCollectionName = this.collections[0].name
+        if (savedEntity && this.entities.find(e => e.name === savedEntity)) {
+          console.log('[SchemaStore] Restoring saved entity:', savedEntity)
+          this.selectedEntityName = savedEntity
+        } else if (this.entities.length > 0) {
+          console.log('[SchemaStore] Using first entity:', this.entities[0].name)
+          this.selectedEntityName = this.entities[0].name
+        } else {
+          console.log('[SchemaStore] No entities available')
+          this.selectedEntityName = ''
         }
+        console.log('[SchemaStore] Selected entity name:', this.selectedEntityName)
       } catch (error) {
-        console.error('[Store] Error loading schema:', error)
+        console.error('[SchemaStore] Error loading schema:', error)
         this.error = error.message
         throw error
       } finally {
@@ -51,17 +71,17 @@ export const useSchemaStore = defineStore('schema', {
       }
     },
 
-    setSelectedCollection(name) {
-      console.log('[Store] Setting selected collection:', name)
-      this.selectedCollectionName = name
+    setSelectedEntity(name) {
+      console.log('[SchemaStore] Setting selected entity:', name)
+      this.selectedEntityName = name
       
       const dictionaryStore = useDictionaryStore()
       const currentDictionaryId = dictionaryStore.currentDictionaryId
       
       if (currentDictionaryId) {
-        const savedSelections = JSON.parse(localStorage.getItem('selectedCollections') || '{}')
+        const savedSelections = JSON.parse(localStorage.getItem('selectedEntities') || '{}')
         savedSelections[currentDictionaryId] = name
-        localStorage.setItem('selectedCollections', JSON.stringify(savedSelections))
+        localStorage.setItem('selectedEntities', JSON.stringify(savedSelections))
       }
     },
 
@@ -70,9 +90,9 @@ export const useSchemaStore = defineStore('schema', {
       try {
         // Используем новый метод update для обновления сущности
         await dictionaryService.update('entity', name, data)
-        const index = this.collections.findIndex(c => c.name === name)
+        const index = this.entities.findIndex(c => c.name === name)
         if (index !== -1) {
-          this.collections[index] = data
+          this.entities[index] = data
         }
       } catch (error) {
         console.error('[Store] Error updating collection:', error)
@@ -86,7 +106,7 @@ export const useSchemaStore = defineStore('schema', {
         const dictionaryStore = useDictionaryStore()
         // Используем новый метод create для создания сущности
         await dictionaryService.create('entity', data, dictionaryStore.currentDictionaryId)
-        this.collections.push(data)
+        this.entities.push(data)
       } catch (error) {
         console.error('[Store] Error adding collection:', error)
         throw error
@@ -98,7 +118,7 @@ export const useSchemaStore = defineStore('schema', {
       try {
         // Используем новый метод delete для удаления сущности
         await dictionaryService.delete('entity', name)
-        this.collections = this.collections.filter(c => c.name !== name)
+        this.entities = this.entities.filter(c => c.name !== name)
       } catch (error) {
         console.error('[Store] Error deleting collection:', error)
         throw error
@@ -110,7 +130,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Adding field to entity:', entityName)
       try {
         await dictionaryService.create('field', fieldData, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity) {
           entity.fields = entity.fields || []
           entity.fields.push(fieldData)
@@ -125,7 +145,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Updating field:', fieldName, 'in entity:', entityName)
       try {
         await dictionaryService.update('field', fieldName, fieldData, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity) {
           const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
           if (fieldIndex !== -1) {
@@ -142,7 +162,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Deleting field:', fieldName, 'from entity:', entityName)
       try {
         await dictionaryService.delete('field', fieldName, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity) {
           entity.fields = entity.fields.filter(f => f.name !== fieldName)
         }
@@ -157,7 +177,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Adding relation to entity:', entityName)
       try {
         await dictionaryService.create('relation', { name: relationName, ...relationData }, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity) {
           entity.relations = entity.relations || {}
           entity.relations[relationName] = relationData
@@ -172,7 +192,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Updating relation:', relationName, 'in entity:', entityName)
       try {
         await dictionaryService.update('relation', relationName, relationData, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity && entity.relations) {
           entity.relations[relationName] = relationData
         }
@@ -186,7 +206,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Deleting relation:', relationName, 'from entity:', entityName)
       try {
         await dictionaryService.delete('relation', relationName, entityName)
-        const entity = this.getCollectionByName(entityName)
+        const entity = this.getEntityByName(entityName)
         if (entity && entity.relations) {
           delete entity.relations[relationName]
         }

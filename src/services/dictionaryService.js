@@ -120,10 +120,13 @@ export default {
     const url = `${config.path}/${identifier}`
 
     try {
+      console.log(`[DictionaryService] Getting ${type} with id:`, identifier)
+      console.log('[DictionaryService] Request URL:', url)
       const response = await api.get(url)
+      console.log(`[DictionaryService] Got ${type} data:`, response.data)
       return response.data
     } catch (error) {
-      console.error(`Error getting ${type}:`, error)
+      console.error(`[DictionaryService] Error getting ${type}:`, error)
       throw error
     }
   },

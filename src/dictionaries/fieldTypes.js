@@ -1,6 +1,7 @@
 export const dataTypeOptions = [
-  { label: 'number - Число', value: 'number' },
   { label: 'string - Строка', value: 'string' },
+  { label: 'number - Число', value: 'number' },
+  { label: 'float - Число с плавающей точкой', value: 'float' },
   { label: 'reference - Ссылка', value: 'reference' },
   { label: 'textarea - Текстовое поле', value: 'textarea' },
   { label: 'date - Дата', value: 'date' },

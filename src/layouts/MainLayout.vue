@@ -42,7 +42,7 @@
             class="dictionary-select q-ml-md"
             @update:model-value="onDictionaryChange"
           >
-            <!-- Изменяем слот для опций в q-select -->
+            <!-- Изменяем слот для опци в q-select -->
             <template v-slot:option="{ opt, selected, toggleOption }">
               <q-item
                 v-ripple
@@ -113,7 +113,7 @@
       <q-scroll-area class="fit">
         <EntityList
           :entities="collections"
-          :selectedEntityName="selectedCollectionName"
+          :selectedEntityName="selectedEntityName"
           @addEntity="showAddEntityDialog"
           @selectEntity="setSelectedEntity"
           @deleteEntity="deleteEntity"
@@ -158,14 +158,27 @@ export default defineComponent({
 
   setup() {
     console.log('[Layout] Setup started')
-    const leftDrawerOpen = ref(false)
-    const schemaStore = useSchemaStore()
-    const dictionaryStore = useDictionaryStore()
-    const router = useRouter()
     const route = useRoute()
+    const router = useRouter()
+    const $q = useQuasar()
+    const dictionaryStore = useDictionaryStore()
+    const schemaStore = useSchemaStore()
+    const leftDrawerOpen = ref(false)
+
+    // Добавляем computed для selectedEntityName
+    const selectedEntityName = computed(() => schemaStore.selectedEntityName)
+
+    // Следим за изменением выбранной сущности
+    watch(selectedEntityName, (newName) => {
+      console.log('[Layout] Selected entity changed:', newName)
+      if (newName && route.params.name !== newName) {
+        console.log('[Layout] Navigating to entity:', newName)
+        router.push(`/entity/${newName}`)
+      }
+    })
+
     const entityForm = ref(null)
     const dictionaryForm = ref(null)  // Добавляем ref для формы словаря
-    const $q = useQuasar()
 
     // Объявляем changeDictionary до его использования
     const changeDictionary = async (id) => {
@@ -174,10 +187,12 @@ export default defineComponent({
         await dictionaryStore.setCurrentDictionary(id)
         await schemaStore.loadSchema(id)
         
-        // Теперь selectedCollectionName уже установлен в loadSchema
-        if (schemaStore.selectedCollectionName) {
-          router.push(`/collection/${schemaStore.selectedCollectionName}`)
+        // После загрузки схемы проверяем выбранную сущность
+        if (schemaStore.selectedEntityName) {
+          console.log('[Layout] Navigating to selected entity:', schemaStore.selectedEntityName)
+          router.push(`/entity/${schemaStore.selectedEntityName}`)
         } else {
+          console.log('[Layout] No entity selected, redirecting to root')
           router.push('/')
         }
       } catch (error) {
@@ -210,30 +225,11 @@ export default defineComponent({
       }))
     })
 
-    const collections = computed(() => schemaStore.collections || [])
-    const selectedCollectionName = computed(() => schemaStore.selectedCollectionName)
-    
-    // Следим за изменением аршрта
-    watch(() => route.params.name, (newName) => {
-      console.log('[Layout] Route collection changed:', newName)
-      if (newName && newName !== selectedCollectionName.value) {
-        console.log('[Layout] Updating selected collection:', newName)
-        schemaStore.setSelectedCollection(newName)
-      }
-    }, { immediate: true })
-
-    // Следим за изменением выбранной коллекции
-    watch(selectedCollectionName, (newName) => {
-      console.log('[Layout] Selected collection changed:', newName)
-      if (newName && route.params.name !== newName) {
-        console.log('[Layout] Navigating to collection:', newName)
-        router.push(`/collection/${newName}`)
-      }
-    })
+    const collections = computed(() => schemaStore.entities || [])
 
     const setSelectedEntity = (name) => {
       console.log('[Layout] Setting selected entity:', name)
-      schemaStore.setSelectedCollection(name)
+      schemaStore.setSelectedEntity(name)
     }
 
     const showAddEntityDialog = () => {
@@ -257,7 +253,7 @@ export default defineComponent({
         console.error('Error deleting entity:', error)
         $q.notify({
           type: 'negative',
-          message: 'Ошибка при удаении сущности'
+          message: 'Ошибка при удае��ии сущности'
         })
       }
     }
@@ -362,7 +358,7 @@ export default defineComponent({
         leftDrawerOpen.value = !leftDrawerOpen.value
       },
       collections,
-      selectedCollectionName,
+      selectedEntityName,
       currentDictionary,
       dictionaryOptions,
       changeDictionary,

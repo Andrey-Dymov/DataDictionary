@@ -1,32 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '../layouts/MainLayout.vue'
-import IndexPage from '../pages/IndexPage.vue'
 import EntityInfo from '../pages/EntityInfo.vue'
-import ErrorNotFound from '../pages/ErrorNotFound.vue'
 
 const routes = [
   {
     path: '/',
-    component: MainLayout,
+    component: () => import('../layouts/MainLayout.vue'),
     children: [
       {
         path: '',
-        component: IndexPage
+        redirect: '/entity'
       },
       {
-        path: '/collection/:name',
+        path: 'entity/:name?',
+        name: 'entity',
         component: EntityInfo
       }
     ]
-  },
-  {
-    path: '/:catchAll(.*)*',
-    component: ErrorNotFound
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL || '/'),  // Исправлено с process.env на import.meta.env
+  history: createWebHistory(import.meta.env.BASE_URL || '/'),
   routes
 })
 

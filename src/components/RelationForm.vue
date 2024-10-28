@@ -82,7 +82,7 @@
   
           <q-select
             v-model="form.target"
-            :options="collectionOptions"
+            :options="entityOptions"
             label="Связанная сущность"
             standout
             dense
@@ -218,26 +218,26 @@
         restriction: 'restrict'
       })
   
-      // Теперь collectionOptions использует schemaStore
-      const collectionOptions = computed(() => {
-        const collections = schemaStore.collections || []
-        return collections
-          .filter(collection => collection.name !== props.sourceName)
-          .map(collection => ({
-            label: `${collection.name} - ${collection.prompt}`,
-            value: collection.name
+      // Теперь entityOptions использует schemaStore
+      const entityOptions = computed(() => {
+        const entities = schemaStore.entities || []
+        return entities
+          .filter(entity => entity.name !== props.sourceName)
+          .map(entity => ({
+            label: `${entity.name} - ${entity.prompt}`,
+            value: entity.name
           }))
       })
   
       const foreignKeyLabel = computed(() => {
         if (!form.value.target) return 'Внешний ключ'
-        const collections = schemaStore.collections || []
-        const sourceCollection = collections.find(c => c.name === props.sourceName)
-        const targetCollection = collections.find(c => c.name === form.value.target)
+        const entities = schemaStore.entities || []
+        const sourceEntity = entities.find(e => e.name === props.sourceName)
+        const targetEntity = entities.find(e => e.name === form.value.target)
         if (form.value.type === 'belongsTo') {
-          return `Внешний ключ (${sourceCollection?.name} - ${sourceCollection?.prompt})`
+          return `Внешний ключ (${sourceEntity?.name} - ${sourceEntity?.prompt})`
         } else {
-          return `Внешний ключ (${targetCollection?.name} - ${targetCollection?.prompt})`
+          return `Внешний ключ (${targetEntity?.name} - ${targetEntity?.prompt})`
         }
       })
   
@@ -251,26 +251,26 @@
   
       const updateForeignKeyOptions = () => {
         if (form.value.target) {
-          const collections = schemaStore.collections || []
-          const sourceCollection = collections.find(c => c.name === props.sourceName)
-          const targetCollection = collections.find(c => c.name === form.value.target)
+          const entities = schemaStore.entities || []
+          const sourceEntity = entities.find(e => e.name === props.sourceName)
+          const targetEntity = entities.find(e => e.name === form.value.target)
           
           if (form.value.type === 'hasMany') {
-            foreignKeyOptions.value = targetCollection.fields
+            foreignKeyOptions.value = targetEntity.fields
               .filter(field => field.name.toLowerCase().endsWith('id'))
               .map(field => ({
                 label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
                 value: field.name
               }))
           } else if (form.value.type === 'belongsTo') {
-            foreignKeyOptions.value = sourceCollection.fields
+            foreignKeyOptions.value = sourceEntity.fields
               .filter(field => field.name.toLowerCase().endsWith('id'))
               .map(field => ({
                 label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
                 value: field.name
               }))
           } else if (form.value.type === 'belongsToMany') {
-            foreignKeyOptions.value = sourceCollection.fields
+            foreignKeyOptions.value = sourceEntity.fields
               .filter(field => field.name.toLowerCase().endsWith('ids'))
               .map(field => ({
                 label: `${field.name}${field.prompt ? ` - ${field.prompt}` : ''}`,
@@ -278,7 +278,7 @@
               }))
           }
           
-          form.value.name = targetCollection.name
+          form.value.name = targetEntity.name
         } else {
           foreignKeyOptions.value = []
           form.value.name = ''
@@ -404,8 +404,8 @@
       })
   
       const targetPrompt = computed(() => {
-        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
-        return targetCollection ? targetCollection.prompt : ''
+        const targetEntity = schemaStore.entities.find(e => e.name === form.value.target)
+        return targetEntity ? targetEntity.prompt : ''
       })
   
       const getRelationTypeText = computed(() => {
@@ -447,15 +447,15 @@
   
       const updateForeignKey = () => {
         if (form.value.target && form.value.type) {
-          const sourceCollection = schemaStore.collections.find(c => c.name === props.sourceName)
-          const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
+          const sourceEntity = schemaStore.entities.find(e => e.name === props.sourceName)
+          const targetEntity = schemaStore.entities.find(e => e.name === form.value.target)
           
           if (form.value.type === 'hasMany') {
-            form.value.foreignKey = `${sourceCollection.name.toLowerCase()}Id`
+            form.value.foreignKey = `${sourceEntity.name.toLowerCase()}Id`
           } else if (form.value.type === 'belongsTo') {
-            form.value.foreignKey = `${targetCollection.name.toLowerCase()}Id`
+            form.value.foreignKey = `${targetEntity.name.toLowerCase()}Id`
           } else if (form.value.type === 'belongsToMany') {
-            form.value.foreignKey = `${targetCollection.name.toLowerCase()}Ids`
+            form.value.foreignKey = `${targetEntity.name.toLowerCase()}Ids`
           }
         } else {
           form.value.foreignKey = ''
@@ -466,10 +466,10 @@
       watch(() => form.value.target, updateForeignKey)
   
       const suggestedName = computed(() => {
-        const targetCollection = schemaStore.collections.find(c => c.name === form.value.target)
-        if (!targetCollection) return ''
+        const targetEntity = schemaStore.entities.find(e => e.name === form.value.target)
+        if (!targetEntity) return ''
   
-        let name = targetCollection.name
+        let name = targetEntity.name
         if (form.value.type === 'belongsTo') {
           // Убираем окончание 's' или 'es' для 'Многие ко одному'
           if (name.endsWith('es')) {
@@ -481,7 +481,7 @@
         return name
       })
   
-      const loadCollectionOptions = async () => {
+      const loadEntityOptions = async () => {
         try {
           // Получаем список всех сущностей через единый интерфейс
           const entities = await dictionaryService.getList('entity')
@@ -492,7 +492,7 @@
               value: entity.name
             }))
         } catch (error) {
-          console.error('Error loading collections:', error)
+          console.error('Error loading entities:', error)
           return []
         }
       }
@@ -503,7 +503,7 @@
         onOKClick,
         form,
         isEdit,
-        collectionOptions,
+        entityOptions,
         foreignKeyOptions,
         foreignKeyLabel,
         isFormValid,
@@ -525,7 +525,7 @@
         updateForeignKey,
         suggestedName,
         saveRelation,
-        loadCollectionOptions
+        loadEntityOptions
       }
     }
   }
@@ -646,6 +646,7 @@
     }
   }
   </style>
+
 
 
 
