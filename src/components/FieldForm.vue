@@ -8,82 +8,41 @@
       <q-card-section class="q-pt-none">
         <div class="row q-col-gutter-md q-mb-sm">
           <div class="col-6">
-            <q-input 
-              v-model="form.name" 
-              label="Название" 
-              standout 
-              dense
-              :rules="[val => !!val || 'Обязательное поле']"
-            />
+            <q-input v-model="form.name" label="Название" standout dense
+              :rules="[val => !!val || 'Обязательное поле']" />
           </div>
           <div class="col-6">
-            <q-select
-              v-model="form.dataType"
-              :options="dataTypeOptions"
-              label="Тип данных"
-              standout
-              dense
-              emit-value
-              map-options
-            />
+            <q-toggle v-model="form.required" label="Обязательное" left-label color="green" dense />
           </div>
-        </div>
-
-        <div class="q-mb-sm">
-          <div class="text-subtitle2 q-mb-xs">Секция</div>
-          <q-btn-toggle
-            v-model="form.section"
-            :options="sectionOptions"
-            unelevated
-            dense
-            toggle-color="primary"
-            spread
-          />
         </div>
 
         <div class="row q-col-gutter-md q-mb-sm">
           <div class="col-6">
-            <q-select
-              v-model="form.listType"
-              :options="listTypeOptions"
-              label="Тип в списке"
-              standout
-              dense
-              emit-value
-              map-options
-            />
+            <q-select v-model="form.dataType" :options="dataTypeOptions" label="Тип данных" standout dense emit-value
+              map-options />
           </div>
           <div class="col-6">
-            <q-select
-              v-model="form.inputType"
-              :options="inputTypeOptions"
-              label="Тип ввода в форме"
-              standout
-              dense
-              emit-value
-              map-options
-            />
+            <q-select v-model="form.listType" :options="listTypeOptions" label="Тип в списке" standout dense emit-value
+              map-options />
           </div>
+
+        </div>
+
+        <div class="q-mb-sm">
+          <div class="text-subtitle2 q-mb-xs">Секция</div>
+          <q-btn-toggle v-model="form.section" :options="sectionOptions" unelevated dense toggle-color="primary"
+            spread />
         </div>
 
         <div class="row q-col-gutter-md items-center">
           <div class="col-6">
-            <q-input 
-              v-model="form.prompt" 
-              label="Метка" 
-              standout 
-              dense
-            />
+            <q-input v-model="form.prompt" label="Метка" standout dense />
           </div>
           <div class="col-6">
-            <q-toggle
-              v-model="form.required"
-              label="Обязательное"
-              left-label
-              color="green"
-              dense
-            />
+            <q-select v-model="form.inputType" :options="inputTypeOptions" label="Тип ввода в форме" standout dense
+              emit-value map-options />
           </div>
+
         </div>
       </q-card-section>
 
@@ -99,11 +58,11 @@
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
 import dictionaryService from '../services/dictionaryService'
-import { 
-  dataTypeOptions, 
-  sectionOptions, 
-  listTypeOptions, 
-  inputTypeOptions 
+import {
+  dataTypeOptions,
+  sectionOptions,
+  listTypeOptions,
+  inputTypeOptions
 } from '../dictionaries/fieldTypes'
 
 export default {
@@ -137,16 +96,16 @@ export default {
     })
 
     const isFormValid = computed(() => {
-      return form.value.name && 
-             form.value.dataType && 
-             form.value.section && 
-             form.value.listType && 
-             form.value.inputType
+      return form.value.name &&
+        form.value.dataType &&
+        form.value.section &&
+        form.value.listType &&
+        form.value.inputType
     })
 
     const show = (field = null) => {
       if (field) {
-        form.value = { 
+        form.value = {
           name: field.name,
           dataType: field.type,
           section: field.list ? field.list.split('-')[0] : 'main',

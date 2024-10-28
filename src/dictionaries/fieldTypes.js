@@ -5,9 +5,10 @@ export const dataTypeOptions = [
   { label: 'textarea - Текстовое поле', value: 'textarea' },
   { label: 'date - Дата', value: 'date' },
   { label: 'time - Время', value: 'time' },
-  { label: 'checkbox - Флажок', value: 'checkbox' },
   { label: 'email - Электронная почта', value: 'email' },
-  { label: 'numbers - Массив чисел', value: 'numbers' }
+  { label: 'numbers - Массив чисел', value: 'numbers' },
+  { label: 'bool - Логическое', value: 'bool' },
+  { label: 'object - Объект', value: 'object' }
 ]
 
 export const sectionOptions = [
@@ -19,23 +20,32 @@ export const sectionOptions = [
 export const listTypeOptions = [
   { label: 'title - Заголовок', value: 'title' },
   { label: 'subtitle - Подзаголовок', value: 'subtitle' },
-  { label: 'content - Содержание', value: 'content' },
   { label: 'label - Метка', value: 'label' },
-  { label: 'chips - Чипы', value: 'chips' },
+  { label: 'highlite - Подсветка', value: 'highlite' },
+  { label: 'badge - Бэдж', value: 'badge' },
+  { label: 'toggle - Переключатель', value: 'toggle' },
+  { label: 'checkbox - Флажок', value: 'checkbox' },
+  { label: 'value - Значение', value: 'value' },
+  { label: 'order - Порядок', value: 'order' },
   { label: 'count - Счетчик', value: 'count' },
   { label: 'date - Дата', value: 'date' },
-  { label: 'switch - Переключатель', value: 'switch' }
+  { label: 'content - Содержание', value: 'content' },
+  { label: 'code - Код', value: 'code' },
+  { label: 'inline - В строку', value: 'inline' }
 ]
 
 export const inputTypeOptions = [
   { label: 'select - Выбор', value: 'select' },
+  { label: 'multiselect - Множественный выбор', value: 'multiselect' },
   { label: 'string - Строка', value: 'string' },
   { label: 'textarea - Текстовое поле', value: 'textarea' },
   { label: 'date - Дата', value: 'date' },
-  { label: 'numbers - Массив чисел', value: 'numbers' },
+  { label: 'time - Время', value: 'time' },
   { label: 'checkbox - Флажок', value: 'checkbox' },
   { label: 'email - Электронная почта', value: 'email' },
-  { label: 'time - Время', value: 'time' }
+  { label: 'file - Файл', value: 'file' },
+  { label: 'path - Путь', value: 'path' },
+  { label: 'icon-select - Выбор иконки', value: 'icon-select' }
 ]
 
 export const getFieldIcon = (type) => {

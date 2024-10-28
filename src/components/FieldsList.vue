@@ -31,20 +31,23 @@
                         </q-item-label>
                         <q-item-label>
                             <div class="row items-center field-badges">
-                                <q-badge v-if="field.input || field.inputType" color="primary" class="q-mr-sm">
-                                    <q-icon :name="getInputIcon(field.input || field.inputType)" size="16px" class="q-mr-xs" />
-                                    {{ field.input || field.inputType }}
+                                <!-- Тип данных -->
+                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
+                                    {{ field.type }}
                                 </q-badge>
-                                <q-badge v-if="field.list" color="secondary" class="q-mr-sm">
+
+                                <!-- Тип в списке -->
+                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
                                     <q-icon name="list" size="16px" class="q-mr-xs" />
                                     {{ field.list }}
                                 </q-badge>
-                                <template v-if="field.mask">
-                                    <q-badge color="accent" class="q-mr-sm">
-                                        <q-icon name="format_shapes" size="16px" class="q-mr-xs" />
-                                        {{ field.mask }}
-                                    </q-badge>
-                                </template>
+
+                                <!-- Тип ввода -->
+                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
+                                    {{ field.input }}
+                                </q-badge>
                             </div>
                         </q-item-label>
                     </q-item-section>
@@ -65,7 +68,7 @@
 <script>
 import { defineComponent } from 'vue'
 import { useQuasar } from 'quasar'
-import { getFieldIcon, getInputIcon, getFieldTypeLabel } from '../dictionaries/fieldTypes'
+import { getFieldIcon, getInputIcon, getFieldTypeLabel, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
 
 export default defineComponent({
     name: 'FieldsList',
@@ -78,6 +81,23 @@ export default defineComponent({
     emits: ['deleteField', 'addField', 'editField'],
     setup(props, { emit }) {
         const $q = useQuasar()
+
+        // Проверка существования типа данных в справочнике
+        const isValidDataType = (type) => {
+            return dataTypeOptions.some(opt => opt.value === type)
+        }
+
+        // Проверка существования типа списка в справочнике
+        const isValidListType = (listType) => {
+            if (!listType) return true
+            const [section, type] = listType.split('-')
+            return listTypeOptions.some(opt => opt.value === type)
+        }
+
+        // Проверка существования типа ввода в справочнике
+        const isValidInputType = (inputType) => {
+            return inputTypeOptions.some(opt => opt.value === inputType)
+        }
 
         const onAddField = () => {
             emit('addField')
@@ -102,6 +122,9 @@ export default defineComponent({
             getFieldIcon,
             getInputIcon,
             getFieldTypeLabel,
+            isValidDataType,
+            isValidListType,
+            isValidInputType,
             onAddField,
             onEditField,
             confirmDelete
