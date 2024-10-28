@@ -3,14 +3,14 @@
     {
       "id": "dict_001",
       "name": "Проекты 55",
-      "fileName": "original.json",
+      "fileName": "projects_schema.json",
       "filePath": "/Users/smoke/Documents/Development/DataDictionary/schemas",
       "description": "Проекты"
     },
     {
       "id": "dict_002",
       "name": "Решения СД",
-      "fileName": "new.json",
+      "fileName": "solutions_schema.json",
       "filePath": "/Users/smoke/Documents/Development/DataDictionary/schemas",
       "description": "Решения СД"
     }

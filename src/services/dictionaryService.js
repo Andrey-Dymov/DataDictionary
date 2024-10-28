@@ -52,8 +52,14 @@ const ENTITY_CONFIG = {
       list: { available: true },
       get: { available: true },
       create: { available: true },
-      update: { path: '/api/fields/{parentName}/{id}' },
-      delete: { path: '/api/fields/{parentName}/{id}' }
+      update: { 
+        available: true,  // Добавляем available: true
+        path: '/api/fields/{parentName}/{id}' 
+      },
+      delete: { 
+        available: true,  // Для единообразия добавим и сюда
+        path: '/api/fields/{parentName}/{id}' 
+      }
     }
   },
   relation: {
