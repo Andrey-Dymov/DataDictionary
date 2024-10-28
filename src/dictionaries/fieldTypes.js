@@ -35,14 +35,17 @@ export const listTypeOptions = [
 ]
 
 export const inputTypeOptions = [
+  { label: 'string - Строка', value: 'string' },
   { label: 'select - Выбор', value: 'select' },
   { label: 'multiselect - Множественный выбор', value: 'multiselect' },
-  { label: 'string - Строка', value: 'string' },
-  { label: 'textarea - Текстовое поле', value: 'textarea' },
+  { label: 'menu - Меню', value: 'menu' },
+  { label: 'number - Число', value: 'number' },
   { label: 'date - Дата', value: 'date' },
   { label: 'time - Время', value: 'time' },
+  { label: 'textarea - Текстовое поле', value: 'textarea' },
   { label: 'checkbox - Флажок', value: 'checkbox' },
   { label: 'email - Электронная почта', value: 'email' },
+  { label: 'enum - Перечисление', value: 'enum' },
   { label: 'file - Файл', value: 'file' },
   { label: 'path - Путь', value: 'path' },
   { label: 'icon-select - Выбор иконки', value: 'icon-select' }
