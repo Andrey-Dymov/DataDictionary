@@ -411,7 +411,58 @@ app.delete('/api/relations/:entityName/:relationName', async (req, res) => {
   }
 })
 
+// API для работы с файловой системой
+app.get('/api/filesystem/select-file', async (req, res) => {
+  console.log('[API] Getting files list')
+  const dirPath = req.query.path
+  
+  try {
+    if (!dirPath) {
+      throw new Error('Path is required')
+    }
+
+    // Проверяем существование каталога
+    try {
+      await fs.access(dirPath)
+    } catch {
+      throw new Error(`Directory not found: ${dirPath}`)
+    }
+
+    console.log('[API] Reading directory:', dirPath)
+    const files = await fs.readdir(dirPath)
+    
+    // Получаем информацию о каждом файле
+    const fileInfos = await Promise.all(
+      files
+        .filter(file => file.endsWith('.json')) // Фильтруем только JSON файлы
+        .map(async file => {
+          const filePath = path.join(dirPath, file)
+          const stats = await fs.stat(filePath)
+          return {
+            name: file,
+            size: formatFileSize(stats.size),
+            modified: stats.mtime.toLocaleString()
+          }
+        })
+    )
+
+    console.log('[API] Files found:', fileInfos)
+    res.json(fileInfos)
+  } catch (error) {
+    console.error('[API] Error getting files:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // Вспомогательные функции
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
 async function findEntityInDictionaries(entityName) {
   const metaData = await fs.readFile(META_FILE, 'utf8')
   const { dictionaries } = JSON.parse(metaData)

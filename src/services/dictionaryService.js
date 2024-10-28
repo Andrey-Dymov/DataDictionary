@@ -70,10 +70,13 @@ const ENTITY_CONFIG = {
   },
   files: {
     path: '/api/filesystem/select-file',
-    requiresParent: true,
+    requiresParent: false, // Меняем на false
     identifyBy: 'name',
     methods: {
-      list: { available: true },
+      list: { 
+        available: true,
+        useQuery: true // Добавляем флаг для использования query параметров
+      },
       get: { available: false },
       create: { available: false },
       update: { available: false },
@@ -83,7 +86,7 @@ const ENTITY_CONFIG = {
 }
 
 export default {
-  async getList(type, parentName = null) {
+  async getList(type, parentName = null, params = null) {
     const config = ENTITY_CONFIG[type]
     if (!config) throw new Error(`Unknown entity type: ${type}`)
     if (!config.methods.list.available) throw new Error(`List not available for ${type}`)
@@ -93,7 +96,9 @@ export default {
       : config.path
 
     try {
-      const response = await api.get(url)
+      // Используем params только если useQuery = true
+      const options = config.methods.list.useQuery ? { params } : {}
+      const response = await api.get(url, options)
       return response.data
     } catch (error) {
       console.error(`Error getting ${type} list:`, error)

@@ -75,9 +75,12 @@
       </q-card-actions>
 
       <q-dialog v-model="fileDialogOpen">
-        <q-card style="min-width: 350px">
+        <q-card style="min-width: 350px" class="q-pb-lg">
           <q-card-section class="row items-center">
-            <div class="text-h6">Выберите файл</div>
+            <div>
+              <div class="text-h6">Выберите файл</div>
+              <div class="text-caption text-grey-7">{{ form.filePath }}</div>
+            </div>
             <q-space />
             <q-btn icon="close" flat round dense v-close-popup />
           </q-card-section>
@@ -93,7 +96,9 @@
                 @click="selectFileFromList(file)"
               >
                 <q-item-section>
-                  <q-item-label>{{ file.name }}</q-item-label>
+                  <q-item-label :class="{ 'text-weight-bold': isSpecialFile(file.name) }">
+                    {{ file.name }}
+                  </q-item-label>
                   <q-item-label caption>
                     {{ file.size }} - Изменен: {{ file.modified }}
                   </q-item-label>
@@ -150,8 +155,8 @@ export default {
       }
 
       try {
-        // Используем новый сервис для получения списка файлов
-        const files = await dictionaryService.getList('files', form.value.filePath)
+        // Используем query параметр path
+        const files = await dictionaryService.getList('files', null, { path: form.value.filePath })
         availableFiles.value = files
         fileDialogOpen.value = true
       } catch (error) {
@@ -195,6 +200,11 @@ export default {
       }
     }
 
+    const isSpecialFile = (fileName) => {
+      return fileName.toLowerCase().includes('dict') || 
+             fileName.toLowerCase().includes('schema')
+    }
+
     return {
       dialogRef,
       onDialogHide,
@@ -206,7 +216,8 @@ export default {
       showFileSelector,
       selectFileFromList,
       fileDialogOpen,
-      availableFiles
+      availableFiles,
+      isSpecialFile
     }
   }
 }
