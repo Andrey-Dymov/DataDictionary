@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import schemaService from '../services/schemaService'
+import dictionaryService from '../services/dictionaryService'
 
 export const useDictionaryStore = defineStore('dictionary', {
   state: () => ({
@@ -38,7 +38,7 @@ export const useDictionaryStore = defineStore('dictionary', {
       this.isLoading = true
       try {
         console.log('[Dictionary Store] Loading dictionaries metadata...')
-        const data = await schemaService.getList('dictionaries')
+        const data = await dictionaryService.getList('dictionaries')
         this.dictionaries = data.dictionaries
         
         if (!this.dictionaries?.length) {
@@ -72,7 +72,7 @@ export const useDictionaryStore = defineStore('dictionary', {
         localStorage.setItem('currentDictionaryId', id)
         this.currentDictionaryId = id
 
-        const data = await schemaService.getOne('dictionary', id)
+        const data = await dictionaryService.getOne('dictionary', id)
         this.currentDictionary = data
       } catch (error) {
         console.error('[Dictionary Store] Error setting current dictionary:', error)
@@ -85,7 +85,7 @@ export const useDictionaryStore = defineStore('dictionary', {
     async addDictionary(dictionaryData) {
       this.isLoading = true
       try {
-        const newDictionary = await schemaService.create('dictionaries', dictionaryData)
+        const newDictionary = await dictionaryService.create('dictionaries', dictionaryData)
         this.dictionaries.push(newDictionary)
         return newDictionary
       } catch (error) {
@@ -100,7 +100,7 @@ export const useDictionaryStore = defineStore('dictionary', {
     async updateDictionary(id, dictionaryData) {
       this.isLoading = true
       try {
-        const updatedDictionary = await schemaService.update('dictionaries', id, dictionaryData)
+        const updatedDictionary = await dictionaryService.update('dictionaries', id, dictionaryData)
         const index = this.dictionaries.findIndex(d => d.id === id)
         if (index !== -1) {
           this.dictionaries[index] = updatedDictionary
@@ -121,7 +121,7 @@ export const useDictionaryStore = defineStore('dictionary', {
     async deleteDictionary(id) {
       this.isLoading = true
       try {
-        await schemaService.delete('dictionaries', id)
+        await dictionaryService.delete('dictionaries', id)
         this.dictionaries = this.dictionaries.filter(d => d.id !== id)
         
         if (id === this.currentDictionaryId && this.dictionaries.length > 0) {
@@ -139,7 +139,7 @@ export const useDictionaryStore = defineStore('dictionary', {
     async saveDictionary(id, data) {
       this.isLoading = true
       try {
-        await schemaService.update('dictionary', id, data)
+        await dictionaryService.update('dictionary', id, data)
         if (id === this.currentDictionaryId) {
           this.currentDictionary = data
         }

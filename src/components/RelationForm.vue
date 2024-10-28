@@ -175,7 +175,7 @@
   <script>
   import { ref, computed, watch } from 'vue'
   import { useDialogPluginComponent, useQuasar } from 'quasar'
-  import schemaService from '../services/schemaService'
+  import dictionaryService from '../services/dictionaryService'
   import { useSchemaStore } from '../stores/schema'
   import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
   
@@ -312,14 +312,14 @@
         try {
           if (editingRelationName.value) {
             // Обновляем существующую связь через единый интерфейс
-            await schemaService.update('relation', editingRelationName.value, relationData, props.sourceName)
+            await dictionaryService.update('relation', editingRelationName.value, relationData, props.sourceName)
             $q.notify({
               type: 'positive',
               message: 'Связь успешно обновлена'
             })
           } else {
             // Создаем новую связь через единый интерфейс
-            await schemaService.create('relation', relationData, props.sourceName)
+            await dictionaryService.create('relation', relationData, props.sourceName)
             $q.notify({
               type: 'positive',
               message: 'Связь успешно добавлена'
@@ -484,7 +484,7 @@
       const loadCollectionOptions = async () => {
         try {
           // Получаем список всех сущностей через единый интерфейс
-          const entities = await schemaService.getList('entity')
+          const entities = await dictionaryService.getList('entity')
           return entities
             .filter(entity => entity.name !== props.sourceName)
             .map(entity => ({

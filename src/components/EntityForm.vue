@@ -72,7 +72,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import schemaService from '../services/schemaService'
+import dictionaryService from '../services/dictionaryService'
 
 export default {
   name: 'EntityForm',
@@ -105,14 +105,14 @@ export default {
       try {
         if (editingEntityName.value) {
           // Обновляем существующую сущность через единый интерфейс
-          await schemaService.update('entity', editingEntityName.value, entityData)
+          await dictionaryService.update('entity', editingEntityName.value, entityData)
           $q.notify({
             type: 'positive',
             message: 'Сущность успешно обновлена'
           })
         } else {
           // Создаем новую сущность через единый интерфейс
-          await schemaService.create('entity', entityData)
+          await dictionaryService.create('entity', entityData)
           $q.notify({
             type: 'positive',
             message: 'Сущность успешно добавлена'

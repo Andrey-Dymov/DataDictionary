@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import schemaService from '../services/schemaService'
+import dictionaryService from '../services/dictionaryService'
 import { useDictionaryStore } from './dictionary'
 
 export const useSchemaStore = defineStore('schema', {
@@ -29,7 +29,7 @@ export const useSchemaStore = defineStore('schema', {
       this.isLoading = true
       try {
         // Используем новый метод getOne для получения словаря
-        const data = await schemaService.getOne('dictionary', dictionaryId)
+        const data = await dictionaryService.getOne('dictionary', dictionaryId)
         this.collections = data.collections
         this.isLoaded = true
 
@@ -69,7 +69,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Updating collection:', name)
       try {
         // Используем новый метод update для обновления сущности
-        await schemaService.update('entity', name, data)
+        await dictionaryService.update('entity', name, data)
         const index = this.collections.findIndex(c => c.name === name)
         if (index !== -1) {
           this.collections[index] = data
@@ -85,7 +85,7 @@ export const useSchemaStore = defineStore('schema', {
       try {
         const dictionaryStore = useDictionaryStore()
         // Используем новый метод create для создания сущности
-        await schemaService.create('entity', data, dictionaryStore.currentDictionaryId)
+        await dictionaryService.create('entity', data, dictionaryStore.currentDictionaryId)
         this.collections.push(data)
       } catch (error) {
         console.error('[Store] Error adding collection:', error)
@@ -97,7 +97,7 @@ export const useSchemaStore = defineStore('schema', {
       console.log('[Store] Deleting collection:', name)
       try {
         // Используем новый метод delete для удаления сущности
-        await schemaService.delete('entity', name)
+        await dictionaryService.delete('entity', name)
         this.collections = this.collections.filter(c => c.name !== name)
       } catch (error) {
         console.error('[Store] Error deleting collection:', error)
@@ -109,7 +109,7 @@ export const useSchemaStore = defineStore('schema', {
     async addField(entityName, fieldData) {
       console.log('[Store] Adding field to entity:', entityName)
       try {
-        await schemaService.create('field', fieldData, entityName)
+        await dictionaryService.create('field', fieldData, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity) {
           entity.fields = entity.fields || []
@@ -124,7 +124,7 @@ export const useSchemaStore = defineStore('schema', {
     async updateField(entityName, fieldName, fieldData) {
       console.log('[Store] Updating field:', fieldName, 'in entity:', entityName)
       try {
-        await schemaService.update('field', fieldName, fieldData, entityName)
+        await dictionaryService.update('field', fieldName, fieldData, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity) {
           const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
@@ -141,7 +141,7 @@ export const useSchemaStore = defineStore('schema', {
     async deleteField(entityName, fieldName) {
       console.log('[Store] Deleting field:', fieldName, 'from entity:', entityName)
       try {
-        await schemaService.delete('field', fieldName, entityName)
+        await dictionaryService.delete('field', fieldName, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity) {
           entity.fields = entity.fields.filter(f => f.name !== fieldName)
@@ -156,7 +156,7 @@ export const useSchemaStore = defineStore('schema', {
     async addRelation(entityName, relationName, relationData) {
       console.log('[Store] Adding relation to entity:', entityName)
       try {
-        await schemaService.create('relation', { name: relationName, ...relationData }, entityName)
+        await dictionaryService.create('relation', { name: relationName, ...relationData }, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity) {
           entity.relations = entity.relations || {}
@@ -171,7 +171,7 @@ export const useSchemaStore = defineStore('schema', {
     async updateRelation(entityName, relationName, relationData) {
       console.log('[Store] Updating relation:', relationName, 'in entity:', entityName)
       try {
-        await schemaService.update('relation', relationName, relationData, entityName)
+        await dictionaryService.update('relation', relationName, relationData, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity && entity.relations) {
           entity.relations[relationName] = relationData
@@ -185,7 +185,7 @@ export const useSchemaStore = defineStore('schema', {
     async deleteRelation(entityName, relationName) {
       console.log('[Store] Deleting relation:', relationName, 'from entity:', entityName)
       try {
-        await schemaService.delete('relation', relationName, entityName)
+        await dictionaryService.delete('relation', relationName, entityName)
         const entity = this.getCollectionByName(entityName)
         if (entity && entity.relations) {
           delete entity.relations[relationName]

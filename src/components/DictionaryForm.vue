@@ -110,7 +110,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import schemaService from '../services/schemaService'
+import dictionaryService from '../services/dictionaryService'
 
 export default {
   name: 'DictionaryForm',
@@ -151,7 +151,7 @@ export default {
 
       try {
         // Используем новый сервис для получения списка файлов
-        const files = await schemaService.getList('files', form.value.filePath)
+        const files = await dictionaryService.getList('files', form.value.filePath)
         availableFiles.value = files
         fileDialogOpen.value = true
       } catch (error) {

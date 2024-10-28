@@ -98,7 +98,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import schemaService from '../services/schemaService'
+import dictionaryService from '../services/dictionaryService'
 import { 
   dataTypeOptions, 
   sectionOptions, 
@@ -183,14 +183,14 @@ export default {
       try {
         if (editingFieldName.value) {
           // Обновляем существующее поле через единый интерфейс
-          await schemaService.update('field', editingFieldName.value, fieldData, props.entityName)
+          await dictionaryService.update('field', editingFieldName.value, fieldData, props.entityName)
           $q.notify({
             type: 'positive',
             message: 'Поле успешно обновлено'
           })
         } else {
           // Создаем новое поле через единый интерфейс
-          await schemaService.create('field', fieldData, props.entityName)
+          await dictionaryService.create('field', fieldData, props.entityName)
           $q.notify({
             type: 'positive',
             message: 'Поле успешно добавлено'
