@@ -7,21 +7,92 @@
       "prompt": "Решения",
       "promptSingle": "Решение",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "meetingId", "type": "reference", "input": "select", "prompt": "Встреча", "req": true, "list": "main-chips"},
-        {"name": "numberAtMeeting", "type": "number", "prompt": "Номер на встрече", "list": "data-count"},
-        {"name": "numberOfDirectorsSolution", "type": "number", "prompt": "Номер решения руководителей", "list": "data-count"},
-        {"name": "subject", "type": "string", "input": "string", "prompt": "Тема", "req": true, "list": "main-title"},
-        {"name": "content", "type": "textarea", "input": "textarea", "prompt": "Содержание", "list": "main-content"},
-        {"name": "statusId", "type": "reference", "input": "select", "prompt": "Статус", "list": "avatar-label"},
-        {"name": "typeId", "type": "reference", "input": "select", "prompt": "Тип", "list": "main-chips"},
-        {"name": "solutionUserIds", "type": "numbers", "input": "numbers", "prompt": "Пользователи решения", "list": "main-chips"},
-        {"name": "responsibleIds", "type": "numbers", "input": "numbers", "prompt": "Ответственные", "list": "main-chips"},
-        {"name": "scheduledDate", "type": "date", "input": "date", "prompt": "Запланированная дата", "list": "data-date"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "meetingId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Встреча",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "numberAtMeeting",
+          "type": "number",
+          "prompt": "Номер на встрече",
+          "list": "data-count"
+        },
+        {
+          "name": "numberOfDirectorsSolution",
+          "type": "number",
+          "prompt": "Номер решения руководителей",
+          "list": "data-count"
+        },
+        {
+          "name": "subject2",
+          "type": "string",
+          "list": "main-title",
+          "input": "string",
+          "prompt": "Тема3",
+          "req": true
+        },
+        {
+          "name": "content",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Содержание",
+          "list": "main-content"
+        },
+        {
+          "name": "statusId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Статус",
+          "list": "avatar-label"
+        },
+        {
+          "name": "typeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionUserIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи решения",
+          "list": "main-chips"
+        },
+        {
+          "name": "responsibleIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Ответственные",
+          "list": "main-chips"
+        },
+        {
+          "name": "scheduledDate",
+          "type": "date",
+          "input": "date",
+          "prompt": "Запланированная дата",
+          "list": "data-date"
+        }
       ],
       "relations": {
-        "meeting": { "type": "belongsTo", "target": "meetings", "foreignKey": "meetingId" },
-        "responsibles": { "type": "belongsToMany", "target": "employees", "foreignKey": "responsibleIds" }
+        "meeting": {
+          "type": "belongsTo",
+          "target": "meetings",
+          "foreignKey": "meetingId"
+        },
+        "responsibles": {
+          "type": "belongsToMany",
+          "target": "employees",
+          "foreignKey": "responsibleIds"
+        }
       }
     },
     {
@@ -31,24 +102,112 @@
       "prompt": "Встречи",
       "promptSingle": "Встреча",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "name", "type": "string", "input": "string", "prompt": "Название", "req": true, "list": "main-title"},
-        {"name": "date", "type": "date", "input": "date", "prompt": "Дата", "req": true, "list": "data-date"},
-        {"name": "meetingTypeId", "type": "reference", "input": "select", "prompt": "Тип встречи", "req": true, "list": "main-chips"},
-        {"name": "startTime", "type": "time", "input": "time", "prompt": "Время начала", "list": "data-date"},
-        {"name": "nextDate", "type": "date", "input": "date", "prompt": "Следующая дата", "list": "data-date"},
-        {"name": "userIds", "type": "numbers", "input": "numbers", "prompt": "Пользователи", "list": "main-chips"},
-        {"name": "attendedUserIds", "type": "numbers", "input": "numbers", "prompt": "Присутствующие пользователи", "list": "main-chips"},
-        {"name": "issueIds", "type": "numbers", "input": "numbers", "prompt": "Вопросы", "list": "main-chips"},
-        {"name": "solutionIds", "type": "numbers", "input": "numbers", "prompt": "Решения", "list": "main-chips"},
-        {"name": "place", "type": "string", "input": "string", "prompt": "Место", "list": "main-title"},
-        {"name": "participants", "type": "string", "input": "string", "prompt": "Участники", "list": "main-subtitle"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "input": "date",
+          "prompt": "Дата",
+          "req": true,
+          "list": "data-date"
+        },
+        {
+          "name": "meetingTypeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип встречи",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "startTime",
+          "type": "time",
+          "input": "time",
+          "prompt": "Время начала",
+          "list": "data-date"
+        },
+        {
+          "name": "nextDate",
+          "type": "date",
+          "input": "date",
+          "prompt": "Следующая дата",
+          "list": "data-date"
+        },
+        {
+          "name": "userIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "attendedUserIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Присутствующие пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "issueIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Вопросы",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Решения",
+          "list": "main-chips"
+        },
+        {
+          "name": "place",
+          "type": "string",
+          "input": "string",
+          "prompt": "Место",
+          "list": "main-title"
+        },
+        {
+          "name": "participants",
+          "type": "string",
+          "input": "string",
+          "prompt": "Участники",
+          "list": "main-subtitle"
+        }
       ],
       "relations": {
-        "meetingType": { "type": "belongsTo", "target": "meeting_types", "foreignKey": "meetingTypeId" },
-        "attendedUsers": { "type": "belongsToMany", "target": "employees", "foreignKey": "attendedUserIds" },
-        "issues": { "type": "hasMany", "target": "issues", "foreignKey": "meetingId" },
-        "solutions": { "type": "hasMany", "target": "solutions", "foreignKey": "meetingId" }
+        "meetingType": {
+          "type": "belongsTo",
+          "target": "meeting_types",
+          "foreignKey": "meetingTypeId"
+        },
+        "attendedUsers": {
+          "type": "belongsToMany",
+          "target": "employees",
+          "foreignKey": "attendedUserIds"
+        },
+        "issues": {
+          "type": "hasMany",
+          "target": "issues",
+          "foreignKey": "meetingId"
+        },
+        "solutions": {
+          "type": "hasMany",
+          "target": "solutions",
+          "foreignKey": "meetingId"
+        }
       }
     },
     {
@@ -58,24 +217,110 @@
       "prompt": "Вопросы",
       "promptSingle": "Вопрос",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "userId", "type": "reference", "input": "select", "prompt": "Пользователь", "req": true, "list": "main-chips"},
-        {"name": "theme", "type": "string", "input": "string", "prompt": "Тема", "req": true, "list": "main-title"},
-        {"name": "content", "type": "textarea", "input": "textarea", "prompt": "Содержание", "list": "main-content"},
-        {"name": "taskTypeId", "type": "reference", "input": "select", "prompt": "Тип задачи", "list": "main-chips"},
-        {"name": "importanceId", "type": "reference", "input": "select", "prompt": "Важность", "list": "main-chips"},
-        {"name": "solutionId", "type": "reference", "input": "select", "prompt": "Решение", "list": "main-chips"},
-        {"name": "duration", "type": "number", "prompt": "Продолжительность", "list": "data-count"},
-        {"name": "meetingId", "type": "reference", "input": "select", "prompt": "Встреча", "req": true, "list": "main-chips"},
-        {"name": "solution_number", "type": "string", "input": "string", "prompt": "Номер решения", "list": "main-subtitle"},
-        {"name": "solution_created", "type": "date", "input": "date", "prompt": "Дата создания решения", "list": "data-date"},
-        {"name": "order", "type": "number", "prompt": "Порядок", "list": "data-count"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "userId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Пользователь",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "theme",
+          "type": "string",
+          "input": "string",
+          "prompt": "Тема",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "content",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Содержание",
+          "list": "main-content"
+        },
+        {
+          "name": "taskTypeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип задачи",
+          "list": "main-chips"
+        },
+        {
+          "name": "importanceId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Важность",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Решение",
+          "list": "main-chips"
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "prompt": "Продолжительность",
+          "list": "data-count"
+        },
+        {
+          "name": "meetingId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Встреча",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "solution_number",
+          "type": "string",
+          "input": "string",
+          "prompt": "Номер решения",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "solution_created",
+          "type": "date",
+          "input": "date",
+          "prompt": "Дата создания решения",
+          "list": "data-date"
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "prompt": "Порядок",
+          "list": "data-count"
+        }
       ],
       "relations": {
-        "user": { "type": "belongsTo", "target": "employees", "foreignKey": "userId" },
-        "importance": { "type": "belongsTo", "target": "importance", "foreignKey": "importanceId" },
-        "solution": { "type": "belongsTo", "target": "solutions", "foreignKey": "solutionId" },
-        "meeting": { "type": "belongsTo", "target": "meetings", "foreignKey": "meetingId" }
+        "user": {
+          "type": "belongsTo",
+          "target": "employees",
+          "foreignKey": "userId"
+        },
+        "importance": {
+          "type": "belongsTo",
+          "target": "importance",
+          "foreignKey": "importanceId"
+        },
+        "solution": {
+          "type": "belongsTo",
+          "target": "solutions",
+          "foreignKey": "solutionId"
+        },
+        "meeting": {
+          "type": "belongsTo",
+          "target": "meetings",
+          "foreignKey": "meetingId"
+        }
       }
     },
     {
@@ -85,16 +330,59 @@
       "prompt": "Сотрудники",
       "promptSingle": "Сотрудник",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "email", "type": "email", "input": "email", "prompt": "Email", "req": true, "list": "main-subtitle"},
-        {"name": "name", "type": "string", "input": "string", "prompt": "Имя", "req": true, "list": "main-title"},
-        {"name": "departmentId", "type": "reference", "input": "select", "prompt": "Отдел", "list": "main-chips"},
-        {"name": "positionId", "type": "reference", "input": "select", "prompt": "Должность", "list": "main-chips"},
-        {"name": "fired", "type": "checkbox", "input": "checkbox", "prompt": "Уволен", "list": "data-switch"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "input": "email",
+          "prompt": "Email",
+          "req": true,
+          "list": "main-subtitle"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Имя",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "departmentId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Отдел",
+          "list": "main-chips"
+        },
+        {
+          "name": "positionId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Должность",
+          "list": "main-chips"
+        },
+        {
+          "name": "fired",
+          "type": "checkbox",
+          "input": "checkbox",
+          "prompt": "Уволен",
+          "list": "data-switch"
+        }
       ],
       "relations": {
-        "department": { "type": "belongsTo", "target": "departments", "foreignKey": "departmentId" },
-        "position": { "type": "belongsTo", "target": "positions", "foreignKey": "positionId" }
+        "department": {
+          "type": "belongsTo",
+          "target": "departments",
+          "foreignKey": "departmentId"
+        },
+        "position": {
+          "type": "belongsTo",
+          "target": "positions",
+          "foreignKey": "positionId"
+        }
       }
     },
     {
@@ -104,8 +392,18 @@
       "prompt": "Должности",
       "promptSingle": "Должность",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "name", "type": "string", "input": "string", "prompt": "Название", "req": true, "list": "main-title"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        }
       ],
       "relations": {}
     },
@@ -116,8 +414,18 @@
       "prompt": "Подразделения",
       "promptSingle": "Подразделение",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "name", "type": "string", "input": "string", "prompt": "Название", "req": true, "list": "main-title"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        }
       ],
       "relations": {}
     },
@@ -128,23 +436,636 @@
       "prompt": "Типы встреч",
       "promptSingle": "Тип встречи",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "name", "type": "string", "input": "string", "prompt": "Название", "req": true, "list": "main-title"},
-        {"name": "scheduledBegin", "type": "time", "input": "time", "prompt": "Запланированное начало", "list": "data-date"},
-        {"name": "regulations", "type": "textarea", "input": "textarea", "prompt": "Регламент", "list": "main-content"},
-        {"name": "abbreviation", "type": "string", "input": "string", "prompt": "Аббревиатура", "list": "main-subtitle"},
-        {"name": "location", "type": "string", "input": "string", "prompt": "Местоположение", "list": "main-title"},
-        {"name": "fine", "type": "number", "prompt": "Штраф", "list": "data-count"},
-        {"name": "fineCurrency", "type": "string", "input": "string", "prompt": "Валюта штрафа", "list": "main-subtitle"},
-        {"name": "absenceFine", "type": "number", "prompt": "Штраф за отсутствие", "list": "data-count"},
-        {"name": "fineInterval", "type": "string", "input": "string", "prompt": "Интервал штрафа", "list": "main-subtitle"},
-        {"name": "typicalTaskIds", "type": "numbers", "input": "numbers", "prompt": "Типовые задачи", "list": "main-chips"},
-        {"name": "userIds", "type": "numbers", "input": "numbers", "prompt": "Пользователи", "list": "main-chips"},
-        {"name": "isDefault", "type": "checkbox", "input": "checkbox", "prompt": "По умолчанию", "list": "data-switch"}
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "scheduledBegin",
+          "type": "time",
+          "input": "time",
+          "prompt": "Запланированное начало",
+          "list": "data-date"
+        },
+        {
+          "name": "regulations",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Регламент",
+          "list": "main-content"
+        },
+        {
+          "name": "abbreviation",
+          "type": "string",
+          "input": "string",
+          "prompt": "Аббревиатура",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "input": "string",
+          "prompt": "Местоположение",
+          "list": "main-title"
+        },
+        {
+          "name": "fine",
+          "type": "number",
+          "prompt": "Штраф",
+          "list": "data-count"
+        },
+        {
+          "name": "fineCurrency",
+          "type": "string",
+          "input": "string",
+          "prompt": "Валюта штрафа",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "absenceFine",
+          "type": "number",
+          "prompt": "Штраф за отсутствие",
+          "list": "data-count"
+        },
+        {
+          "name": "fineInterval",
+          "type": "string",
+          "input": "string",
+          "prompt": "Интервал штрафа",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "typicalTaskIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Типовые задачи",
+          "list": "main-chips"
+        },
+        {
+          "name": "userIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "isDefault",
+          "type": "checkbox",
+          "input": "checkbox",
+          "prompt": "По умолчанию",
+          "list": "data-switch"
+        }
       ],
       "relations": {
-        "meetings": { "type": "hasMany", "target": "meetings", "foreignKey": "meetingTypeId" }
+        "meetings": {
+          "type": "hasMany",
+          "target": "meetings",
+          "foreignKey": "meetingTypeId"
+        }
       }
     }
-  ]
+  ],
+  "entities": [
+    {
+      "name": "solutions",
+      "description": "Решения по встречам",
+      "icon": "check_circle",
+      "prompt": "Решения",
+      "promptSingle": "Решение",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "meetingId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Встреча",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "numberAtMeeting",
+          "type": "number",
+          "prompt": "Номер на встрече",
+          "list": "data-count"
+        },
+        {
+          "name": "numberOfDirectorsSolution",
+          "type": "number",
+          "prompt": "Номер решения руководителей",
+          "list": "data-count"
+        },
+        {
+          "name": "subject2",
+          "type": "string",
+          "list": "main-title",
+          "input": "string",
+          "prompt": "Тема3",
+          "req": true
+        },
+        {
+          "name": "content",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Содержание",
+          "list": "main-content"
+        },
+        {
+          "name": "statusId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Статус",
+          "list": "avatar-label"
+        },
+        {
+          "name": "typeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionUserIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи решения",
+          "list": "main-chips"
+        },
+        {
+          "name": "responsibleIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Ответственные",
+          "list": "main-chips"
+        },
+        {
+          "name": "scheduledDate",
+          "type": "date",
+          "input": "date",
+          "prompt": "Запланированная дата",
+          "list": "data-date"
+        }
+      ],
+      "relations": {
+        "meeting": {
+          "type": "belongsTo",
+          "target": "meetings",
+          "foreignKey": "meetingId"
+        },
+        "responsibles": {
+          "type": "belongsToMany",
+          "target": "employees",
+          "foreignKey": "responsibleIds"
+        }
+      }
+    },
+    {
+      "name": "meetings",
+      "description": "Информация о встречах",
+      "icon": "event",
+      "prompt": "Встречи",
+      "promptSingle": "Встреча",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "input": "date",
+          "prompt": "Дата",
+          "req": true,
+          "list": "data-date"
+        },
+        {
+          "name": "meetingTypeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип встречи",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "startTime",
+          "type": "time",
+          "input": "time",
+          "prompt": "Время начала",
+          "list": "data-date"
+        },
+        {
+          "name": "nextDate",
+          "type": "date",
+          "input": "date",
+          "prompt": "Следующая дата",
+          "list": "data-date"
+        },
+        {
+          "name": "userIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "attendedUserIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Присутствующие пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "issueIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Вопросы",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Решения",
+          "list": "main-chips"
+        },
+        {
+          "name": "place",
+          "type": "string",
+          "input": "string",
+          "prompt": "Место",
+          "list": "main-title"
+        },
+        {
+          "name": "participants",
+          "type": "string",
+          "input": "string",
+          "prompt": "Участники",
+          "list": "main-subtitle"
+        }
+      ],
+      "relations": {
+        "meetingType": {
+          "type": "belongsTo",
+          "target": "meeting_types",
+          "foreignKey": "meetingTypeId"
+        },
+        "attendedUsers": {
+          "type": "belongsToMany",
+          "target": "employees",
+          "foreignKey": "attendedUserIds"
+        },
+        "issues": {
+          "type": "hasMany",
+          "target": "issues",
+          "foreignKey": "meetingId"
+        },
+        "solutions": {
+          "type": "hasMany",
+          "target": "solutions",
+          "foreignKey": "meetingId"
+        }
+      }
+    },
+    {
+      "name": "issues",
+      "description": "Вопросы на встречах",
+      "icon": "report_problem",
+      "prompt": "Вопросы",
+      "promptSingle": "Вопрос",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "userId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Пользователь",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "theme",
+          "type": "string",
+          "input": "string",
+          "prompt": "Тема",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "content",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Содержание",
+          "list": "main-content"
+        },
+        {
+          "name": "taskTypeId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Тип задачи",
+          "list": "main-chips"
+        },
+        {
+          "name": "importanceId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Важность",
+          "list": "main-chips"
+        },
+        {
+          "name": "solutionId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Решение",
+          "list": "main-chips"
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "prompt": "Продолжительность",
+          "list": "data-count"
+        },
+        {
+          "name": "meetingId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Встреча",
+          "req": true,
+          "list": "main-chips"
+        },
+        {
+          "name": "solution_number",
+          "type": "string",
+          "input": "string",
+          "prompt": "Номер решения",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "solution_created",
+          "type": "date",
+          "input": "date",
+          "prompt": "Дата создания решения",
+          "list": "data-date"
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "prompt": "Порядок",
+          "list": "data-count"
+        }
+      ],
+      "relations": {
+        "user": {
+          "type": "belongsTo",
+          "target": "employees",
+          "foreignKey": "userId"
+        },
+        "importance": {
+          "type": "belongsTo",
+          "target": "importance",
+          "foreignKey": "importanceId"
+        },
+        "solution": {
+          "type": "belongsTo",
+          "target": "solutions",
+          "foreignKey": "solutionId"
+        },
+        "meeting": {
+          "type": "belongsTo",
+          "target": "meetings",
+          "foreignKey": "meetingId"
+        }
+      }
+    },
+    {
+      "name": "employees",
+      "description": "Сотрудники компании",
+      "icon": "people",
+      "prompt": "Сотрудники",
+      "promptSingle": "Сотрудник",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "input": "email",
+          "prompt": "Email",
+          "req": true,
+          "list": "main-subtitle"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Имя",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "departmentId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Отдел",
+          "list": "main-chips"
+        },
+        {
+          "name": "positionId",
+          "type": "reference",
+          "input": "select",
+          "prompt": "Должность",
+          "list": "main-chips"
+        },
+        {
+          "name": "fired",
+          "type": "checkbox",
+          "input": "checkbox",
+          "prompt": "Уволен",
+          "list": "data-switch"
+        }
+      ],
+      "relations": {
+        "department": {
+          "type": "belongsTo",
+          "target": "departments",
+          "foreignKey": "departmentId"
+        },
+        "position": {
+          "type": "belongsTo",
+          "target": "positions",
+          "foreignKey": "positionId"
+        }
+      }
+    },
+    {
+      "name": "positions",
+      "description": "Должности сотрудников",
+      "icon": "assignment_ind",
+      "prompt": "Должности",
+      "promptSingle": "Должность",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        }
+      ],
+      "relations": {}
+    },
+    {
+      "name": "departments",
+      "description": "Подразделения компании",
+      "icon": "domain",
+      "prompt": "Подразделения",
+      "promptSingle": "Подразделение",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        }
+      ],
+      "relations": {}
+    },
+    {
+      "name": "meeting_types",
+      "description": "Типы встреч",
+      "icon": "category",
+      "prompt": "Типы встреч",
+      "promptSingle": "Тип встречи",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "input": "string",
+          "prompt": "Название",
+          "req": true,
+          "list": "main-title"
+        },
+        {
+          "name": "scheduledBegin",
+          "type": "time",
+          "input": "time",
+          "prompt": "Запланированное начало",
+          "list": "data-date"
+        },
+        {
+          "name": "regulations",
+          "type": "textarea",
+          "input": "textarea",
+          "prompt": "Регламент",
+          "list": "main-content"
+        },
+        {
+          "name": "abbreviation",
+          "type": "string",
+          "input": "string",
+          "prompt": "Аббревиатура",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "input": "string",
+          "prompt": "Местоположение",
+          "list": "main-title"
+        },
+        {
+          "name": "fine",
+          "type": "number",
+          "prompt": "Штраф",
+          "list": "data-count"
+        },
+        {
+          "name": "fineCurrency",
+          "type": "string",
+          "input": "string",
+          "prompt": "Валюта штрафа",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "absenceFine",
+          "type": "number",
+          "prompt": "Штраф за отсутствие",
+          "list": "data-count"
+        },
+        {
+          "name": "fineInterval",
+          "type": "string",
+          "input": "string",
+          "prompt": "Интервал штрафа",
+          "list": "main-subtitle"
+        },
+        {
+          "name": "typicalTaskIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Типовые задачи",
+          "list": "main-chips"
+        },
+        {
+          "name": "userIds",
+          "type": "numbers",
+          "input": "numbers",
+          "prompt": "Пользователи",
+          "list": "main-chips"
+        },
+        {
+          "name": "isDefault",
+          "type": "checkbox",
+          "input": "checkbox",
+          "prompt": "По умолчанию",
+          "list": "data-switch"
+        }
+      ],
+      "relations": {
+        "meetings": {
+          "type": "hasMany",
+          "target": "meetings",
+          "foreignKey": "meetingTypeId"
+        }
+      }
+    }
+  ],
+  "version": "1.0"
 }

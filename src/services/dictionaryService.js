@@ -54,11 +54,21 @@ const ENTITY_CONFIG = {
       create: { available: true },
       update: { 
         available: true,  // Добавляем available: true
-        path: '/api/fields/{parentName}/{id}' 
+        path: '/api/fields/{parentName}/{id}',
+        replaceParams: (url, id, parentName) => {
+          return url
+            .replace('{id}', id)
+            .replace('{parentName}', parentName)
+        }
       },
       delete: { 
-        available: true,  // Для единообразия добавим и сюда
-        path: '/api/fields/{parentName}/{id}' 
+        available: true,  // Добавляем available: true
+        path: '/api/fields/{parentName}/{id}',
+        replaceParams: (url, id, parentName) => {
+          return url
+            .replace('{id}', id)
+            .replace('{parentName}', parentName)
+        }
       }
     }
   },
@@ -158,11 +168,12 @@ export default {
     const methodConfig = config.methods.update
     let url = methodConfig.path || `${config.path}/${identifier}`
     
-    // Заменяем параметры в URL
-    url = url
-      .replace('{id}', identifier)
-      .replace('{parentName}', parentName || '')
+    // Используем replaceParams если он определен
+    if (methodConfig.replaceParams) {
+      url = methodConfig.replaceParams(url, identifier, parentName)
+    }
 
+    console.log(`[DictionaryService] Updating ${type}:`, { identifier, parentName, url, data })
     try {
       const response = await api.put(url, data)
       return response.data

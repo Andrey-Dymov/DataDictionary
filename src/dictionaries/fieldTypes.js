@@ -3,6 +3,7 @@ export const dataTypeOptions = [
   { label: 'number - Число', value: 'number' },
   { label: 'float - Число с плавающей точкой', value: 'float' },
   { label: 'reference - Ссылка', value: 'reference' },
+  { label: 'references - Ссылки', value: 'references' },
   { label: 'textarea - Текстовое поле', value: 'textarea' },
   { label: 'date - Дата', value: 'date' },
   { label: 'time - Время', value: 'time' },
@@ -56,6 +57,7 @@ export const getFieldIcon = (type) => {
   switch (type) {
     case 'string': return 'text_fields'
     case 'number': return 'numbers'
+    case 'float': return 'trending_up'
     case 'date': return 'calendar_today'
     case 'time': return 'schedule'
     case 'checkbox': return 'check_box'
@@ -63,8 +65,10 @@ export const getFieldIcon = (type) => {
     case 'array': return 'view_list'
     case 'email': return 'email'
     case 'reference': return 'link'
+    case 'references': return 'link_off'
     case 'numbers': return 'filter_9_plus'
     case 'textarea': return 'subject'
+    case 'bool': return 'toggle_on'
     default: return 'help'
   }
 }
@@ -74,6 +78,8 @@ export const getInputIcon = (type) => {
     case 'text': return 'text_fields'
     case 'textarea': return 'subject'
     case 'select': return 'arrow_drop_down_circle'
+    case 'multiselect': return 'checklist'
+    case 'menu': return 'menu'
     case 'number': return 'numbers'
     case 'checkbox': return 'check_box'
     case 'file': return 'upload_file'
@@ -82,6 +88,8 @@ export const getInputIcon = (type) => {
     case 'email': return 'email'
     case 'reference': return 'link'
     case 'numbers': return 'filter_9_plus'
+    case 'enum': return 'list'
+    case 'string': return 'text_fields'
     default: return 'text_fields'
   }
 }

@@ -64,6 +64,7 @@ import {
   listTypeOptions,
   inputTypeOptions
 } from '../dictionaries/fieldTypes'
+import { useSchemaStore } from '../stores/schema'
 
 export default {
   name: 'FieldForm',
@@ -79,9 +80,10 @@ export default {
     ...useDialogPluginComponent.emits
   ],
 
-  setup(props) {
+  setup(props, { emit }) {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     const $q = useQuasar()
+    const schemaStore = useSchemaStore()
     const isEdit = ref(false)
     const editingFieldName = ref(null)
 
@@ -140,25 +142,46 @@ export default {
 
     const saveField = async (fieldData) => {
       try {
+        const fieldToSave = {
+          name: fieldData.name,
+          type: fieldData.dataType,
+          list: `${fieldData.section}-${fieldData.listType}`,
+          input: fieldData.inputType,
+          prompt: fieldData.prompt,
+          req: fieldData.required
+        }
+
+        console.log('[FieldForm] Saving field:', { 
+          editingFieldName: editingFieldName.value,
+          fieldToSave,
+          entityName: props.entityName 
+        })
+
         if (editingFieldName.value) {
-          // Обновляем существующее поле через единый интерфейс
-          await dictionaryService.update('field', editingFieldName.value, fieldData, props.entityName)
+          await schemaStore.updateField(props.entityName, editingFieldName.value, fieldToSave)
           $q.notify({
             type: 'positive',
             message: 'Поле успешно обновлено'
           })
         } else {
-          // Создаем новое поле через единый интерфейс
-          await dictionaryService.create('field', fieldData, props.entityName)
+          await schemaStore.addField(props.entityName, fieldToSave)
           $q.notify({
             type: 'positive',
             message: 'Поле успешно добавлено'
           })
         }
 
-        onDialogOK(fieldData)
+        emit('ok', fieldToSave)
+        emit('hide')
+
       } catch (error) {
-        console.error('Error saving field:', error)
+        console.error('[FieldForm] Error saving field:', error)
+        console.error('[FieldForm] Error details:', {
+          error,
+          fieldData,
+          entityName: props.entityName,
+          editingFieldName: editingFieldName.value
+        })
         $q.notify({
           type: 'negative',
           message: `Ошибка при ${editingFieldName.value ? 'обновлении' : 'добавлении'} поля`

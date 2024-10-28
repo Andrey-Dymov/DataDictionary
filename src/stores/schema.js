@@ -142,18 +142,29 @@ export const useSchemaStore = defineStore('schema', {
     },
 
     async updateField(entityName, fieldName, fieldData) {
-      console.log('[Store] Updating field:', fieldName, 'in entity:', entityName)
+      console.log('[SchemaStore] Updating field:', fieldName, 'in entity:', entityName)
       try {
+        // Сначала обновляем на сервере
         await dictionaryService.update('field', fieldName, fieldData, entityName)
+        
+        // После успешного обновления на сервере обновляем локальное состояние
         const entity = this.getEntityByName(entityName)
         if (entity) {
           const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
           if (fieldIndex !== -1) {
+            console.log('[SchemaStore] Updating local field data:', fieldData)
             entity.fields[fieldIndex] = fieldData
           }
         }
+
+        // Перезагружаем данные словаря
+        const dictionaryStore = useDictionaryStore()
+        console.log('[SchemaStore] Reloading dictionary data')
+        await this.loadSchema(dictionaryStore.currentDictionaryId)
+        console.log('[SchemaStore] Dictionary data reloaded')
+
       } catch (error) {
-        console.error('[Store] Error updating field:', error)
+        console.error('[SchemaStore] Error updating field:', error)
         throw error
       }
     },
