@@ -30,7 +30,9 @@ module.exports = configure(function (ctx) {
     },
     framework: {
       config: {},
-      plugins: []
+      plugins: [
+        'Dialog'
+      ]
     },
     animations: [],
     ssr: {

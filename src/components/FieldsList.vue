@@ -3,25 +3,12 @@
         <q-card-section>
             <div class="row items-center q-mb-md">
                 <div class="text-h6 q-mr-auto">Поля</div>
-                <!-- Изменим вызов на более безопасный с подтверждением -->
                 <q-btn flat round dense color="primary" icon="add" @click="onAddField">
                     <q-tooltip>Добавить поле</q-tooltip>
                 </q-btn>
             </div>
             <q-list dense separator>
-                <q-item v-for="field in sortedFields" :key="field.name" class="q-py-xs" clickable
-                    @click="onEditField(field)">
-                    <q-item-section avatar>
-                        <q-avatar class="relative-position">
-                            <q-icon :name="getFieldIcon(field.type)" color="primary">
-                                <q-tooltip>{{ getFieldTypeLabel(field.type) }}</q-tooltip>
-                            </q-icon>
-                            <q-badge v-if="field.req" color="negative" floating round size="6px" class="required-badge">
-                                <q-tooltip>Обязательное поле</q-tooltip>
-                            </q-badge>
-                        </q-avatar>
-                    </q-item-section>
-
+                <q-item v-for="field in idFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
                     <q-item-section>
                         <q-item-label class="text-subtitle2">
                             {{ field.name }}
@@ -39,19 +26,14 @@
                         </q-item-label>
                         <q-item-label>
                             <div class="row items-center field-badges">
-                                <!-- Тип данных -->
                                 <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
                                     <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
                                     {{ field.type }}
                                 </q-badge>
-
-                                <!-- Тип в списке -->
                                 <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
                                     <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
                                     {{ field.list }}
                                 </q-badge>
-
-                                <!-- Тип ввода -->
                                 <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
                                     <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
                                     {{ field.input }}
@@ -59,7 +41,129 @@
                             </div>
                         </q-item-label>
                     </q-item-section>
-
+                    <q-item-section side>
+                        <div class="row items-center">
+                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
+                                <q-tooltip>Удалить поле</q-tooltip>
+                            </q-btn>
+                        </div>
+                    </q-item-section>
+                </q-item>
+                <q-item v-for="field in referenceFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
+                    <q-item-section>
+                        <q-item-label class="text-subtitle2">
+                            {{ field.name }}
+                            <span v-if="field.name !== field.prompt" class="text-grey-6">
+                                - {{ field.prompt }}
+                            </span>
+                            <q-badge
+                                v-if="field.parent"
+                                color="purple"
+                                text-color="white"
+                                class="q-ml-sm"
+                            >
+                                {{ getEntityPrompt(field.parent) }}
+                            </q-badge>
+                        </q-item-label>
+                        <q-item-label>
+                            <div class="row items-center field-badges">
+                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
+                                    {{ field.type }}
+                                </q-badge>
+                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
+                                    {{ field.list }}
+                                </q-badge>
+                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
+                                    {{ field.input }}
+                                </q-badge>
+                            </div>
+                        </q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                        <div class="row items-center">
+                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
+                                <q-tooltip>Удалить поле</q-tooltip>
+                            </q-btn>
+                        </div>
+                    </q-item-section>
+                </q-item>
+                <q-item v-for="field in referencesFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
+                    <q-item-section>
+                        <q-item-label class="text-subtitle2">
+                            {{ field.name }}
+                            <span v-if="field.name !== field.prompt" class="text-grey-6">
+                                - {{ field.prompt }}
+                            </span>
+                            <q-badge
+                                v-if="field.parent"
+                                color="purple"
+                                text-color="white"
+                                class="q-ml-sm"
+                            >
+                                {{ getEntityPrompt(field.parent) }}
+                            </q-badge>
+                        </q-item-label>
+                        <q-item-label>
+                            <div class="row items-center field-badges">
+                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
+                                    {{ field.type }}
+                                </q-badge>
+                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
+                                    {{ field.list }}
+                                </q-badge>
+                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
+                                    {{ field.input }}
+                                </q-badge>
+                            </div>
+                        </q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                        <div class="row items-center">
+                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
+                                <q-tooltip>Удалить поле</q-tooltip>
+                            </q-btn>
+                        </div>
+                    </q-item-section>
+                </q-item>
+                <q-item v-for="field in otherFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
+                    <q-item-section>
+                        <q-item-label class="text-subtitle2">
+                            {{ field.name }}
+                            <span v-if="field.name !== field.prompt" class="text-grey-6">
+                                - {{ field.prompt }}
+                            </span>
+                            <q-badge
+                                v-if="field.parent"
+                                color="purple"
+                                text-color="white"
+                                class="q-ml-sm"
+                            >
+                                {{ getEntityPrompt(field.parent) }}
+                            </q-badge>
+                        </q-item-label>
+                        <q-item-label>
+                            <div class="row items-center field-badges">
+                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
+                                    {{ field.type }}
+                                </q-badge>
+                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
+                                    {{ field.list }}
+                                </q-badge>
+                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
+                                    {{ field.input }}
+                                </q-badge>
+                            </div>
+                        </q-item-label>
+                    </q-item-section>
                     <q-item-section side>
                         <div class="row items-center">
                             <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
@@ -75,7 +179,7 @@
 
 <script>
 import { defineComponent, computed } from 'vue'
-import { useQuasar } from 'quasar'
+import { Dialog } from 'quasar'
 import { getFieldIcon, getInputIcon, getFieldTypeLabel, getListTypeIcon, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
 import { useSchemaStore } from '../stores/schema'
 
@@ -89,7 +193,6 @@ export default defineComponent({
     },
     emits: ['deleteField', 'addField', 'editField'],
     setup(props, { emit }) {
-        const $q = useQuasar()
         const schemaStore = useSchemaStore()
 
         // Проверка существования типа данных в справочнике
@@ -118,10 +221,18 @@ export default defineComponent({
         }
 
         const confirmDelete = (field) => {
-            $q.dialog({
+            Dialog.create({
                 title: 'Подтверждение',
                 message: `Вы уверены, что хотите удалить поле "${field.prompt || field.name}"?`,
-                cancel: true,
+                cancel: {
+                    label: 'Отмена',
+                    flat: true
+                },
+                ok: {
+                    label: 'Удалить',
+                    color: 'negative',
+                    flat: true
+                },
                 persistent: true
             }).onOk(() => {
                 emit('deleteField', field.name)
@@ -133,29 +244,29 @@ export default defineComponent({
             return entity ? entity.prompt || entity.name : entityName
         }
 
-        // Добавляем computed для сортировки полей
-        const sortedFields = computed(() => {
-            if (!props.fields) return []
+        // Добавляем computed для разных типов полей
+        const idFields = computed(() => {
+            return props.fields
+                .filter(f => f.type === 'id')
+                .sort((a, b) => a.name.localeCompare(b.name))
+        })
 
-            // Разделяем поля на категории
-            const idFields = props.fields.filter(f => f.type === 'id')
-            const referenceFields = props.fields.filter(f => f.type === 'reference')
-            const referencesFields = props.fields.filter(f => f.type === 'references')
-            const otherFields = props.fields.filter(f => 
-                f.type !== 'id' && 
-                f.type !== 'reference' && 
-                f.type !== 'references'
-            )
+        const referenceFields = computed(() => {
+            return props.fields
+                .filter(f => f.type === 'reference')
+                .sort((a, b) => a.name.localeCompare(b.name))
+        })
 
-            // Сортируем каждую категорию по имени
-            const sortByName = (a, b) => a.name.localeCompare(b.name)
-            
-            return [
-                ...idFields.sort(sortByName),
-                ...referenceFields.sort(sortByName),
-                ...referencesFields.sort(sortByName),
-                ...otherFields.sort(sortByName)
-            ]
+        const referencesFields = computed(() => {
+            return props.fields
+                .filter(f => f.type === 'references')
+                .sort((a, b) => a.name.localeCompare(b.name))
+        })
+
+        const otherFields = computed(() => {
+            return props.fields
+                .filter(f => !['id', 'reference', 'references'].includes(f.type))
+                .sort((a, b) => a.name.localeCompare(b.name))
         })
 
         return {
@@ -170,7 +281,10 @@ export default defineComponent({
             onEditField,
             confirmDelete,
             getEntityPrompt,
-            sortedFields,
+            idFields,
+            referenceFields,
+            referencesFields,
+            otherFields
         }
     }
 })

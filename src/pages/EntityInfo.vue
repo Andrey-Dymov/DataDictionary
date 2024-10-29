@@ -114,6 +114,14 @@
                     />
                 </div>
                 <div class="col-12 col-md-6">
+                    <!-- Добавляем блок расчетных связей -->
+                    <q-card flat bordered class="q-mb-md">
+                        <q-card-section>
+                            <div class="text-h6 q-mb-md">Расчетные связи</div>
+                            <pre class="calculated-relations">{{ calculatedRelationsJson }}</pre>
+                        </q-card-section>
+                    </q-card>
+
                     <RelationsList 
                         :relations="entity.relations" 
                         :source-name="entity.name"
@@ -269,6 +277,58 @@ export default defineComponent({
             relationForm.value.show(relation)
         }
 
+        // Добавляем computed для расчетных связей
+        const calculatedRelations = computed(() => {
+            if (!entity.value?.fields) return {}
+
+            const relations = {}
+            
+            // 1. Добавляем связи на основе полей с родителями
+            entity.value.fields.forEach(field => {
+                if (field.parent) {
+                    const relationType = field.type === 'references' 
+                        ? 'belongsToMany' 
+                        : 'belongsTo'
+
+                    const relationName = field.parent
+                    
+                    relations[relationName] = {
+                        type: relationType,
+                        target: field.parent,
+                        foreignKey: field.name,
+                        restriction: 'restrict'
+                    }
+                }
+            })
+
+            // 2. Добавляем обратные связи от детей
+            schemaStore.entities.forEach(childEntity => {
+                if (childEntity.name === entity.value.name) return // Пропускаем текущую сущность
+
+                // Ищем поля в дочерней сущности, которые ссылаются на текущую
+                childEntity.fields.forEach(field => {
+                    if (field.parent === entity.value.name && field.type === 'reference') {
+                        // Для reference создаем hasMany
+                        const relationName = childEntity.name // Имя связи = имя дочерней сущности
+                        relations[relationName] = {
+                            type: 'hasMany',
+                            target: childEntity.name,
+                            foreignKey: field.name,
+                            restriction: 'restrict'
+                        }
+                    }
+                    // Для references связь не создаем, так как это many-to-many и она уже создана с другой стороны
+                })
+            })
+
+            return relations
+        })
+
+        // Форматируем JSON для отображения
+        const calculatedRelationsJson = computed(() => {
+            return JSON.stringify(calculatedRelations.value, null, 2)
+        })
+
         // Возвращаем все необходимые методы и свойства
         return {
             schemaStore,
@@ -285,7 +345,8 @@ export default defineComponent({
             showAddRelationDialog,
             showEditRelationDialog,
             fieldForm,
-            relationForm
+            relationForm,
+            calculatedRelationsJson
         }
     }
 })
@@ -333,4 +394,15 @@ export default defineComponent({
 
   &__native, &__prefix, &__suffix
     color: rgba(0,0,0,0.87)
+
+.calculated-relations
+  background: rgba(0,0,0,0.03)
+  padding: 1rem
+  border-radius: 4px
+  font-family: monospace
+  white-space: pre-wrap
+  word-break: break-word
+  margin: 0
+  font-size: 0.9rem
+  line-height: 1.4
 </style>

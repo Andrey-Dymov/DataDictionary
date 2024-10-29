@@ -75,7 +75,7 @@
         },
         {
           "name": "responsibleIds",
-          "type": "reference",
+          "type": "references",
           "list": "main-chips",
           "input": "numbers",
           "prompt": "Ответственные",
@@ -112,7 +112,10 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": true
         },
         {
           "name": "name",
@@ -133,10 +136,11 @@
         {
           "name": "meetingTypeId",
           "type": "reference",
+          "list": "main-chips",
           "input": "select",
           "prompt": "Тип встречи",
           "req": true,
-          "list": "main-chips"
+          "parent": "meeting_types"
         },
         {
           "name": "startTime",
@@ -154,10 +158,12 @@
         },
         {
           "name": "userIds",
-          "type": "numbers",
-          "input": "numbers",
+          "type": "references",
+          "list": "main-inline",
+          "input": "multiselect",
           "prompt": "Пользователи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "attendedUserIds",
@@ -168,10 +174,12 @@
         },
         {
           "name": "issueIds",
-          "type": "numbers",
+          "type": "reference",
+          "list": "main-chips",
           "input": "numbers",
           "prompt": "Вопросы",
-          "list": "main-chips"
+          "req": false,
+          "parent": "issues"
         },
         {
           "name": "solutionIds",
@@ -227,15 +235,19 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": true
         },
         {
           "name": "userId",
           "type": "reference",
+          "list": "main-badge",
           "input": "select",
           "prompt": "Пользователь",
           "req": true,
-          "list": "main-chips"
+          "parent": "employees"
         },
         {
           "name": "theme",
@@ -255,37 +267,45 @@
         {
           "name": "taskTypeId",
           "type": "reference",
+          "list": "main-badge",
           "input": "select",
           "prompt": "Тип задачи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "solutions"
         },
         {
           "name": "importanceId",
           "type": "reference",
-          "input": "select",
+          "list": "main-none",
+          "input": "none",
           "prompt": "Важность",
-          "list": "main-chips"
+          "req": false
         },
         {
           "name": "solutionId",
           "type": "reference",
+          "list": "main-highlite",
           "input": "select",
           "prompt": "Решение",
-          "list": "main-chips"
+          "req": false,
+          "parent": "solutions"
         },
         {
           "name": "duration",
           "type": "number",
+          "list": "data-value",
+          "input": "time",
           "prompt": "Продолжительность",
-          "list": "data-count"
+          "req": false
         },
         {
           "name": "meetingId",
           "type": "reference",
+          "list": "main-highlite",
           "input": "select",
           "prompt": "Встреча",
           "req": true,
-          "list": "main-chips"
+          "parent": "meetings"
         },
         {
           "name": "solution_number",
@@ -304,8 +324,10 @@
         {
           "name": "order",
           "type": "number",
+          "list": "data-value",
+          "input": "number",
           "prompt": "Порядок",
-          "list": "data-count"
+          "req": false
         }
       ],
       "relations": {
@@ -617,7 +639,7 @@
         },
         {
           "name": "responsibleIds",
-          "type": "reference",
+          "type": "references",
           "list": "main-chips",
           "input": "numbers",
           "prompt": "Ответственные",
@@ -654,7 +676,10 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": true
         },
         {
           "name": "name",
@@ -675,10 +700,11 @@
         {
           "name": "meetingTypeId",
           "type": "reference",
+          "list": "main-chips",
           "input": "select",
           "prompt": "Тип встречи",
           "req": true,
-          "list": "main-chips"
+          "parent": "meeting_types"
         },
         {
           "name": "startTime",
@@ -696,23 +722,18 @@
         },
         {
           "name": "userIds",
-          "type": "numbers",
-          "input": "numbers",
+          "type": "references",
+          "list": "main-inline",
+          "input": "multiselect",
           "prompt": "Пользователи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "attendedUserIds",
           "type": "numbers",
           "input": "numbers",
           "prompt": "Присутствующие пользователи",
-          "list": "main-chips"
-        },
-        {
-          "name": "issueIds",
-          "type": "numbers",
-          "input": "numbers",
-          "prompt": "Вопросы",
           "list": "main-chips"
         },
         {
@@ -769,15 +790,19 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": true
         },
         {
           "name": "userId",
           "type": "reference",
+          "list": "main-badge",
           "input": "select",
           "prompt": "Пользователь",
           "req": true,
-          "list": "main-chips"
+          "parent": "employees"
         },
         {
           "name": "theme",
@@ -797,37 +822,45 @@
         {
           "name": "taskTypeId",
           "type": "reference",
+          "list": "main-badge",
           "input": "select",
           "prompt": "Тип задачи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "solutions"
         },
         {
           "name": "importanceId",
           "type": "reference",
-          "input": "select",
+          "list": "main-none",
+          "input": "none",
           "prompt": "Важность",
-          "list": "main-chips"
+          "req": false
         },
         {
           "name": "solutionId",
           "type": "reference",
+          "list": "main-highlite",
           "input": "select",
           "prompt": "Решение",
-          "list": "main-chips"
+          "req": false,
+          "parent": "solutions"
         },
         {
           "name": "duration",
           "type": "number",
+          "list": "data-value",
+          "input": "time",
           "prompt": "Продолжительность",
-          "list": "data-count"
+          "req": false
         },
         {
           "name": "meetingId",
           "type": "reference",
+          "list": "main-highlite",
           "input": "select",
           "prompt": "Встреча",
           "req": true,
-          "list": "main-chips"
+          "parent": "meetings"
         },
         {
           "name": "solution_number",
@@ -846,8 +879,10 @@
         {
           "name": "order",
           "type": "number",
+          "list": "data-value",
+          "input": "number",
           "prompt": "Порядок",
-          "list": "data-count"
+          "req": false
         }
       ],
       "relations": {
