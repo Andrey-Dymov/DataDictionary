@@ -9,7 +9,7 @@
                 </q-btn>
             </div>
             <q-list dense separator>
-                <q-item v-for="field in fields" :key="field.name" class="q-py-xs" clickable
+                <q-item v-for="field in sortedFields" :key="field.name" class="q-py-xs" clickable
                     @click="onEditField(field)">
                     <q-item-section avatar>
                         <q-avatar class="relative-position">
@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { getFieldIcon, getInputIcon, getFieldTypeLabel, getListTypeIcon, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
 import { useSchemaStore } from '../stores/schema'
@@ -133,6 +133,31 @@ export default defineComponent({
             return entity ? entity.prompt || entity.name : entityName
         }
 
+        // Добавляем computed для сортировки полей
+        const sortedFields = computed(() => {
+            if (!props.fields) return []
+
+            // Разделяем поля на категории
+            const idFields = props.fields.filter(f => f.type === 'id')
+            const referenceFields = props.fields.filter(f => f.type === 'reference')
+            const referencesFields = props.fields.filter(f => f.type === 'references')
+            const otherFields = props.fields.filter(f => 
+                f.type !== 'id' && 
+                f.type !== 'reference' && 
+                f.type !== 'references'
+            )
+
+            // Сортируем каждую категорию по имени
+            const sortByName = (a, b) => a.name.localeCompare(b.name)
+            
+            return [
+                ...idFields.sort(sortByName),
+                ...referenceFields.sort(sortByName),
+                ...referencesFields.sort(sortByName),
+                ...otherFields.sort(sortByName)
+            ]
+        })
+
         return {
             getFieldIcon,
             getInputIcon,
@@ -144,7 +169,8 @@ export default defineComponent({
             onAddField,
             onEditField,
             confirmDelete,
-            getEntityPrompt
+            getEntityPrompt,
+            sortedFields,
         }
     }
 })

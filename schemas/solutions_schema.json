@@ -9,7 +9,10 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": false
         },
         {
           "name": "meetingId",
@@ -548,7 +551,10 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "req": false
         },
         {
           "name": "meetingId",

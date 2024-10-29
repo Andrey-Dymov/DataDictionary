@@ -1,4 +1,5 @@
 export const dataTypeOptions = [
+  { label: 'id - Идентификатор', value: 'id' },
   { label: 'string - Строка', value: 'string' },
   { label: 'number - Число', value: 'number' },
   { label: 'float - Число с плавающей точкой', value: 'float' },
@@ -20,6 +21,7 @@ export const sectionOptions = [
 ]
 
 export const listTypeOptions = [
+  { label: 'none - Нет', value: 'none', icon: 'not_interested' },
   { label: 'title - Заголовок', value: 'title', icon: 'title' },
   { label: 'subtitle - Подзаголовок', value: 'subtitle', icon: 'subtitles' },
   { label: 'label - Метка', value: 'label', icon: 'label' },
@@ -37,6 +39,7 @@ export const listTypeOptions = [
 ]
 
 export const inputTypeOptions = [
+  { label: 'none - Нет', value: 'none' },
   { label: 'string - Строка', value: 'string' },
   { label: 'select - Выбор', value: 'select' },
   { label: 'multiselect - Множественный выбор', value: 'multiselect' },
@@ -55,6 +58,7 @@ export const inputTypeOptions = [
 
 export const getFieldIcon = (type) => {
   switch (type) {
+    case 'id': return 'fingerprint'
     case 'string': return 'text_fields'
     case 'number': return 'numbers'
     case 'float': return 'money'
@@ -78,6 +82,7 @@ export const getFieldIcon = (type) => {
 
 export const getInputIcon = (type) => {
   switch (type) {
+    case 'none': return 'not_interested'
     case 'text': return 'text_fields'
     case 'textarea': return 'subject'
     case 'select': return 'arrow_drop_down_circle'
@@ -118,6 +123,7 @@ export const getFieldTypeLabel = (type) => {
 
 export const getListTypeIcon = (type) => {
   switch (type) {
+    case 'none': return 'not_interested'
     case 'title': return 'title'
     case 'subtitle': return 'subtitles'
     case 'label': return 'label'
