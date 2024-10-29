@@ -84,7 +84,7 @@
             v-model="form.target"
             :options="entityOptions"
             label="Связанная сущность"
-            standout
+            outlined
             dense
             class="q-mb-sm"
             emit-value
@@ -95,7 +95,7 @@
           <q-input 
             v-model="form.foreignKey"
             :label="foreignKeyLabel"
-            standout 
+            outlined 
             dense
             class="q-mb-sm"
             :rules="[val => !!val || 'Обязательное поле']"
@@ -147,7 +147,7 @@
             <q-input 
               v-model="form.name" 
               label="Название связи" 
-              standout 
+              outlined 
               dense
               class="col"
               :rules="[val => !!val || 'Обязательное поле']"

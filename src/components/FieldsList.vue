@@ -28,6 +28,14 @@
                             <span v-if="field.name !== field.prompt" class="text-grey-6">
                                 - {{ field.prompt }}
                             </span>
+                            <q-badge
+                                v-if="field.parent"
+                                color="purple"
+                                text-color="white"
+                                class="q-ml-sm"
+                            >
+                                {{ getEntityPrompt(field.parent) }}
+                            </q-badge>
                         </q-item-label>
                         <q-item-label>
                             <div class="row items-center field-badges">
@@ -69,6 +77,7 @@
 import { defineComponent } from 'vue'
 import { useQuasar } from 'quasar'
 import { getFieldIcon, getInputIcon, getFieldTypeLabel, getListTypeIcon, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
+import { useSchemaStore } from '../stores/schema'
 
 export default defineComponent({
     name: 'FieldsList',
@@ -81,6 +90,7 @@ export default defineComponent({
     emits: ['deleteField', 'addField', 'editField'],
     setup(props, { emit }) {
         const $q = useQuasar()
+        const schemaStore = useSchemaStore()
 
         // Проверка существования типа данных в справочнике
         const isValidDataType = (type) => {
@@ -118,6 +128,11 @@ export default defineComponent({
             })
         }
 
+        const getEntityPrompt = (entityName) => {
+            const entity = schemaStore.getEntityByName(entityName)
+            return entity ? entity.prompt || entity.name : entityName
+        }
+
         return {
             getFieldIcon,
             getInputIcon,
@@ -128,7 +143,8 @@ export default defineComponent({
             isValidInputType,
             onAddField,
             onEditField,
-            confirmDelete
+            confirmDelete,
+            getEntityPrompt
         }
     }
 })
@@ -166,4 +182,10 @@ export default defineComponent({
   font-weight: 500
   line-height: 2rem
   letter-spacing: 0.0125em
+
+.q-badge
+  font-size: 0.8em
+  padding: 2px 6px
+  border-radius: 4px
+  font-weight: normal
 </style>

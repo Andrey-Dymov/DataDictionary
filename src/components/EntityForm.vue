@@ -12,7 +12,7 @@
             <q-input 
               v-model="form.name" 
               label="Название" 
-              standout 
+              outlined 
               dense
               :rules="[val => !!val || 'Обязательное поле']"
             />
@@ -22,7 +22,7 @@
             <q-input 
               v-model="form.prompt" 
               label="Метка" 
-              standout 
+              outlined 
               dense
             />
           </div>
@@ -31,7 +31,7 @@
             <q-input 
               v-model="form.promptSingle" 
               label="Метка единственного числа" 
-              standout 
+              outlined 
               dense
             />
           </div>
@@ -41,7 +41,7 @@
               v-model="form.description" 
               label="Описание" 
               type="textarea" 
-              standout 
+              outlined 
               dense
             />
           </div>
@@ -50,7 +50,7 @@
             <q-input 
               v-model="form.icon" 
               label="Иконка" 
-              standout 
+              outlined 
               dense
             >
               <template v-slot:append>

@@ -347,6 +347,15 @@ app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
       return res.status(404).json({ error: 'Entity not found' })
     }
 
+    // Проверяем существование родительской сущности, если указана
+    if (fieldData.parent) {
+      const parentEntity = dictionary.entities.find(e => e.name === fieldData.parent)
+      if (!parentEntity) {
+        console.error('[API] Parent entity not found:', fieldData.parent)
+        return res.status(404).json({ error: 'Parent entity not found' })
+      }
+    }
+
     // Находим поле
     const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
     if (fieldIndex === -1) {
@@ -359,13 +368,13 @@ app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
     console.log('[API] Updated field in entity')
 
     // Обновляем сущность в словаре
-    const entityIndex = dictionary.collections.findIndex(e => e.name === entityName)
+    const entityIndex = dictionary.collections?.findIndex(e => e.name === entityName)
     if (entityIndex !== -1) {
       dictionary.collections[entityIndex] = entity
       console.log('[API] Updated entity in collections')
     }
 
-    const entitiesIndex = dictionary.entities.findIndex(e => e.name === entityName)
+    const entitiesIndex = dictionary.entities?.findIndex(e => e.name === entityName)
     if (entitiesIndex !== -1) {
       dictionary.entities[entitiesIndex] = entity
       console.log('[API] Updated entity in entities')
@@ -375,10 +384,6 @@ app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
     console.log('[API] Saving changes to file:', filePath)
     await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
     console.log('[API] Changes saved successfully')
-
-    // Перечитываем файл для проверки
-    const savedData = await fs.readFile(filePath, 'utf8')
-    console.log('[API] Verification - saved data:', JSON.parse(savedData))
     
     res.json(fieldData)
   } catch (error) {
@@ -547,28 +552,30 @@ async function findEntityInDictionaries(entityName) {
 }
 
 async function findEntityAndDictionary(entityName) {
-  console.log('[API] Finding entity and dictionary for:', entityName)
+  console.log('\n[API] Finding entity and dictionary for:', entityName)
   
   try {
     const metaData = await fs.readFile(META_FILE, 'utf8')
     const { dictionaries } = JSON.parse(metaData)
-    console.log('[API] Found dictionaries:', dictionaries.length)
+    console.log('[API] Found dictionaries:', dictionaries.map(d => d.id))
     
     for (const dict of dictionaries) {
       const filePath = path.join(dict.filePath, dict.fileName)
-      console.log('[API] Checking file:', filePath)
+      console.log('\n[API] Checking dictionary:', dict.id)
+      console.log('[API] Reading file:', filePath)
       
       const data = await fs.readFile(filePath, 'utf8')
       const dictionary = JSON.parse(data)
-      console.log('[API] Dictionary data loaded, checking entities...')
+      console.log('[API] Dictionary loaded, checking entities...')
       
       // Проверяем наличие entities или collections
       const entities = dictionary.entities || dictionary.collections || []
-      console.log('[API] Found entities:', entities.length)
+      console.log('[API] Found entities:', entities.map(e => e.name))
       
       const entity = entities.find(e => e.name === entityName)
       if (entity) {
         console.log('[API] Found entity:', entityName)
+        console.log('[API] Entity fields:', entity.fields?.map(f => f.name))
         return { 
           dictionary: {
             ...dictionary,

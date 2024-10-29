@@ -11,7 +11,7 @@
             <q-input 
               v-model="form.name" 
               label="Название словаря" 
-              standout 
+              outlined 
               dense
               class="q-mb-xs"
               :rules="[val => !!val || 'Обязательное поле']"
@@ -22,7 +22,7 @@
             <q-input
               v-model="form.filePath"
               label="Каталог"
-              standout
+              outlined
               dense
               class="q-mb-xs"
               :rules="[val => !!val || 'Обязательное поле']"
@@ -33,7 +33,7 @@
             <q-input
               v-model="form.fileName"
               label="Файл словаря"
-              standout
+              outlined
               dense
               readonly
               class="q-mb-xs"
@@ -60,7 +60,7 @@
               v-model="form.description" 
               label="Описание" 
               type="textarea" 
-              standout 
+              outlined 
               dense
               autogrow
               class="q-mb-xs"

@@ -14,10 +14,11 @@
         {
           "name": "meetingId",
           "type": "reference",
+          "list": "main-chips",
           "input": "select",
           "prompt": "Встреча",
           "req": true,
-          "list": "main-chips"
+          "parent": "meetings"
         },
         {
           "name": "numberAtMeeting",
@@ -62,17 +63,21 @@
         },
         {
           "name": "solutionUserIds",
-          "type": "numbers",
+          "type": "reference",
+          "list": "main-chips",
           "input": "numbers",
           "prompt": "Пользователи решения",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "responsibleIds",
-          "type": "numbers",
+          "type": "reference",
+          "list": "main-chips",
           "input": "numbers",
           "prompt": "Ответственные",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "scheduledDate",
@@ -548,10 +553,11 @@
         {
           "name": "meetingId",
           "type": "reference",
+          "list": "main-chips",
           "input": "select",
           "prompt": "Встреча",
           "req": true,
-          "list": "main-chips"
+          "parent": "meetings"
         },
         {
           "name": "numberAtMeeting",
@@ -596,17 +602,21 @@
         },
         {
           "name": "solutionUserIds",
-          "type": "numbers",
+          "type": "reference",
+          "list": "main-chips",
           "input": "numbers",
           "prompt": "Пользователи решения",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "responsibleIds",
-          "type": "numbers",
+          "type": "reference",
+          "list": "main-chips",
           "input": "numbers",
           "prompt": "Ответственные",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "scheduledDate",
