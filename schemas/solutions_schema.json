@@ -167,10 +167,12 @@
         },
         {
           "name": "attendedUserIds",
-          "type": "numbers",
-          "input": "numbers",
+          "type": "references",
+          "list": "main-inline",
+          "input": "multiselect",
           "prompt": "Присутствующие пользователи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "solutionIds",
