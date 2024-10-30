@@ -1,134 +1,39 @@
 <!-- Переименовываем из CollectionDetails.vue -->
 <template>
     <q-page class="q-pa-md">
-        <template v-if="entity"> <!-- было collection -->
-            <!-- Информация о сущности -->
+        <template v-if="entity">
+            <!-- Новый компактный заголовок -->
             <div class="entity-header q-mb-lg">
-                <div class="row items-center q-mb-md">
+                <div class="row items-center q-mb-xs">
                     <q-icon 
                         :name="entity.icon" 
                         size="36px" 
                         color="primary"
                         class="q-mr-md"
                     />
-                    <div class="text-h4">{{ entity.prompt }}</div>
-                </div>
-
-                <!-- Основная информация о сущности -->
-                <q-card flat bordered>
-                    <q-card-section>
-                        <div class="row wrap q-col-gutter-xs">
-                            <!-- Название - всегда первое и шире остальных -->
-                            <div class="entity-field-item" style="min-width: 250px">
-                                <q-field
-                                    label="Название"
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline text-primary">
-                                            {{ entity.name }}
-                                        </div>
-                                    </template>
-                                </q-field>
-                            </div>
-
-                            <!-- Метка -->
-                            <div class="entity-field-item" style="min-width: 200px">
-                                <q-field
-                                    label="Метка"
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline">
-                                            {{ entity.prompt || '-' }}
-                                        </div>
-                                    </template>
-                                </q-field>
-                            </div>
-
-                            <!-- Метка ед.ч. -->
-                            <div class="entity-field-item" style="min-width: 200px">
-                                <q-field
-                                    label="Метка ед.ч."
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline">
-                                            {{ entity.promptSingle || '-' }}
-                                        </div>
-                                    </template>
-                                </q-field>
-                            </div>
-
-                            <!-- Иконка -->
-                            <div class="entity-field-item" style="min-width: 150px">
-                                <q-field
-                                    label="Иконка"
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline">
-                                            <q-icon :name="entity.icon" size="1.2em" class="q-mr-sm" />
-                                            {{ entity.icon || '-' }}
-                                        </div>
-                                    </template>
-                                </q-field>
-                            </div>
-
-                            <!-- Описание - если есть -->
-                            <div v-if="entity.description" class="entity-field-item" style="min-width: 300px">
-                                <q-field
-                                    label="Описание"
-                                    stack-label
-                                    dense
-                                    borderless
-                                >
-                                    <template v-slot:control>
-                                        <div class="self-center full-width no-outline">
-                                            {{ entity.description }}
-                                        </div>
-                                    </template>
-                                </q-field>
-                            </div>
+                    <div>
+                        <div class="text-h4">
+                            {{ entity.prompt }}
+                            <span class="text-grey-7"> - {{ entity.name }}</span>
                         </div>
-                    </q-card-section>
-                </q-card>
+                        <div 
+                            v-if="entity.description && entity.description !== entity.prompt" 
+                            class="text-grey-8 text-subtitle1"
+                        >
+                            {{ entity.description }}
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <!-- Поля и связи -->
+            <!-- Только список полей -->
             <div class="row q-col-gutter-md">
-                <div class="col-12 col-md-6">
+                <div class="col-12">
                     <FieldsList 
                         :fields="entity.fields" 
                         @deleteField="handleDeleteField"
                         @addField="showAddFieldDialog"
                         @editField="showEditFieldDialog"
-                    />
-                </div>
-                <div class="col-12 col-md-6">
-                    <!-- Добавляем блок расчетных связей -->
-                    <q-card flat bordered class="q-mb-md">
-                        <q-card-section>
-                            <div class="text-h6 q-mb-md">Расчетные связи</div>
-                            <pre class="calculated-relations">{{ calculatedRelationsJson }}</pre>
-                        </q-card-section>
-                    </q-card>
-
-                    <RelationsList 
-                        :relations="entity.relations" 
-                        :source-name="entity.name"
-                        :source-prompt="entity.prompt"
-                        @deleteRelation="handleDeleteRelation"
-                        @addRelation="showAddRelationDialog"
-                        @editRelation="showEditRelationDialog"
                     />
                 </div>
             </div>
@@ -137,7 +42,6 @@
             <h5 class="text-grey-7">Выберите сущность из списка слева</h5>
         </div>
 
-        <!-- Исправляем передачу пропсов в формы -->
         <FieldForm 
             ref="fieldForm"
             :entity-name="entityName"
@@ -216,7 +120,7 @@ export default defineComponent({
             return 'col-12 col-sm-2'
         }
 
-        // Добавляем методы о��работки полей
+        // Добавляем методы обработки полей
         const handleDeleteField = async (fieldName) => {
             try {
                 // Вызываем метод deleteField из schemaStore
@@ -357,55 +261,29 @@ export default defineComponent({
 
 <style lang="sass">
 .entity-header
-    .q-card
-        background: rgba(0,0,0,0.02)
-        
-    .text-subtitle2
-        margin-bottom: 4px
-    
-.entity-info  // Переименовываем из collection-details
-  &__header
-    margin-bottom: 2rem
-  
-  &__description
-    color: $grey-7
-    margin-bottom: 2rem
-    
-  &__content
-    display: grid
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
-    gap: 1rem
+    .text-h4
+        font-size: 2rem
+        font-weight: 500
+        line-height: 2.5rem
+        letter-spacing: 0.0125em
 
-.text-h4
-  font-size: 2rem
-  font-weight: 500
-  line-height: 2.5rem
-  letter-spacing: 0.0125em
+        .text-grey-7
+            font-size: inherit
+            font-weight: inherit
 
-.text-subtitle1
-  font-size: 1rem
-  font-weight: 400
-  line-height: 1.75rem
-  letter-spacing: 0.00937em
-
-.q-field
-  margin-bottom: 8px
-  
-  &__label
-    color: rgba(0,0,0,0.6)
-    font-weight: 500
-
-  &__native, &__prefix, &__suffix
-    color: rgba(0,0,0,0.87)
+    .text-subtitle1
+        font-size: 1rem
+        line-height: 1.5
+        margin-top: 4px
 
 .calculated-relations
-  background: rgba(0,0,0,0.03)
-  padding: 1rem
-  border-radius: 4px
-  font-family: monospace
-  white-space: pre-wrap
-  word-break: break-word
-  margin: 0
-  font-size: 0.9rem
-  line-height: 1.4
+    background: rgba(0,0,0,0.03)
+    padding: 1rem
+    border-radius: 4px
+    font-family: monospace
+    white-space: pre-wrap
+    word-break: break-word
+    margin: 0
+    font-size: 0.9rem
+    line-height: 1.4
 </style>

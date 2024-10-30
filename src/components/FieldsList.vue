@@ -10,53 +10,93 @@
             <q-list dense separator>
                 <template v-for="group in fieldGroups" :key="group.name">
                     <div v-if="group.fields.length > 0" class="field-group-header">{{ group.label }}</div>
-                    <template v-for="field in group.fields" :key="field.name">
-                        <q-item class="q-py-xs" clickable @click="onEditField(field)">
+                    <template v-for="item in group.fields" :key="item.name">
+                        <q-item class="q-py-xs" clickable @click="item.isCalculated ? null : onEditField(item)">
                             <q-item-section avatar>
                                 <q-avatar class="relative-position">
-                                    <q-icon :name="getFieldIcon(field.type)" color="primary">
-                                        <q-tooltip>{{ getFieldTypeLabel(field.type) }}</q-tooltip>
+                                    <q-icon 
+                                        :name="item.isCalculated ? getRelationIcon(item.type) : getFieldIcon(item.type)" 
+                                        :color="item.isCalculated ? 'purple' : 'primary'"
+                                    >
+                                        <q-tooltip>{{ item.isCalculated ? getRelationTypeText(item.type) : getFieldTypeLabel(item.type) }}</q-tooltip>
                                     </q-icon>
-                                    <q-badge v-if="field.req" color="negative" floating round size="6px" class="required-badge">
+                                    <q-badge 
+                                        v-if="!item.isCalculated && item.req" 
+                                        color="negative" 
+                                        floating 
+                                        round 
+                                        size="6px" 
+                                        class="required-badge"
+                                    >
                                         <q-tooltip>Обязательное поле</q-tooltip>
                                     </q-badge>
                                 </q-avatar>
                             </q-item-section>
+
                             <q-item-section>
                                 <q-item-label class="text-subtitle2">
-                                    {{ field.name }}
-                                    <span v-if="field.name !== field.prompt" class="text-grey-6">
-                                        - {{ field.prompt }}
+                                    {{ item.name }}
+                                    <span v-if="!item.isCalculated && item.name !== item.prompt" class="text-grey-6">
+                                        - {{ item.prompt }}
                                     </span>
+                                    <!-- Бейдж для обычных полей с родителем -->
                                     <q-badge
-                                        v-if="field.parent"
-                                        color="purple"
+                                        v-if="item.parent && !item.isCalculated"
+                                        color="deep-purple"
                                         text-color="white"
                                         class="q-ml-sm"
                                     >
-                                        {{ getEntityPrompt(field.parent) }}
+                                        {{ getEntityPrompt(item.parent) }}
                                     </q-badge>
+                                    <!-- Бейдж для расчетных связей -->
+                                    <template v-if="item.isCalculated">
+                                        <q-badge
+                                            :color="item.direction === 'parent' ? 'deep-purple' : 'indigo'"
+                                            text-color="white"
+                                            class="q-ml-sm"
+                                        >
+                                            {{ getEntityPrompt(item.target) }}
+                                        </q-badge>
+                                        <q-badge
+                                            color="grey-7"
+                                            text-color="white"
+                                            class="q-ml-sm"
+                                        >
+                                            {{ item.foreignKey }}
+                                        </q-badge>
+                                    </template>
                                 </q-item-label>
                                 <q-item-label>
                                     <div class="row items-center field-badges">
-                                        <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
-                                            <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
-                                            {{ field.type }}
-                                        </q-badge>
-                                        <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                            <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
-                                            {{ field.list }}
-                                        </q-badge>
-                                        <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
-                                            <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
-                                            {{ field.input }}
-                                        </q-badge>
+                                        <!-- Для обычных полей -->
+                                        <template v-if="!item.isCalculated">
+                                            <q-badge :color="isValidDataType(item.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                                <q-icon :name="getFieldIcon(item.type)" size="16px" class="q-mr-xs" />
+                                                {{ item.type }}
+                                            </q-badge>
+                                            <q-badge :color="isValidListType(item.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                                <q-icon :name="getListTypeIcon(item.list?.split('-')[1])" size="16px" class="q-mr-xs" />
+                                                {{ item.list }}
+                                            </q-badge>
+                                            <q-badge :color="isValidInputType(item.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                                <q-icon :name="getInputIcon(item.input)" size="16px" class="q-mr-xs" />
+                                                {{ item.input }}
+                                            </q-badge>
+                                        </template>
+                                        <!-- Для связей -->
+                                        <!-- <template v-else>
+                                            <q-badge color="deep-purple" class="q-mr-sm">
+                                                <q-icon name="link" size="16px" class="q-mr-xs" />
+                                                {{ item.foreignKey }}
+                                            </q-badge>
+                                        </template> -->
                                     </div>
                                 </q-item-label>
                             </q-item-section>
-                            <q-item-section side>
+
+                            <q-item-section side v-if="!item.isCalculated">
                                 <div class="row items-center">
-                                    <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
+                                    <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(item)">
                                         <q-tooltip>Удалить поле</q-tooltip>
                                     </q-btn>
                                 </div>
@@ -74,6 +114,7 @@ import { defineComponent, computed } from 'vue'
 import { Dialog } from 'quasar'
 import { getFieldIcon, getInputIcon, getFieldTypeLabel, getListTypeIcon, dataTypeOptions, listTypeOptions, inputTypeOptions } from '../dictionaries/fieldTypes'
 import { useSchemaStore } from '../stores/schema'
+import { manyToManySvg, oneToManySvg, manyToOneSvg } from '../assets/icons/relations'
 
 export default defineComponent({
     name: 'FieldsList',
@@ -185,7 +226,94 @@ export default defineComponent({
                 })
         })
 
-        // Добавляем computed для групп полей
+        // Добавляем новые computed свойства после существующих групп полей
+        const calculatedParentRelations = computed(() => {
+            if (!props.fields) return []
+
+            const relations = []
+            const relationNames = new Set()
+            
+            // Сначала обрабатываем reference поля
+            props.fields
+                .filter(field => field.parent && field.type === 'reference')
+                .forEach(field => {
+                    // Убираем Id из имени поля
+                    const baseName = field.name.endsWith('Id')
+                        ? field.name.slice(0, -2)
+                        : field.name
+
+                    // Преобразуем в camelCase
+                    const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1)
+
+                    relations.push({
+                        name: relationName,
+                        type: 'belongsTo',
+                        target: field.parent,
+                        foreignKey: field.name,
+                        isCalculated: true,
+                        direction: 'parent'
+                    })
+                })
+
+            // Затем обрабатываем references поля
+            props.fields
+                .filter(field => field.parent && field.type === 'references')
+                .forEach(field => {
+                    // Убираем Ids из имени поля
+                    const baseName = field.name.endsWith('Ids')
+                        ? field.name.slice(0, -3)
+                        : field.name
+
+                    // Преобразуем в camelCase и добавляем 's' в конце
+                    const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1) + 's'
+
+                    relations.push({
+                        name: relationName,
+                        type: 'belongsToMany',
+                        target: field.parent,
+                        foreignKey: field.name,
+                        isCalculated: true,
+                        direction: 'parent'
+                    })
+                })
+
+            // Сортируем: сначала reference, потом references
+            return relations.sort((a, b) => {
+                if (a.type === b.type) {
+                    return a.name.localeCompare(b.name)
+                }
+                return a.type === 'belongsTo' ? -1 : 1
+            })
+        })
+
+        const calculatedChildRelations = computed(() => {
+            if (!props.fields) return []
+            
+            const relations = []
+            const currentEntityName = schemaStore.selectedEntityName
+
+            // Добавляем только связи о полей с типом reference
+            schemaStore.entities.forEach(childEntity => {
+                if (childEntity.name === currentEntityName) return
+
+                childEntity.fields
+                    .filter(field => field.parent === currentEntityName && field.type === 'reference')
+                    .forEach(field => {
+                        relations.push({
+                            name: childEntity.name,
+                            type: 'hasMany',
+                            target: childEntity.name,
+                            foreignKey: field.name,
+                            isCalculated: true,
+                            direction: 'child'
+                        })
+                    })
+            })
+
+            return relations.sort((a, b) => a.name.localeCompare(b.name))
+        })
+
+        // Добавляем новые группы в fieldGroups
         const fieldGroups = computed(() => [
             {
                 name: 'id',
@@ -204,10 +332,45 @@ export default defineComponent({
             },
             {
                 name: 'other',
-                label: 'Остальные поля',
+                label: 'Поля данных',
                 fields: otherFields.value
+            },
+            {
+                name: 'parent_relations',
+                label: 'Родители',
+                fields: calculatedParentRelations.value
+            },
+            {
+                name: 'child_relations',
+                label: 'Дети',
+                fields: calculatedChildRelations.value
             }
         ])
+
+        const getRelationIcon = (type) => {
+            switch (type) {
+                case 'hasMany': 
+                    // Для hasMany используем иконку reference, так как это связь от reference поля
+                    return getFieldIcon('reference')
+                case 'belongsTo': 
+                    // Для belongsTo используем иконку reference
+                    return getFieldIcon('reference')
+                case 'belongsToMany': 
+                    // Для belongsToMany используем иконку references
+                    return getFieldIcon('references')
+                default: 
+                    return 'help'
+            }
+        }
+
+        const getRelationTypeText = (type) => {
+            switch (type) {
+                case 'hasMany': return 'Один ко многим'
+                case 'belongsTo': return 'Многие к одному'
+                case 'belongsToMany': return 'Многие ко многим'
+                default: return 'Неизвестный тип'
+            }
+        }
 
         return {
             getFieldIcon,
@@ -225,7 +388,11 @@ export default defineComponent({
             referenceFields,
             referencesFields,
             otherFields,
-            fieldGroups
+            fieldGroups,
+            getRelationIcon,
+            getRelationTypeText,
+            calculatedParentRelations,
+            calculatedChildRelations
         }
     }
 })

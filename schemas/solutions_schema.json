@@ -17,7 +17,7 @@
         {
           "name": "meetingId",
           "type": "reference",
-          "list": "main-chips",
+          "list": "main-none",
           "input": "select",
           "prompt": "Встреча",
           "req": true,
@@ -66,7 +66,7 @@
         },
         {
           "name": "solutionUserIds",
-          "type": "reference",
+          "type": "references",
           "list": "main-chips",
           "input": "numbers",
           "prompt": "Пользователи решения",
@@ -355,7 +355,11 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "prompt": "id",
+          "req": true
         },
         {
           "name": "email",
@@ -376,16 +380,20 @@
         {
           "name": "departmentId",
           "type": "reference",
+          "list": "main-none",
           "input": "select",
           "prompt": "Отдел",
-          "list": "main-chips"
+          "req": false,
+          "parent": "departments"
         },
         {
           "name": "positionId",
           "type": "reference",
+          "list": "main-none",
           "input": "select",
           "prompt": "Должность",
-          "list": "main-chips"
+          "req": false,
+          "parent": "positions"
         },
         {
           "name": "fired",
@@ -417,7 +425,11 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "prompt": "id",
+          "req": true
         },
         {
           "name": "name",
@@ -439,7 +451,11 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "prompt": "id",
+          "req": true
         },
         {
           "name": "name",
@@ -461,7 +477,11 @@
       "fields": [
         {
           "name": "id",
-          "type": "number"
+          "type": "id",
+          "list": "main-none",
+          "input": "none",
+          "prompt": "id",
+          "req": true
         },
         {
           "name": "name",
@@ -502,8 +522,10 @@
         {
           "name": "fine",
           "type": "number",
+          "list": "data-count",
+          "input": "string",
           "prompt": "Штраф",
-          "list": "data-count"
+          "req": false
         },
         {
           "name": "fineCurrency",
@@ -515,8 +537,10 @@
         {
           "name": "absenceFine",
           "type": "number",
+          "list": "data-count",
+          "input": "number",
           "prompt": "Штраф за отсутствие",
-          "list": "data-count"
+          "req": false
         },
         {
           "name": "fineInterval",
@@ -527,24 +551,29 @@
         },
         {
           "name": "typicalTaskIds",
-          "type": "numbers",
-          "input": "numbers",
+          "type": "references",
+          "list": "main-none",
+          "input": "none",
           "prompt": "Типовые задачи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "issues"
         },
         {
           "name": "userIds",
-          "type": "numbers",
-          "input": "numbers",
+          "type": "references",
+          "list": "main-none",
+          "input": "none",
           "prompt": "Пользователи",
-          "list": "main-chips"
+          "req": false,
+          "parent": "employees"
         },
         {
           "name": "isDefault",
-          "type": "checkbox",
+          "type": "bool",
+          "list": "data-checkbox",
           "input": "checkbox",
           "prompt": "По умолчанию",
-          "list": "data-switch"
+          "req": false
         }
       ],
       "relations": {
