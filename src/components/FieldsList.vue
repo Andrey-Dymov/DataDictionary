@@ -8,170 +8,62 @@
                 </q-btn>
             </div>
             <q-list dense separator>
-                <q-item v-for="field in idFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
-                    <q-item-section>
-                        <q-item-label class="text-subtitle2">
-                            {{ field.name }}
-                            <span v-if="field.name !== field.prompt" class="text-grey-6">
-                                - {{ field.prompt }}
-                            </span>
-                            <q-badge
-                                v-if="field.parent"
-                                color="purple"
-                                text-color="white"
-                                class="q-ml-sm"
-                            >
-                                {{ getEntityPrompt(field.parent) }}
-                            </q-badge>
-                        </q-item-label>
-                        <q-item-label>
-                            <div class="row items-center field-badges">
-                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
-                                    {{ field.type }}
-                                </q-badge>
-                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
-                                    {{ field.list }}
-                                </q-badge>
-                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
-                                    {{ field.input }}
-                                </q-badge>
-                            </div>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                        <div class="row items-center">
-                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
-                                <q-tooltip>Удалить поле</q-tooltip>
-                            </q-btn>
-                        </div>
-                    </q-item-section>
-                </q-item>
-                <q-item v-for="field in referenceFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
-                    <q-item-section>
-                        <q-item-label class="text-subtitle2">
-                            {{ field.name }}
-                            <span v-if="field.name !== field.prompt" class="text-grey-6">
-                                - {{ field.prompt }}
-                            </span>
-                            <q-badge
-                                v-if="field.parent"
-                                color="purple"
-                                text-color="white"
-                                class="q-ml-sm"
-                            >
-                                {{ getEntityPrompt(field.parent) }}
-                            </q-badge>
-                        </q-item-label>
-                        <q-item-label>
-                            <div class="row items-center field-badges">
-                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
-                                    {{ field.type }}
-                                </q-badge>
-                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
-                                    {{ field.list }}
-                                </q-badge>
-                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
-                                    {{ field.input }}
-                                </q-badge>
-                            </div>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                        <div class="row items-center">
-                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
-                                <q-tooltip>Удалить поле</q-tooltip>
-                            </q-btn>
-                        </div>
-                    </q-item-section>
-                </q-item>
-                <q-item v-for="field in referencesFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
-                    <q-item-section>
-                        <q-item-label class="text-subtitle2">
-                            {{ field.name }}
-                            <span v-if="field.name !== field.prompt" class="text-grey-6">
-                                - {{ field.prompt }}
-                            </span>
-                            <q-badge
-                                v-if="field.parent"
-                                color="purple"
-                                text-color="white"
-                                class="q-ml-sm"
-                            >
-                                {{ getEntityPrompt(field.parent) }}
-                            </q-badge>
-                        </q-item-label>
-                        <q-item-label>
-                            <div class="row items-center field-badges">
-                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
-                                    {{ field.type }}
-                                </q-badge>
-                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
-                                    {{ field.list }}
-                                </q-badge>
-                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
-                                    {{ field.input }}
-                                </q-badge>
-                            </div>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                        <div class="row items-center">
-                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
-                                <q-tooltip>Удалить поле</q-tooltip>
-                            </q-btn>
-                        </div>
-                    </q-item-section>
-                </q-item>
-                <q-item v-for="field in otherFields" :key="field.name" class="q-py-xs" clickable @click="onEditField(field)">
-                    <q-item-section>
-                        <q-item-label class="text-subtitle2">
-                            {{ field.name }}
-                            <span v-if="field.name !== field.prompt" class="text-grey-6">
-                                - {{ field.prompt }}
-                            </span>
-                            <q-badge
-                                v-if="field.parent"
-                                color="purple"
-                                text-color="white"
-                                class="q-ml-sm"
-                            >
-                                {{ getEntityPrompt(field.parent) }}
-                            </q-badge>
-                        </q-item-label>
-                        <q-item-label>
-                            <div class="row items-center field-badges">
-                                <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
-                                    {{ field.type }}
-                                </q-badge>
-                                <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
-                                    {{ field.list }}
-                                </q-badge>
-                                <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
-                                    <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
-                                    {{ field.input }}
-                                </q-badge>
-                            </div>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                        <div class="row items-center">
-                            <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
-                                <q-tooltip>Удалить поле</q-tooltip>
-                            </q-btn>
-                        </div>
-                    </q-item-section>
-                </q-item>
+                <template v-for="group in fieldGroups" :key="group.name">
+                    <div v-if="group.fields.length > 0" class="field-group-header">{{ group.label }}</div>
+                    <template v-for="field in group.fields" :key="field.name">
+                        <q-item class="q-py-xs" clickable @click="onEditField(field)">
+                            <q-item-section avatar>
+                                <q-avatar class="relative-position">
+                                    <q-icon :name="getFieldIcon(field.type)" color="primary">
+                                        <q-tooltip>{{ getFieldTypeLabel(field.type) }}</q-tooltip>
+                                    </q-icon>
+                                    <q-badge v-if="field.req" color="negative" floating round size="6px" class="required-badge">
+                                        <q-tooltip>Обязательное поле</q-tooltip>
+                                    </q-badge>
+                                </q-avatar>
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-subtitle2">
+                                    {{ field.name }}
+                                    <span v-if="field.name !== field.prompt" class="text-grey-6">
+                                        - {{ field.prompt }}
+                                    </span>
+                                    <q-badge
+                                        v-if="field.parent"
+                                        color="purple"
+                                        text-color="white"
+                                        class="q-ml-sm"
+                                    >
+                                        {{ getEntityPrompt(field.parent) }}
+                                    </q-badge>
+                                </q-item-label>
+                                <q-item-label>
+                                    <div class="row items-center field-badges">
+                                        <q-badge :color="isValidDataType(field.type) ? 'primary' : 'negative'" class="q-mr-sm">
+                                            <q-icon :name="getFieldIcon(field.type)" size="16px" class="q-mr-xs" />
+                                            {{ field.type }}
+                                        </q-badge>
+                                        <q-badge :color="isValidListType(field.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                            <q-icon :name="getListTypeIcon(field.list?.split('-')[1])" size="16px" class="q-mr-xs" />
+                                            {{ field.list }}
+                                        </q-badge>
+                                        <q-badge :color="isValidInputType(field.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                            <q-icon :name="getInputIcon(field.input)" size="16px" class="q-mr-xs" />
+                                            {{ field.input }}
+                                        </q-badge>
+                                    </div>
+                                </q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                                <div class="row items-center">
+                                    <q-btn flat round dense color="grey-6" icon="delete" @click.stop="confirmDelete(field)">
+                                        <q-tooltip>Удалить поле</q-tooltip>
+                                    </q-btn>
+                                </div>
+                            </q-item-section>
+                        </q-item>
+                    </template>
+                </template>
             </q-list>
         </q-card-section>
     </q-card>
@@ -207,7 +99,7 @@ export default defineComponent({
             return listTypeOptions.some(opt => opt.value === type)
         }
 
-        // Проверка существования типа ввода в справочнике
+        // Проверка сществования типа ввода в справочнике
         const isValidInputType = (inputType) => {
             return inputTypeOptions.some(opt => opt.value === inputType)
         }
@@ -254,20 +146,68 @@ export default defineComponent({
         const referenceFields = computed(() => {
             return props.fields
                 .filter(f => f.type === 'reference')
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => {
+                    // Сначала сортируем по секции (avatar в начале)
+                    const sectionA = a.list?.split('-')[0] || ''
+                    const sectionB = b.list?.split('-')[0] || ''
+                    if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
+                    if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
+                    // Затем по имени
+                    return a.name.localeCompare(b.name)
+                })
         })
 
         const referencesFields = computed(() => {
             return props.fields
                 .filter(f => f.type === 'references')
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => {
+                    // Сначала сортируем по секции (avatar в начале)
+                    const sectionA = a.list?.split('-')[0] || ''
+                    const sectionB = b.list?.split('-')[0] || ''
+                    if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
+                    if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
+                    // Затем по имени
+                    return a.name.localeCompare(b.name)
+                })
         })
 
         const otherFields = computed(() => {
             return props.fields
                 .filter(f => !['id', 'reference', 'references'].includes(f.type))
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => {
+                    // Сначала сортируем по секции (avatar в начале)
+                    const sectionA = a.list?.split('-')[0] || ''
+                    const sectionB = b.list?.split('-')[0] || ''
+                    if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
+                    if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
+                    // Затем по имени
+                    return a.name.localeCompare(b.name)
+                })
         })
+
+        // Добавляем computed для групп полей
+        const fieldGroups = computed(() => [
+            {
+                name: 'id',
+                label: 'Идентификаторы',
+                fields: idFields.value
+            },
+            {
+                name: 'reference',
+                label: 'Ссылки на родителей',
+                fields: referenceFields.value
+            },
+            {
+                name: 'references',
+                label: 'Множественные ссылки',
+                fields: referencesFields.value
+            },
+            {
+                name: 'other',
+                label: 'Остальные поля',
+                fields: otherFields.value
+            }
+        ])
 
         return {
             getFieldIcon,
@@ -284,7 +224,8 @@ export default defineComponent({
             idFields,
             referenceFields,
             referencesFields,
-            otherFields
+            otherFields,
+            fieldGroups
         }
     }
 })
@@ -328,4 +269,13 @@ export default defineComponent({
   padding: 2px 6px
   border-radius: 4px
   font-weight: normal
+
+.field-group-header
+  font-size: 0.7rem
+  color: $grey-7
+  padding: 4px 16px 2px
+  background: rgba(0,0,0,0.02)
+  font-weight: 500
+  text-transform: uppercase
+  letter-spacing: 0.5px
 </style>

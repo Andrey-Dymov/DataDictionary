@@ -53,7 +53,7 @@ const ENTITY_CONFIG = {
       get: { available: true },
       create: { available: true },
       update: { 
-        available: true,  // Добавляем available: true
+        available: true,
         path: '/api/fields/{parentName}/{id}',
         replaceParams: (url, id, parentName) => {
           return url
@@ -62,7 +62,7 @@ const ENTITY_CONFIG = {
         }
       },
       delete: { 
-        available: true,  // Добавляем available: true
+        available: true,
         path: '/api/fields/{parentName}/{id}',
         replaceParams: (url, id, parentName) => {
           return url
@@ -184,6 +184,13 @@ export default {
   },
 
   async delete(type, identifier, parentName = null) {
+    console.log('[DictionaryService] Delete request:', {
+      type,
+      identifier,
+      parentName,
+      config: ENTITY_CONFIG[type]
+    })
+
     const config = ENTITY_CONFIG[type]
     if (!config) throw new Error(`Unknown entity type: ${type}`)
     if (!config.methods.delete.available) throw new Error(`Delete not available for ${type}`)
@@ -192,15 +199,25 @@ export default {
     let url = methodConfig.path || `${config.path}/${identifier}`
     
     // Заменяем параметры в URL
-    url = url
-      .replace('{id}', identifier)
-      .replace('{parentName}', parentName || '')
+    if (methodConfig.replaceParams) {
+      url = methodConfig.replaceParams(url, identifier, parentName)
+    } else {
+      url = url
+        .replace('{id}', identifier)
+        .replace('{parentName}', parentName || '')
+    }
 
+    console.log('[DictionaryService] Delete URL:', url)
+    console.log('[DictionaryService] Delete params:', {
+      methodConfig,
+      finalUrl: url
+    })
+    
     try {
       const response = await api.delete(url)
       return response.data
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error)
+      console.error(`[DictionaryService] Error deleting ${type}:`, error)
       throw error
     }
   }

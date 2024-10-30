@@ -62,20 +62,12 @@ app.get('/api/dictionaries/:id', async (req, res) => {
     const data = await fs.readFile(filePath, 'utf8')
     const dictionaryData = JSON.parse(data)
     
-    // Конвертируем данные из старого формата в новый
-    const convertedData = {
-      ...dictionaryData,
-      entities: dictionaryData.collections || [],
-      version: dictionaryData.version || "1.0"
-    }
-    delete convertedData.collections
-    
     console.log('[API] Dictionary loaded:', { 
       id, 
-      entitiesCount: convertedData.entities.length 
+      entitiesCount: dictionaryData.entities.length 
     })
     
-    res.json(convertedData)
+    res.json(dictionaryData)
   } catch (error) {
     console.error(`[API] Error reading dictionary ${id}:`, error)
     res.status(500).json({ error: error.message })
@@ -178,18 +170,8 @@ app.post('/api/dictionaries/:id/data', async (req, res) => {
       throw new Error('Dictionary not found')
     }
 
-    // Конвертируем данные из старого формата в новый
-    const dataToSave = {
-      ...dictionaryData,
-      // Если есть collections, но нет entities - конвертируем
-      entities: dictionaryData.collections || dictionaryData.entities || [],
-      version: "1.0"
-    }
-    // Удаляем старое поле collections если оно есть
-    delete dataToSave.collections
-
     const filePath = path.join(dictionary.filePath, dictionary.fileName)
-    await fs.writeFile(filePath, JSON.stringify(dataToSave, null, 2))
+    await fs.writeFile(filePath, JSON.stringify(dictionaryData, null, 2))
     
     res.json({ success: true })
   } catch (error) {
@@ -368,16 +350,10 @@ app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
     console.log('[API] Updated field in entity')
 
     // Обновляем сущность в словаре
-    const entityIndex = dictionary.collections?.findIndex(e => e.name === entityName)
+    const entityIndex = dictionary.entities.findIndex(e => e.name === entityName)
     if (entityIndex !== -1) {
-      dictionary.collections[entityIndex] = entity
-      console.log('[API] Updated entity in collections')
-    }
-
-    const entitiesIndex = dictionary.entities?.findIndex(e => e.name === entityName)
-    if (entitiesIndex !== -1) {
-      dictionary.entities[entitiesIndex] = entity
-      console.log('[API] Updated entity in entities')
+      dictionary.entities[entityIndex] = entity
+      console.log('[API] Updated entity in dictionary')
     }
 
     // Сохраняем изменения в файл
@@ -396,16 +372,45 @@ app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
 app.delete('/api/fields/:entityName/:fieldName', async (req, res) => {
   const { entityName, fieldName } = req.params
   try {
+    console.log('\n[API] DELETE /api/fields/:entityName/:fieldName')
+    console.log('[API] Request params:', { entityName, fieldName })
+    
+    // Находим словарь и сущность
     const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
-    if (!entity) {
+    if (!dictionary || !entity) {
+      console.error('[API] Entity not found:', entityName)
       return res.status(404).json({ error: 'Entity not found' })
     }
+    console.log('[API] Entity found:', entityName)
 
-    entity.fields = entity.fields.filter(f => f.name !== fieldName)
+    // Находим поле
+    const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
+    if (fieldIndex === -1) {
+      console.error('[API] Field not found:', fieldName)
+      return res.status(404).json({ error: 'Field not found' })
+    }
+    console.log('[API] Field found:', fieldName)
+
+    // Удаляем поле
+    entity.fields.splice(fieldIndex, 1)
+    console.log('[API] Removed field from entity')
+
+    // Обновляем сущность в словаре
+    const entityIndex = dictionary.entities.findIndex(e => e.name === entityName)
+    if (entityIndex !== -1) {
+      dictionary.entities[entityIndex] = entity
+      console.log('[API] Updated entity in dictionary')
+    }
+
+    // Сохраняем изменения в файл
+    console.log('[API] Saving changes to file:', filePath)
     await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
+    console.log('[API] Changes saved successfully')
+    
     res.json({ success: true })
   } catch (error) {
     console.error('[API] Error deleting field:', error)
+    console.error('[API] Error stack:', error.stack)
     res.status(500).json({ error: error.message })
   }
 })
@@ -568,22 +573,12 @@ async function findEntityAndDictionary(entityName) {
       const dictionary = JSON.parse(data)
       console.log('[API] Dictionary loaded, checking entities...')
       
-      // Проверяем наличие entities или collections
-      const entities = dictionary.entities || dictionary.collections || []
-      console.log('[API] Found entities:', entities.map(e => e.name))
+      console.log('[API] Found entities:', dictionary.entities.map(e => e.name))
       
-      const entity = entities.find(e => e.name === entityName)
+      const entity = dictionary.entities.find(e => e.name === entityName)
       if (entity) {
         console.log('[API] Found entity:', entityName)
-        console.log('[API] Entity fields:', entity.fields?.map(f => f.name))
-        return { 
-          dictionary: {
-            ...dictionary,
-            entities: entities // Всегда возвращаем как entities
-          }, 
-          entity, 
-          filePath 
-        }
+        return { dictionary, entity, filePath }
       }
     }
     

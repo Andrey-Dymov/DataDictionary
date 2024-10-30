@@ -186,7 +186,7 @@
 
       <q-card-actions align="right" class="text-primary">
         <q-btn flat label="Отмена" v-close-popup />
-        <q-btn flat label="OK" @click="onOKClick" :disable="!isFormValid" />
+        <q-btn flat label="OK" @click = "onOKClick" :disable="!isFormValid" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -217,7 +217,8 @@ export default {
   },
 
   emits: [
-    ...useDialogPluginComponent.emits
+    ...useDialogPluginComponent.emits,
+    'ok'
   ],
 
   setup(props, { emit }) {
@@ -239,22 +240,23 @@ export default {
     })
 
     const isFormValid = computed(() => {
-      return form.value.name &&
-        form.value.dataType &&
-        form.value.section &&
-        form.value.listType &&
-        form.value.inputType
+      return !!form.value.name && 
+             !!form.value.dataType && 
+             !!form.value.listType && 
+             !!form.value.inputType
     })
 
     const show = (field = null) => {
+      console.log('[FieldForm] Show called with:', field)
       if (field) {
+        const [section = 'main', listType = ''] = field.list ? field.list.split('-') : []
         form.value = {
           name: field.name,
           dataType: field.type,
-          section: field.list ? field.list.split('-')[0] : 'main',
-          listType: field.list ? field.list.split('-')[1] : '',
+          section,
+          listType,
           inputType: field.input,
-          prompt: field.prompt,
+          prompt: field.prompt || '',
           required: field.req || false,
           parent: field.parent || null
         }
@@ -278,6 +280,7 @@ export default {
     }
 
     const onOKClick = () => {
+      console.log('[FieldForm] OK clicked, form valid:', isFormValid.value)
       if (isFormValid.value) {
         saveField(form.value)
       }
@@ -290,7 +293,7 @@ export default {
           type: fieldData.dataType,
           list: `${fieldData.section}-${fieldData.listType}`,
           input: fieldData.inputType,
-          prompt: fieldData.prompt,
+          prompt: fieldData.prompt || fieldData.name,
           req: fieldData.required,
           parent: fieldData.parent || undefined
         }
@@ -300,6 +303,9 @@ export default {
           fieldToSave,
           entityName: props.entityName
         })
+
+        // Сначала закрываем диалог
+        onDialogOK(fieldToSave)
 
         if (editingFieldName.value) {
           await schemaStore.updateField(props.entityName, editingFieldName.value, fieldToSave)
@@ -314,9 +320,6 @@ export default {
             message: 'Поле успешно добавлено'
           })
         }
-
-        emit('ok', fieldToSave)
-        emit('hide')
 
       } catch (error) {
         console.error('[FieldForm] Error saving field:', error)
@@ -368,45 +371,35 @@ export default {
         baseName = baseName.slice(0, -2)
       }
 
-      // Теперь у нас есть baseName с сохраненным CamelCase: "meetingType"
-      const camelBaseName = baseName // уже в camelCase
-      const snakeBaseName = camelToSnake(baseName) // преобразуем в snake_case
+      // Преобразуем baseName в snake_case
+      const snakeBaseName = camelToSnake(baseName)
+      
+      // Добавляем 's' к snake_case имени для поиска множественной формы
+      const pluralSnakeBaseName = snakeBaseName + 's'
       
       console.log('[FieldForm] Detecting parent for:', { 
         originalName: fieldName,
         baseName,
-        camelBaseName,
         snakeBaseName,
-        availableEntities: entityOptions.value.map(e => e.value.toLowerCase())
+        pluralSnakeBaseName,
+        availableEntities: entityOptions.value.map(e => e.value)
       })
 
       // Ищем сущность, учитывая разные форматы имен
       const matchingEntity = entityOptions.value.find(opt => {
         const optValue = opt.value.toLowerCase()
-        const snakeOptValue = optValue // уже в snake_case
-        const camelOptValue = snakeToCamel(optValue)
         
-        // Проверяем, содержится ли имя сущности в имени поля
-        const snakeMatch = snakeBaseName.includes(snakeOptValue) || snakeOptValue.includes(snakeBaseName)
-        const camelMatch = camelBaseName.includes(camelOptValue) || camelOptValue.includes(camelBaseName)
+        // Проверяем точное совпадение с множественной формой
+        const exactPluralMatch = optValue === pluralSnakeBaseName
         
-        // Проверяем точное совпадение
-        const exactSnakeMatch = snakeBaseName === snakeOptValue
-        const exactCamelMatch = camelBaseName === camelOptValue
-
         console.log('[FieldForm] Checking entity:', { 
           entity: optValue,
-          snakeCase: snakeOptValue,
-          camelCase: camelOptValue,
-          matches: {
-            snakeMatch,
-            camelMatch,
-            exactSnakeMatch,
-            exactCamelMatch
-          }
+          snakeBaseName,
+          pluralSnakeBaseName,
+          exactPluralMatch
         })
 
-        return snakeMatch || camelMatch || exactSnakeMatch || exactCamelMatch
+        return exactPluralMatch
       })
 
       if (matchingEntity) {
@@ -452,7 +445,7 @@ export default {
     return {
       dialogRef,
       onDialogHide,
-      onOKClick,
+      onDialogOK,
       form,
       isEdit,
       dataTypeOptions,
@@ -468,7 +461,8 @@ export default {
       detectParentFromName,
       generateFieldName,
       snakeToCamel,
-      camelToSnake
+      camelToSnake,
+      onOKClick
     }
   }
 }

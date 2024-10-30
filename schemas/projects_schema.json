@@ -1,5 +1,5 @@
 {
-  "collections": [
+  "entities": [
     {
       "name": "projects", "description": "Информация о проектах",
       "icon": "work", "prompt": "Проекты", "promptSingle": "Проект",

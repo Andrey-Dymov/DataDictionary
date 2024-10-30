@@ -216,14 +216,11 @@ export default defineComponent({
             return 'col-12 col-sm-2'
         }
 
-        // Добавляем методы обработки полей
+        // Добавляем методы о��работки полей
         const handleDeleteField = async (fieldName) => {
             try {
-                const updatedFields = entity.value.fields.filter(f => f.name !== fieldName)
-                await schemaStore.updateCollection(entity.value.name, {
-                    ...entity.value,
-                    fields: updatedFields
-                })
+                // Вызываем метод deleteField из schemaStore
+                await schemaStore.deleteField(entityName.value, fieldName)
                 $q.notify({
                     type: 'positive',
                     message: 'Поле успешно удалено'
@@ -290,7 +287,13 @@ export default defineComponent({
                         ? 'belongsToMany' 
                         : 'belongsTo'
 
-                    const relationName = field.parent
+                    // Получаем имя связи из имени поля, убирая окончание Id/Ids
+                    let relationName = field.name
+                    if (relationName.endsWith('Ids')) {
+                        relationName = relationName.slice(0, -3)
+                    } else if (relationName.endsWith('Id')) {
+                        relationName = relationName.slice(0, -2)
+                    }
                     
                     relations[relationName] = {
                         type: relationType,

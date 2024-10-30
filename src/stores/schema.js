@@ -170,15 +170,22 @@ export const useSchemaStore = defineStore('schema', {
     },
 
     async deleteField(entityName, fieldName) {
-      console.log('[Store] Deleting field:', fieldName, 'from entity:', entityName)
+      console.log('[SchemaStore] Deleting field:', fieldName, 'from entity:', entityName)
       try {
+        // Вызываем метод delete из dictionaryService
         await dictionaryService.delete('field', fieldName, entityName)
+        
+        // Обновляем локальное состояние
         const entity = this.getEntityByName(entityName)
         if (entity) {
           entity.fields = entity.fields.filter(f => f.name !== fieldName)
         }
+
+        // Перезагружаем данные словаря для синхронизации
+        const dictionaryStore = useDictionaryStore()
+        await this.loadSchema(dictionaryStore.currentDictionaryId)
       } catch (error) {
-        console.error('[Store] Error deleting field:', error)
+        console.error('[SchemaStore] Error deleting field:', error)
         throw error
       }
     },
