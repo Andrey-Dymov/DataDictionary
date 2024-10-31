@@ -26,14 +26,32 @@
                 </div>
             </div>
             
-            <!-- Только список полей -->
+            <!-- Поля и связи -->
             <div class="row q-col-gutter-md">
-                <div class="col-12">
+                <div class="col-12 col-md-6">
                     <FieldsList 
                         :fields="entity.fields" 
                         @deleteField="handleDeleteField"
                         @addField="showAddFieldDialog"
                         @editField="showEditFieldDialog"
+                    />
+                </div>
+                <div class="col-12 col-md-6">
+                    <!-- Добавляем блок расчетных связей -->
+                    <q-card flat bordered class="q-mb-md">
+                        <q-card-section>
+                            <div class="text-h6 q-mb-md">Расчетные связи</div>
+                            <pre class="calculated-relations">{{ calculatedRelationsJson }}</pre>
+                        </q-card-section>
+                    </q-card>
+
+                    <RelationsList 
+                        :relations="entity.relations" 
+                        :source-name="entity.name"
+                        :source-prompt="entity.prompt"
+                        @deleteRelation="handleDeleteRelation"
+                        @addRelation="showAddRelationDialog"
+                        @editRelation="showEditRelationDialog"
                     />
                 </div>
             </div>
@@ -184,48 +202,68 @@ export default defineComponent({
 
             const relations = {}
             
-            // 1. Добавляем связи на основе полей с родителями
-            entity.value.fields.forEach(field => {
-                if (field.parent) {
-                    const relationType = field.type === 'references' 
-                        ? 'belongsToMany' 
-                        : 'belongsTo'
+            // 1. Добавляем связи от reference полей (belongsTo)
+            entity.value.fields
+                .filter(field => field.parent && field.type === 'reference')
+                .forEach(field => {
+                    const baseName = field.name.endsWith('Id')
+                        ? field.name.slice(0, -2)
+                        : field.name
 
-                    // Получаем имя связи из имени поля, убирая окончание Id/Ids
-                    let relationName = field.name
-                    if (relationName.endsWith('Ids')) {
-                        relationName = relationName.slice(0, -3)
-                    } else if (relationName.endsWith('Id')) {
-                        relationName = relationName.slice(0, -2)
-                    }
+                    const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1)
                     
                     relations[relationName] = {
-                        type: relationType,
+                        type: 'belongsTo',
                         target: field.parent,
                         foreignKey: field.name,
                         restriction: 'restrict'
                     }
-                }
-            })
+                })
 
-            // 2. Добавляем обратные связи от детей
+            // 2. Добавляем связи от references полей (belongsToMany)
+            entity.value.fields
+                .filter(field => field.parent && field.type === 'references')
+                .forEach(field => {
+                    const baseName = field.name.endsWith('Ids')
+                        ? field.name.slice(0, -3)
+                        : field.name
+
+                    const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1) + 's'
+                    
+                    relations[relationName] = {
+                        type: 'belongsToMany',
+                        target: field.parent,
+                        foreignKey: field.name,
+                        restriction: 'restrict'
+                    }
+                })
+
+            // 3. Добавляем обратные связи от детей (hasMany)
             schemaStore.entities.forEach(childEntity => {
-                if (childEntity.name === entity.value.name) return // Пропускаем текущую сущность
+                if (childEntity.name === entity.value.name) return
 
-                // Ищем поля в дочерней сущности, которые ссылаются на текущую
-                childEntity.fields.forEach(field => {
-                    if (field.parent === entity.value.name && field.type === 'reference') {
-                        // Для reference создаем hasMany
-                        const relationName = childEntity.name // Имя связи = имя дочерней сущности
+                // Перебираем все поля дочерней сущности
+                childEntity.fields
+                    .filter(field => field.parent === entity.value.name && field.type === 'reference')
+                    .forEach(field => {
+                        // Формируем уникальное имя связи
+                        let relationName = childEntity.name
+                        
+                        // Если уже есть связь с таким именем, добавляем имя поля
+                        if (relations[relationName]) {
+                            const fieldBaseName = field.name.endsWith('Id')
+                                ? field.name.slice(0, -2)
+                                : field.name
+                            relationName = `${childEntity.name}${fieldBaseName.charAt(0).toUpperCase()}${fieldBaseName.slice(1)}`
+                        }
+
                         relations[relationName] = {
                             type: 'hasMany',
                             target: childEntity.name,
                             foreignKey: field.name,
                             restriction: 'restrict'
                         }
-                    }
-                    // Для references связь не создаем, так как это many-to-many и она уже создана с другой стороны
-                })
+                    })
             })
 
             return relations

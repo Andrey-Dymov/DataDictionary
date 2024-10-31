@@ -12,6 +12,7 @@
                     <div v-if="group.fields.length > 0" class="field-group-header">{{ group.label }}</div>
                     <template v-for="item in group.fields" :key="item.name">
                         <q-item class="q-py-xs" clickable @click="item.isCalculated ? null : onEditField(item)">
+                            
                             <q-item-section avatar>
                                 <q-avatar class="relative-position">
                                     <q-icon 
@@ -36,7 +37,7 @@
                             <q-item-section>
                                 <q-item-label class="text-subtitle2">
                                     {{ item.name }}
-                                    <span v-if="!item.isCalculated && item.name !== item.prompt" class="text-grey-6">
+                                    <span v-if="!item.isCalculated && item.prompt" class="text-grey-6">
                                         - {{ item.prompt }}
                                     </span>
                                     <!-- Бейдж для обычных полей с родителем -->
@@ -73,23 +74,18 @@
                                             <q-badge :color="isValidDataType(item.type) ? 'primary' : 'negative'" class="q-mr-sm">
                                                 <q-icon :name="getFieldIcon(item.type)" size="16px" class="q-mr-xs" />
                                                 {{ item.type }}
+                                                <!-- Отладочная информация -->
+                                                <span class="text-caption">({{ JSON.stringify(item) }})</span>
                                             </q-badge>
-                                            <q-badge :color="isValidListType(item.list) ? 'secondary' : 'negative'" class="q-mr-sm">
+                                            <q-badge v-if="item.list" :color="isValidListType(item.list) ? 'secondary' : 'negative'" class="q-mr-sm">
                                                 <q-icon :name="getListTypeIcon(item.list?.split('-')[1])" size="16px" class="q-mr-xs" />
                                                 {{ item.list }}
                                             </q-badge>
-                                            <q-badge :color="isValidInputType(item.input) ? 'orange' : 'negative'" class="q-mr-sm">
+                                            <q-badge v-if="item.input" :color="isValidInputType(item.input) ? 'orange' : 'negative'" class="q-mr-sm">
                                                 <q-icon :name="getInputIcon(item.input)" size="16px" class="q-mr-xs" />
                                                 {{ item.input }}
                                             </q-badge>
                                         </template>
-                                        <!-- Для связей -->
-                                        <!-- <template v-else>
-                                            <q-badge color="deep-purple" class="q-mr-sm">
-                                                <q-icon name="link" size="16px" class="q-mr-xs" />
-                                                {{ item.foreignKey }}
-                                            </q-badge>
-                                        </template> -->
                                     </div>
                                 </q-item-label>
                             </q-item-section>
@@ -185,29 +181,55 @@ export default defineComponent({
         })
 
         const referenceFields = computed(() => {
-            return props.fields
-                .filter(f => f.type === 'reference')
-                .sort((a, b) => {
-                    // Сначала сортируем по секции (avatar в начале)
-                    const sectionA = a.list?.split('-')[0] || ''
-                    const sectionB = b.list?.split('-')[0] || ''
-                    if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
-                    if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
-                    // Затем по имени
-                    return a.name.localeCompare(b.name)
+            console.log('[FieldsList] All fields:', props.fields)
+            const refs = props.fields
+                .filter(f => f.type === 'reference' || f.dataType === 'reference')
+                .map(f => {
+                    if (f.dataType) {
+                        return {
+                            name: f.name,
+                            type: f.dataType,
+                            list: f.listType ? `${f.section}-${f.listType}` : undefined,
+                            input: f.inputType === 'none' ? undefined : f.inputType,
+                            prompt: f.prompt,
+                            req: f.required,
+                            parent: f.parent
+                        }
+                    }
+                    return f
                 })
+            console.log('[FieldsList] Reference fields:', refs)
+            return refs.sort((a, b) => {
+                const sectionA = a.list?.split('-')[0] || ''
+                const sectionB = b.list?.split('-')[0] || ''
+                if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
+                if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
+                return a.name.localeCompare(b.name)
+            })
         })
 
         const referencesFields = computed(() => {
             return props.fields
-                .filter(f => f.type === 'references')
+                .filter(f => f.type === 'references' || f.dataType === 'references')
+                .map(f => {
+                    if (f.dataType) {
+                        return {
+                            name: f.name,
+                            type: f.dataType,
+                            list: f.listType ? `${f.section}-${f.listType}` : undefined,
+                            input: f.inputType === 'none' ? undefined : f.inputType,
+                            prompt: f.prompt,
+                            req: f.required,
+                            parent: f.parent
+                        }
+                    }
+                    return f
+                })
                 .sort((a, b) => {
-                    // Сначала сортируем по секции (avatar в начале)
                     const sectionA = a.list?.split('-')[0] || ''
                     const sectionB = b.list?.split('-')[0] || ''
                     if (sectionA === 'avatar' && sectionB !== 'avatar') return -1
                     if (sectionA !== 'avatar' && sectionB === 'avatar') return 1
-                    // Затем по имени
                     return a.name.localeCompare(b.name)
                 })
         })
@@ -290,17 +312,30 @@ export default defineComponent({
             if (!props.fields) return []
             
             const relations = []
+            const relationNames = new Set()
             const currentEntityName = schemaStore.selectedEntityName
 
-            // Добавляем только связи о полей с типом reference
+            // Добавляем только связи от поей с типом reference
             schemaStore.entities.forEach(childEntity => {
                 if (childEntity.name === currentEntityName) return
 
                 childEntity.fields
                     .filter(field => field.parent === currentEntityName && field.type === 'reference')
                     .forEach(field => {
+                        // Формируем базовое имя связи
+                        let relationName = childEntity.name
+                        
+                        // Если такое имя уже есть, добавляем имя поля
+                        if (relationNames.has(relationName)) {
+                            const fieldBaseName = field.name.endsWith('Id')
+                                ? field.name.slice(0, -2)
+                                : field.name
+                            relationName = `${childEntity.name}${fieldBaseName.charAt(0).toUpperCase()}${fieldBaseName.slice(1)}`
+                        }
+                        relationNames.add(relationName)
+
                         relations.push({
-                            name: childEntity.name,
+                            name: relationName,
                             type: 'hasMany',
                             target: childEntity.name,
                             foreignKey: field.name,
