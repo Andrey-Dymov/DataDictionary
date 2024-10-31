@@ -74,8 +74,6 @@
                                             <q-badge :color="isValidDataType(item.type) ? 'primary' : 'negative'" class="q-mr-sm">
                                                 <q-icon :name="getFieldIcon(item.type)" size="16px" class="q-mr-xs" />
                                                 {{ item.type }}
-                                                <!-- Отладочная информация -->
-                                                <span class="text-caption">({{ JSON.stringify(item) }})</span>
                                             </q-badge>
                                             <q-badge v-if="item.list" :color="isValidListType(item.list) ? 'secondary' : 'negative'" class="q-mr-sm">
                                                 <q-icon :name="getListTypeIcon(item.list?.split('-')[1])" size="16px" class="q-mr-xs" />

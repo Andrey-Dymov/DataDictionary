@@ -274,6 +274,18 @@ export default defineComponent({
             return JSON.stringify(calculatedRelations.value, null, 2)
         })
 
+        // Добавляем watch для отслеживания изменения параметра name в маршруте
+        watch(() => route.params.name, (newName) => {
+            if (newName) {
+                schemaStore.setSelectedEntity(newName)
+            }
+        })
+
+        // Также добавляем начальную установку при монтировании
+        if (route.params.name) {
+            schemaStore.setSelectedEntity(route.params.name)
+        }
+
         // Возвращаем все необходимые методы и свойства
         return {
             schemaStore,

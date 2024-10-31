@@ -267,6 +267,22 @@ export const useSchemaStore = defineStore('schema', {
             }
             throw error
         }
+    },
+
+    setSelectedEntity(name) {
+        console.log('[SchemaStore] Setting selected entity:', name)
+        this.selectedEntityName = name
+        
+        // Сохраняем выбор в localStorage
+        const dictionaryStore = useDictionaryStore()
+        const currentDictionaryId = dictionaryStore.currentDictionaryId
+        
+        if (currentDictionaryId) {
+            const savedSelections = JSON.parse(localStorage.getItem('selectedEntities') || '{}')
+            savedSelections[currentDictionaryId] = name
+            localStorage.setItem('selectedEntities', JSON.stringify(savedSelections))
+            console.log('[SchemaStore] Saved selection to localStorage:', { dictionaryId: currentDictionaryId, entityName: name })
+        }
     }
   }
 })
