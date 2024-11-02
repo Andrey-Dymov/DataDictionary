@@ -136,42 +136,47 @@ export default defineComponent({
 </script>
 
 <style lang="sass">
-.entity-list
-  .q-item
-    transition: all 0.3s ease
-    border-radius: 8px
-    margin: 4px 8px
-
-    &:hover
-      // Изменяем поведение при наведении для ��ктивного элемента
-      &.q-item--active
-        background: lighten($primary, 10%) !important
-      // Для неактивных элементов оставляем прежнее поведение
-      &:not(.q-item--active)
-        background-color: rgba($primary, 0.1)
-
-    // Стили для активного элемента
+.q-item
+  &:hover
+    background: rgba($primary, 0.1)
     &.q-item--active
-      background: $primary
-      color: white
-      .q-item__section--side
-        .q-btn
-          color: white
-          opacity: 0.8
-          &:hover
-            opacity: 1
-      .q-icon
-        color: white !important
-      .q-item-label--caption
-        color: rgba(255,255,255,0.7)
+      background: scale($primary, 10%) !important
+    &:not(.q-item--active)
+      background-color: rgba($primary, 0.1)
 
-    // Стили для кнопок действий
-    .q-item__section--side
-      .q-btn
-        transition: opacity 0.3s ease
-        opacity: 0.7
-        &:hover
-          opacity: 1
+  &.q-item--active
+    background: $primary
+    color: white
+    .text-grey-7
+      color: rgba(255,255,255,0.7) !important
+
+.entity-item
+  padding: 8px 16px
+  border-radius: 4px
+  margin-bottom: 4px
+  transition: all 0.3s ease
+
+  &:hover
+    background: rgba($primary, 0.1)
+
+  &.selected
+    background: scale($primary, 10%)
+    color: white
+
+    .text-grey-7
+      color: rgba(255,255,255,0.7)
+
+.entity-actions
+  opacity: 0
+  transition: opacity 0.3s ease
+
+  .q-item:hover &
+    opacity: 1
+
+.entity-icon
+  width: 24px
+  height: 24px
+  margin-right: 12px
 
 .cursor-pointer
   cursor: pointer

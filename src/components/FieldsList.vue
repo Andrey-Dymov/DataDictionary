@@ -454,27 +454,14 @@ export default defineComponent({
     margin-bottom: 4px
 
 .required-badge
+  position: absolute
   top: -2px
   right: -2px
-  transform: scale(0.7)
-
-.text-h6
-  font-size: 1.25rem
-  font-weight: 500
-  line-height: 2rem
-  letter-spacing: 0.0125em
-
-.q-badge
-  font-size: 0.8em
-  padding: 2px 6px
-  border-radius: 4px
-  font-weight: normal
+  transform: translateX(50%) translateY(-50%)
 
 .field-group-header
-  font-size: 0.7rem
-  color: $grey-7
-  padding: 4px 16px 2px
-  background: rgba(0,0,0,0.02)
+  padding: 8px 16px
+  font-size: 0.9rem
   font-weight: 500
   text-transform: uppercase
   letter-spacing: 0.5px

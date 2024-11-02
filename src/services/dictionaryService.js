@@ -79,9 +79,31 @@ const ENTITY_CONFIG = {
     methods: {
       list: { available: true },
       get: { available: true },
-      create: { available: true },
-      update: { path: '/api/relations/{parentName}/{id}' },
-      delete: { path: '/api/relations/{parentName}/{id}' }
+      create: { 
+        available: true,
+        path: '/api/relations/{parentName}',
+        replaceParams: (url, parentName) => {
+          return url.replace('{parentName}', parentName)
+        }
+      },
+      update: { 
+        available: true,
+        path: '/api/relations/{parentName}/{relationName}',
+        replaceParams: (url, relationName, parentName) => {
+          return url
+            .replace('{parentName}', parentName)
+            .replace('{relationName}', relationName)
+        }
+      },
+      delete: { 
+        available: true,
+        path: '/api/relations/{parentName}/{relationName}',
+        replaceParams: (url, relationName, parentName) => {
+          return url
+            .replace('{parentName}', parentName)
+            .replace('{relationName}', relationName)
+        }
+      }
     }
   },
   files: {
@@ -101,7 +123,11 @@ const ENTITY_CONFIG = {
   }
 }
 
-export default {
+class DictionaryService {
+  constructor() {
+    this.api = api
+  }
+
   async getList(type, parentName = null, params = null) {
     const config = ENTITY_CONFIG[type]
     if (!config) throw new Error(`Unknown entity type: ${type}`)
@@ -114,13 +140,13 @@ export default {
     try {
       // Используем params только если useQuery = true
       const options = config.methods.list.useQuery ? { params } : {}
-      const response = await api.get(url, options)
+      const response = await this.api.get(url, options)
       return response.data
     } catch (error) {
       console.error(`Error getting ${type} list:`, error)
       throw error
     }
-  },
+  }
 
   async getOne(type, identifier) {
     const config = ENTITY_CONFIG[type]
@@ -132,33 +158,44 @@ export default {
     try {
       console.log(`[DictionaryService] Getting ${type} with id:`, identifier)
       console.log('[DictionaryService] Request URL:', url)
-      const response = await api.get(url)
+      const response = await this.api.get(url)
       console.log(`[DictionaryService] Got ${type} data:`, response.data)
       return response.data
     } catch (error) {
       console.error(`[DictionaryService] Error getting ${type}:`, error)
       throw error
     }
-  },
+  }
 
-  async create(type, data, parentName = null) {
+  async create(type, parentName, data) {
     const config = ENTITY_CONFIG[type]
     if (!config) throw new Error(`Unknown entity type: ${type}`)
     if (!config.methods.create.available) throw new Error(`Create not available for ${type}`)
-    if (config.requiresParent && !parentName) throw new Error(`Parent name is required for ${type}`)
+    
+    const methodConfig = config.methods.create
+    let url = methodConfig.path || config.path
 
-    const url = config.requiresParent
-      ? `${config.path}/${parentName}`
-      : config.path
+    // Используем replaceParams если он определен
+    if (methodConfig.replaceParams) {
+      url = methodConfig.replaceParams(url, parentName)
+    } else if (config.requiresParent && parentName) {
+      url = `${url}/${parentName}`
+    }
+
+    console.log(`[DictionaryService] Creating ${type}:`, {
+      url,
+      parentName,
+      data
+    })
 
     try {
-      const response = await api.post(url, data)
+      const response = await this.api.post(url, data)
       return response.data
     } catch (error) {
-      console.error(`Error creating ${type}:`, error)
+      console.error(`[DictionaryService] Error creating ${type}:`, error)
       throw error
     }
-  },
+  }
 
   async update(type, identifier, data, parentName = null) {
     const config = ENTITY_CONFIG[type]
@@ -173,52 +210,68 @@ export default {
       url = methodConfig.replaceParams(url, identifier, parentName)
     }
 
-    console.log(`[DictionaryService] Updating ${type}:`, { identifier, parentName, url, data })
-    try {
-      const response = await api.put(url, data)
-      return response.data
-    } catch (error) {
-      console.error(`Error updating ${type}:`, error)
-      throw error
-    }
-  },
-
-  async delete(type, identifier, parentName = null) {
-    console.log('[DictionaryService] Delete request:', {
+    console.log(`[DictionaryService] Updating ${type}:`, { 
       type,
       identifier,
       parentName,
-      config: ENTITY_CONFIG[type]
+      url,
+      data 
     })
 
-    const config = ENTITY_CONFIG[type]
-    if (!config) throw new Error(`Unknown entity type: ${type}`)
-    if (!config.methods.delete.available) throw new Error(`Delete not available for ${type}`)
+    try {
+      const response = await this.api.put(url, data)
+      return response.data
+    } catch (error) {
+      console.error(`[DictionaryService] Error updating ${type}:`, error)
+      throw error
+    }
+  }
 
-    const methodConfig = config.methods.delete
-    let url = methodConfig.path || `${config.path}/${identifier}`
+  async delete(type, parentName, identifier, config = {}) {
+    console.log('[DictionaryService] Delete request:', { type, identifier, parentName, config })
     
-    // Заменяем параметры в URL
+    const entityConfig = ENTITY_CONFIG[type]
+    if (!entityConfig) throw new Error(`Unknown entity type: ${type}`)
+    if (!entityConfig.methods.delete.available) throw new Error(`Delete not available for ${type}`)
+    
+    const methodConfig = entityConfig.methods.delete
+    let url = methodConfig.path || `${entityConfig.path}/${identifier}`
+
     if (methodConfig.replaceParams) {
       url = methodConfig.replaceParams(url, identifier, parentName)
     } else {
-      url = url
-        .replace('{id}', identifier)
-        .replace('{parentName}', parentName || '')
+      // Для relations формируем URL вручную
+      if (type === 'relation') {
+        url = `/api/relations/${parentName}/${identifier}`
+      }
     }
 
     console.log('[DictionaryService] Delete URL:', url)
-    console.log('[DictionaryService] Delete params:', {
-      methodConfig,
-      finalUrl: url
-    })
-    
+
     try {
-      const response = await api.delete(url)
+      const response = await this.api.delete(url)
       return response.data
     } catch (error) {
       console.error(`[DictionaryService] Error deleting ${type}:`, error)
       throw error
     }
   }
+
+  async deleteField(entityName, fieldName) {
+    return await this.delete('field', entityName, fieldName)
+  }
+
+  async deleteRelation(entityName, relationName) {
+    return await this.delete('relation', entityName, relationName)
+  }
+
+  async deleteEntity(entityName) {
+    return await this.delete('entity', null, entityName)
+  }
+
+  async deleteDictionary(dictionaryId) {
+    return await this.delete('dictionary', null, dictionaryId)
+  }
 }
+
+export default new DictionaryService()

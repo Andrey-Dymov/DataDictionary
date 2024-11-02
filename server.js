@@ -14,29 +14,88 @@ const META_FILE = path.join(__dirname, 'dictionaries-meta.json')
 
 // Security middleware
 app.use((req, res, next) => {
-  console.log('[Security] Setting CORS and security headers')
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.header('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; img-src 'self' data: blob:;")
   
   if (req.method === 'OPTIONS') {
-    console.log('[Security] Handling OPTIONS request')
     return res.sendStatus(200)
   }
   next()
 })
 
+// Middleware для логирования запросов
+app.use((req, res, next) => {
+    // Извлекаем параметры из URL
+    const urlParts = req.url.split('/')
+    const params = {}
+    
+    // Парсим параметры из URL в зависимости от пути
+    if (req.url.startsWith('/api/fields/')) {
+        params.entityName = urlParts[3]
+        params.fieldName = urlParts[4]
+    } 
+    else if (req.url.startsWith('/api/relations/')) {
+        params.entityName = urlParts[3]
+        params.relationName = urlParts[4]
+    }
+    else if (req.url.startsWith('/api/entities/')) {
+        params.entityName = urlParts[3]
+    }
+    else if (req.url.startsWith('/api/dictionaries/')) {
+        if (urlParts[3] === 'meta') {
+            params.type = 'meta'
+        } else {
+            params.dictionaryId = urlParts[3]
+            if (urlParts[4] === 'data') {
+                params.type = 'data'
+            }
+        }
+    }
+
+    // Формируем сообщение лога в зависимости от типа запроса
+    let logMessage = `[API:Middleware] ${req.method} ${req.originalUrl}`
+    
+    // Добавляем детали операции
+    if (req.method === 'PUT' && req.url.startsWith('/api/fields/')) {
+        logMessage = `[API:Middleware] Update field: ${params.entityName}.${params.fieldName} -> ${req.body.name}`
+    }
+    else if (req.method === 'DELETE' && req.url.startsWith('/api/relations/')) {
+        logMessage = `[API:Middleware] Delete relation: ${params.entityName}.${params.relationName}`
+    }
+    else if (req.method === 'POST' && req.url.startsWith('/api/relations/')) {
+        logMessage = `[API:Middleware] Create relation: ${params.entityName}.${req.body.name}`
+    }
+    else if (req.method === 'PUT' && req.url.startsWith('/api/relations/')) {
+        logMessage = `[API:Middleware] Update relation: ${params.entityName}.${params.relationName}`
+    }
+    else if (req.method === 'GET' && req.url.startsWith('/api/dictionaries/')) {
+        if (params.type === 'meta') {
+            logMessage = '[API:Middleware] Get dictionaries metadata'
+        } else {
+            logMessage = `[API:Middleware] Get dictionary: ${params.dictionaryId}`
+        }
+    }
+
+    // Выводим лог
+    console.log(logMessage, {
+        params,
+        body: req.method !== 'GET' ? req.body : undefined
+    })
+
+    // Отключаем логирование в обработчиках
+    req.logged = true
+    
+    next()
+})
+
 // API для работы с метаданными словарей
 app.get('/api/dictionaries/meta', async (req, res) => {
   try {
-    const exists = await fs.access(META_FILE).then(() => true).catch(() => false)
-    console.log('[API] META_FILE exists:', exists)
-    
+    console.log('[API] Loading dictionaries metadata')
     const data = await fs.readFile(META_FILE, 'utf8')
-    const parsed = JSON.parse(data)
-    console.log('[API] Successfully loaded dictionaries metadata:', parsed)
-    res.json(parsed)
+    res.json(JSON.parse(data))
   } catch (error) {
     console.error('[API] Error loading dictionaries metadata:', error)
     res.status(500).json({ error: error.message })
@@ -47,7 +106,7 @@ app.get('/api/dictionaries/meta', async (req, res) => {
 app.get('/api/dictionaries/:id', async (req, res) => {
   const { id } = req.params
   try {
-    console.log('[API] Getting dictionary:', id)
+    console.log('[API] Loading dictionary:', id)
     const metaData = await fs.readFile(META_FILE, 'utf8')
     const { dictionaries } = JSON.parse(metaData)
     const dictionary = dictionaries.find(d => d.id === id)
@@ -57,19 +116,10 @@ app.get('/api/dictionaries/:id', async (req, res) => {
     }
 
     const filePath = path.join(dictionary.filePath, dictionary.fileName)
-    console.log('[API] Reading file:', filePath)
-    
     const data = await fs.readFile(filePath, 'utf8')
-    const dictionaryData = JSON.parse(data)
-    
-    console.log('[API] Dictionary loaded:', { 
-      id, 
-      entitiesCount: dictionaryData.entities.length 
-    })
-    
-    res.json(dictionaryData)
+    res.json(JSON.parse(data))
   } catch (error) {
-    console.error(`[API] Error reading dictionary ${id}:`, error)
+    console.error(`[API] Error loading dictionary ${id}:`, error)
     res.status(500).json({ error: error.message })
   }
 })
@@ -204,10 +254,9 @@ app.get('/api/entities', async (req, res) => {
 app.get('/api/entities/:name', async (req, res) => {
   const { name } = req.params
   try {
+    console.log('[API] GET entity:', { name })
     const entity = await findEntityInDictionaries(name)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
-    }
+    console.log('[API] Entity found:', { name, fields: entity.fields?.length || 0 })
     res.json(entity)
   } catch (error) {
     console.error('[API] Error getting entity:', error)
@@ -283,10 +332,9 @@ app.delete('/api/entities/:name', async (req, res) => {
 app.get('/api/fields/:entityName', async (req, res) => {
   const { entityName } = req.params
   try {
+    console.log('[API] GET fields for entity:', { entityName })
     const entity = await findEntityInDictionaries(entityName)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
-    }
+    console.log('[API] Fields found:', { entityName, count: entity.fields?.length || 0 })
     res.json(entity.fields || [])
   } catch (error) {
     console.error('[API] Error getting fields:', error)
@@ -315,58 +363,29 @@ app.post('/api/fields/:entityName', async (req, res) => {
 })
 
 app.put('/api/fields/:entityName/:fieldName', async (req, res) => {
-  const { entityName, fieldName } = req.params
-  const fieldData = req.body
-  try {
-    console.log('\n[API] PUT /api/fields/:entityName/:fieldName')
-    console.log('[API] Request params:', { entityName, fieldName })
-    console.log('[API] Request body:', fieldData)
+    const { entityName, fieldName } = req.params
+    const fieldData = req.body
     
-    // Находим словарь и сущность
-    const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
-    if (!dictionary || !entity) {
-      console.error('[API] Entity not found:', entityName)
-      return res.status(404).json({ error: 'Entity not found' })
+    try {
+        const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
+        
+        // Ищем поле по старому имени
+        const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
+        if (fieldIndex === -1) {
+            throw new Error(`Field ${fieldName} not found in entity ${entityName}`)
+        }
+        
+        // Обновляем поле
+        entity.fields[fieldIndex] = fieldData
+        
+        // Сохраняем изменения
+        await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
+        
+        res.json({ success: true })
+    } catch (error) {
+        console.error('[API] Error updating field:', error)
+        res.status(500).json({ error: error.message })
     }
-
-    // Проверяем существование родительской сущности, если указана
-    if (fieldData.parent) {
-      const parentEntity = dictionary.entities.find(e => e.name === fieldData.parent)
-      if (!parentEntity) {
-        console.error('[API] Parent entity not found:', fieldData.parent)
-        return res.status(404).json({ error: 'Parent entity not found' })
-      }
-    }
-
-    // Находим поле
-    const fieldIndex = entity.fields.findIndex(f => f.name === fieldName)
-    if (fieldIndex === -1) {
-      console.error('[API] Field not found:', fieldName)
-      return res.status(404).json({ error: 'Field not found' })
-    }
-
-    // Обновляем поле
-    entity.fields[fieldIndex] = fieldData
-    console.log('[API] Updated field in entity')
-
-    // Обновляем сущность в словаре
-    const entityIndex = dictionary.entities.findIndex(e => e.name === entityName)
-    if (entityIndex !== -1) {
-      dictionary.entities[entityIndex] = entity
-      console.log('[API] Updated entity in dictionary')
-    }
-
-    // Сохраняем изменения в файл
-    console.log('[API] Saving changes to file:', filePath)
-    await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
-    console.log('[API] Changes saved successfully')
-    
-    res.json(fieldData)
-  } catch (error) {
-    console.error('[API] Error updating field:', error)
-    console.error('[API] Error stack:', error.stack)
-    res.status(500).json({ error: error.message })
-  }
 })
 
 app.delete('/api/fields/:entityName/:fieldName', async (req, res) => {
@@ -416,76 +435,62 @@ app.delete('/api/fields/:entityName/:fieldName', async (req, res) => {
 })
 
 // API для работы со связями (relations)
-app.get('/api/relations/:entityName', async (req, res) => {
-  const { entityName } = req.params
-  try {
-    const entity = await findEntityInDictionaries(entityName)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
-    }
-    res.json(entity.relations || {})
-  } catch (error) {
-    console.error('[API] Error getting relations:', error)
-    res.status(500).json({ error: error.message })
-  }
-})
-
 app.post('/api/relations/:entityName', async (req, res) => {
-  const { entityName } = req.params
-  const { name, ...relationData } = req.body
-  try {
-    const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
-    }
-
-    entity.relations = entity.relations || {}
-    entity.relations[name] = relationData
+    const { entityName } = req.params
+    const { name, ...relationData } = req.body
     
-    await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
-    res.json(relationData)
-  } catch (error) {
-    console.error('[API] Error creating relation:', error)
-    res.status(500).json({ error: error.message })
-  }
+    try {
+        // Убираем дублирующий лог
+        const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
+        
+        entity.relations = entity.relations || {}
+        entity.relations[name] = relationData
+        await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
+        
+        res.json({ success: true })
+    } catch (error) {
+        console.error('[API] Error creating relation:', error)
+        res.status(500).json({ error: error.message })
+    }
 })
 
 app.put('/api/relations/:entityName/:relationName', async (req, res) => {
-  const { entityName, relationName } = req.params
-  const relationData = req.body
-  try {
-    const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
+    const { entityName, relationName } = req.params
+    const relationData = req.body
+    
+    try {
+        // Убираем дублирующий лог
+        const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
+        
+        entity.relations = entity.relations || {}
+        entity.relations[relationName] = relationData
+        await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
+        
+        res.json({ success: true })
+    } catch (error) {
+        console.error('[API] Error updating relation:', error)
+        res.status(500).json({ error: error.message })
     }
-
-    entity.relations = entity.relations || {}
-    entity.relations[relationName] = relationData
-    await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
-    res.json(relationData)
-  } catch (error) {
-    console.error('[API] Error updating relation:', error)
-    res.status(500).json({ error: error.message })
-  }
 })
 
 app.delete('/api/relations/:entityName/:relationName', async (req, res) => {
-  const { entityName, relationName } = req.params
-  try {
-    const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
-    if (!entity) {
-      return res.status(404).json({ error: 'Entity not found' })
+    const { entityName, relationName } = req.params
+    
+    try {
+        // Убираем дублирующий лог
+        const { dictionary, entity, filePath } = await findEntityAndDictionary(entityName)
+        
+        if (entity.relations && entity.relations[relationName]) {
+            delete entity.relations[relationName]
+            await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
+            res.json({ success: true })
+        } else {
+            throw new Error('Relation not found')
+        }
+    } catch (error) {
+        console.error('[API] Error deleting relation:', error)
+        res.status(500).json({ error: error.message })
     }
-
-    if (entity.relations) {
-      delete entity.relations[relationName]
-      await fs.writeFile(filePath, JSON.stringify(dictionary, null, 2))
-    }
-    res.json({ success: true })
-  } catch (error) {
-    console.error('[API] Error deleting relation:', error)
-    res.status(500).json({ error: error.message })
-  }
 })
 
 // API для работы с файловой системой
@@ -557,37 +562,121 @@ async function findEntityInDictionaries(entityName) {
 }
 
 async function findEntityAndDictionary(entityName) {
-  console.log('\n[API] Finding entity and dictionary for:', entityName)
-  
-  try {
+    console.log('[API] Finding entity and dictionary for:', entityName)
     const metaData = await fs.readFile(META_FILE, 'utf8')
     const { dictionaries } = JSON.parse(metaData)
-    console.log('[API] Found dictionaries:', dictionaries.map(d => d.id))
     
-    for (const dict of dictionaries) {
-      const filePath = path.join(dict.filePath, dict.fileName)
-      console.log('\n[API] Checking dictionary:', dict.id)
-      console.log('[API] Reading file:', filePath)
-      
-      const data = await fs.readFile(filePath, 'utf8')
-      const dictionary = JSON.parse(data)
-      console.log('[API] Dictionary loaded, checking entities...')
-      
-      console.log('[API] Found entities:', dictionary.entities.map(e => e.name))
-      
-      const entity = dictionary.entities.find(e => e.name === entityName)
-      if (entity) {
-        console.log('[API] Found entity:', entityName)
-        return { dictionary, entity, filePath }
-      }
+    for (const dictionary of dictionaries) {
+        const filePath = path.join(dictionary.filePath, dictionary.fileName)
+        const data = JSON.parse(await fs.readFile(filePath, 'utf8'))
+        const entity = data.entities.find(e => e.name === entityName)
+        
+        if (entity) {
+            console.log('[API] Found entity:', entityName)
+            return { dictionary: data, entity, filePath }
+        }
     }
     
-    console.log('[API] Entity not found:', entityName)
-    return { dictionary: null, entity: null, filePath: null }
-  } catch (error) {
-    console.error('[API] Error in findEntityAndDictionary:', error)
-    throw error
-  }
+    throw new Error('Entity not found')
+}
+
+// Функция для расчета связей сущности
+function calculateRelations(entity, allEntities) {
+    console.log('[API] Calculating relations for entity:', entity.name)
+    console.log('[API] Current relations:', entity.relations)
+    
+    const relations = {}
+    
+    // Добавляем связи от reference полей
+    const referenceFields = entity.fields
+        .filter(field => field.parent && field.type === 'reference')
+    
+    console.log('[API] Reference fields found:', referenceFields.length)
+    
+    referenceFields.forEach(field => {
+        const baseName = field.name.endsWith('Id') ? field.name.slice(0, -2) : field.name
+        const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1)
+        
+        relations[relationName] = {
+            type: 'belongsTo',
+            target: field.parent,
+            foreignKey: field.name,
+            restriction: field.restriction || 'restrict'
+        }
+        
+        console.log('[API] Added belongsTo relation:', {
+            name: relationName,
+            field: field.name,
+            target: field.parent
+        })
+    })
+
+    // Добавляем связи от references полей
+    const referencesFields = entity.fields
+        .filter(field => field.parent && field.type === 'references')
+    
+    console.log('[API] References fields found:', referencesFields.length)
+    
+    referencesFields.forEach(field => {
+        const baseName = field.name.endsWith('Ids') ? field.name.slice(0, -3) : field.name
+        const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1) + 's'
+        
+        relations[relationName] = {
+            type: 'belongsToMany',
+            target: field.parent,
+            foreignKey: field.name,
+            restriction: field.restriction || 'restrict'
+        }
+        
+        console.log('[API] Added belongsToMany relation:', {
+            name: relationName,
+            field: field.name,
+            target: field.parent
+        })
+    })
+
+    // Добавляем обратные связи
+    console.log('[API] Checking reverse relations from other entities:', allEntities.length)
+    
+    allEntities.forEach(childEntity => {
+        if (childEntity.name === entity.name) return
+
+        const reverseFields = childEntity.fields
+            .filter(field => field.parent === entity.name && field.type === 'reference')
+        
+        if (reverseFields.length > 0) {
+            console.log('[API] Found reverse relations from:', {
+                entity: childEntity.name,
+                fields: reverseFields.map(f => f.name)
+            })
+        }
+
+        reverseFields.forEach(field => {
+            let relationName = childEntity.name
+            
+            if (relations[relationName]) {
+                const fieldBaseName = field.name.endsWith('Id') ? 
+                    field.name.slice(0, -2) : field.name
+                relationName = `${childEntity.name}${fieldBaseName.charAt(0).toUpperCase()}${fieldBaseName.slice(1)}`
+            }
+
+            relations[relationName] = {
+                type: 'hasMany',
+                target: childEntity.name,
+                foreignKey: field.name,
+                restriction: field.restriction || 'restrict'
+            }
+            
+            console.log('[API] Added hasMany relation:', {
+                name: relationName,
+                field: field.name,
+                target: childEntity.name
+            })
+        })
+    })
+
+    console.log('[API] Final relations:', relations)
+    return relations
 }
 
 // Initialize data and start server

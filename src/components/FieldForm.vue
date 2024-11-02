@@ -54,60 +54,101 @@
             </q-select>
           </div>
         </div>
-        <div class="col-6" v-if="['reference', 'references'].includes(form.type)">
-          <q-select 
-            v-model="form.parent" 
-            :options="entityOptions" 
-            label="Родитель" 
-            outlined 
-            dense
-            emit-value
-            map-options
-            clearable
-            @update:model-value="val => form.parent = val"
-            behavior="menu"
-          >
-            <template v-slot:append>
-              <q-btn
-                flat
-                dense
-                round
-                icon="auto_awesome"
-                color="primary"
-                @click.stop="detectParentFromName(form.name)"
-              >
-                <q-tooltip>
-                  Определить родителя по названию поля
-                </q-tooltip>
-              </q-btn>
-            </template>
-
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
-                <q-item-section avatar style="width: 32px; min-width: 32px">
-                  <q-icon :name="scope.opt.icon || 'category'" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ scope.opt.label }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-
-            <template v-slot:selected>
-              <div class="row items-center no-wrap" v-if="form.parent">
-                <q-icon 
-                  :name="entityOptions.find(opt => opt.value === form.parent)?.icon || 'category'" 
+        <div class="row q-col-gutter-md q-mb-sm" v-if="['reference', 'references'].includes(form.type)">
+          <div class="col-6">
+            <q-select 
+              v-model="form.parent" 
+              :options="entityOptions" 
+              label="Родитель" 
+              outlined 
+              dense
+              emit-value
+              map-options
+              clearable
+              @update:model-value="val => form.parent = val"
+              behavior="menu"
+            >
+              <template v-slot:append>
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="auto_awesome"
                   color="primary"
-                  size="24px"
-                  class="q-mr-sm"
-                  style="width: 24px; min-width: 24px"
-                />
-                <div class="ellipsis">
-                  {{ entityOptions.find(opt => opt.value === form.parent)?.label }}
+                  @click.stop="detectParentFromName(form.name)"
+                >
+                  <q-tooltip>
+                    Определить родителя по названию поля
+                  </q-tooltip>
+                </q-btn>
+              </template>
+
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+                  <q-item-section avatar style="width: 32px; min-width: 32px">
+                    <q-icon :name="scope.opt.icon || 'category'" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected>
+                <div class="row items-center no-wrap" v-if="form.parent">
+                  <q-icon 
+                    :name="entityOptions.find(opt => opt.value === form.parent)?.icon || 'category'" 
+                    color="primary"
+                    size="24px"
+                    class="q-mr-sm"
+                    style="width: 24px; min-width: 24px"
+                  />
+                  <div class="ellipsis">
+                    {{ entityOptions.find(opt => opt.value === form.parent)?.label }}
+                  </div>
                 </div>
-              </div>
-            </template>
-          </q-select>
+              </template>
+            </q-select>
+          </div>
+
+          <div class="col-6">
+            <q-select
+              v-model="form.restriction"
+              :options="restrictionOptions"
+              label="Ограничения"
+              outlined
+              dense
+              emit-value
+              map-options
+              behavior="menu"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+                  <q-item-section avatar style="width: 32px; min-width: 32px">
+                    <q-icon :name="getRestrictionIcon(scope.opt.value)" color="primary" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected>
+                <div class="row items-center no-wrap">
+                  <q-icon 
+                    :name="getRestrictionIcon(form.restriction)" 
+                    color="primary"
+                    size="24px"
+                    class="q-mr-sm"
+                    style="width: 24px; min-width: 24px"
+                  />
+                  <div class="ellipsis">
+                    {{ restrictionOptions.find(opt => opt.value === form.restriction)?.label }}
+                  </div>
+                </div>
+              </template>
+            </q-select>
+          </div>
         </div>
 
         <div class="row q-col-gutter-md q-mb-sm">
@@ -243,7 +284,8 @@ export default {
       input: 'none',
       prompt: '',
       req: false,
-      parent: null
+      parent: null,
+      restriction: 'restrict'
     })
 
     const isFormValid = computed(() => {
@@ -263,7 +305,8 @@ export default {
           input: field.input,
           prompt: field.prompt || '',
           req: field.req || false,
-          parent: field.parent || null
+          parent: field.parent || null,
+          restriction: field.restriction || 'restrict'
         }
         editingFieldName.value = field.name
         isEdit.value = true
@@ -275,7 +318,8 @@ export default {
           input: 'none',
           prompt: '',
           req: false,
-          parent: null
+          parent: null,
+          restriction: 'restrict'
         }
         editingFieldName.value = null
         isEdit.value = false
@@ -439,6 +483,23 @@ export default {
         { label: 'main-inline - В строку', value: 'main-inline', icon: 'short_text' }
     ]
 
+    // Изменим опции для ограничений
+    const restrictionOptions = [
+      { label: 'Запрет', value: 'restrict', icon: 'block' },
+      { label: 'Каскад', value: 'cascade', icon: 'delete_sweep' },
+      { label: 'Обнуление', value: 'null', icon: 'remove_circle_outline' }
+    ]
+
+    // Добавляем функцию для получения иконки ограничения
+    const getRestrictionIcon = (value) => {
+      switch (value) {
+        case 'restrict': return 'block'
+        case 'cascade': return 'delete_sweep'
+        case 'null': return 'remove_circle_outline'
+        default: return 'help'
+      }
+    }
+
     return {
       dialogRef,
       onDialogHide,
@@ -458,7 +519,9 @@ export default {
       entityOptions,
       detectParentFromName,
       generateFieldName,
-      listOptions
+      listOptions,
+      restrictionOptions,
+      getRestrictionIcon
     }
   }
 }
@@ -469,6 +532,18 @@ export default {
   max-width: 95vw
 
 .q-select
+  .q-field__native,
+  .q-field__prefix,
+  .q-field__suffix
+    max-width: 100%
+    
+  .ellipsis
+    text-overflow: ellipsis
+    white-space: nowrap
+    overflow: hidden
+    max-width: calc(100% - 40px)  // Оставляем место для иконки
+    display: inline-block
+
   .q-item
     min-height: 40px
     padding: 8px 16px
@@ -482,19 +557,9 @@ export default {
     flex: 1 !important
     min-width: 0 !important
     padding-left: 0 !important
-
-  .q-item__label
-    font-size: 14px
-    line-height: 1.2
-    white-space: normal
-    word-break: break-word
-    color: inherit
-
-.ellipsis
-  text-overflow: ellipsis
-  white-space: nowrap
-  overflow: hidden
-  flex: 1
-  min-width: 0
-  color: inherit
+    
+    .q-item__label
+      text-overflow: ellipsis
+      white-space: nowrap
+      overflow: hidden
 </style>

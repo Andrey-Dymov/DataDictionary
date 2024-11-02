@@ -216,7 +216,7 @@ export default defineComponent({
     // Получаем информацию о текущем словаре
     const getCurrentDictionaryInfo = computed(() => dictionaryStore.getCurrentDictionaryInfo)
 
-    // Получаем опции для выпадающего списка
+    // Получем опции для выпадающего списка
     const dictionaryOptions = computed(() => {
       return dictionaryStore.dictionaries.map(dict => ({
         label: dict.name,
@@ -253,7 +253,7 @@ export default defineComponent({
         console.error('Error deleting entity:', error)
         $q.notify({
           type: 'negative',
-          message: 'Ошибка при удае��ии сущности'
+          message: 'Ошибка при удаеии сущности'
         })
       }
     }
@@ -423,8 +423,9 @@ export default defineComponent({
       max-width: 300px
     
     &:hover
+      background: rgba($primary, 0.1)
       &.q-item--active
-        background: lighten($primary, 10%) !important
+        background: scale($primary, 10%) !important
       &:not(.q-item--active)
         background-color: rgba($primary, 0.1)
 

@@ -1,0 +1,56 @@
+@use 'sass:color'
+@use 'sass:math'
+@use 'quasar/src/css/variables.sass' as vars
+
+// Миксины для часто используемых стилей
+@mixin ellipsis
+  text-overflow: ellipsis
+  white-space: nowrap
+  overflow: hidden
+
+@mixin hover-effect
+  background: rgba(vars.$primary, 0.1)
+  &.q-item--active
+    background: scale(vars.$primary, 10%) !important
+  &:not(.q-item--active)
+    background-color: rgba(vars.$primary, 0.1)
+
+// Общие стили для q-select
+.q-select
+  .q-field__native,
+  .q-field__prefix,
+  .q-field__suffix
+    max-width: 100%
+    
+  .ellipsis
+    @include ellipsis
+    max-width: calc(100% - 40px)
+    display: inline-block
+
+  .q-item
+    min-height: 40px
+    padding: 8px 16px
+
+    &__section--avatar
+      width: 32px !important
+      min-width: 32px !important
+      padding-right: 12px !important
+
+    &__section--main
+      flex: 1 !important
+      min-width: 0 !important
+      padding-left: 0 !important
+      
+      .q-item__label
+        @include ellipsis
+
+// Общие стили для q-item
+.q-item
+  &:hover
+    @include hover-effect
+
+  &.q-item--active
+    background: vars.$primary
+    color: white
+    .text-grey-7
+      color: rgba(255,255,255,0.7) !important

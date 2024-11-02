@@ -24,5 +24,15 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  css: {
+    preprocessorOptions: {
+      sass: {
+        additionalData: `
+          @use "quasar/src/css/variables.sass" as vars
+          @import "@/styles/global.sass"
+        `
+      }
+    }
   }
 })

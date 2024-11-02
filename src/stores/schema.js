@@ -37,13 +37,13 @@ export const useSchemaStore = defineStore('schema', {
         .filter(field => field.parent && field.type === 'reference')
         .forEach(field => {
           const baseName = field.name.endsWith('Id') ? field.name.slice(0, -2) : field.name
-          const relationName = baseName.charAt(0).toLowerCase() + baseName.slice(1)
+          const relationName = baseName
           
           relations[relationName] = {
             type: 'belongsTo',
             target: field.parent,
             foreignKey: field.name,
-            restriction: 'restrict'
+            restriction: field.restriction || 'restrict'
           }
         })
 
@@ -58,7 +58,7 @@ export const useSchemaStore = defineStore('schema', {
             type: 'belongsToMany',
             target: field.parent,
             foreignKey: field.name,
-            restriction: 'restrict'
+            restriction: field.restriction || 'restrict'
           }
         })
 
@@ -81,7 +81,7 @@ export const useSchemaStore = defineStore('schema', {
               type: 'hasMany',
               target: childEntity.name,
               foreignKey: field.name,
-              restriction: 'restrict'
+              restriction: field.restriction || 'restrict'
             }
           })
       })
@@ -89,116 +89,203 @@ export const useSchemaStore = defineStore('schema', {
       return relations
     },
 
-    compareRelations(oldRelations, newRelations) {
-      const changes = {
-        delete: [],
-        update: [],
-        create: []
-      }
+    compareRelations(oldRelations, newRelations, $q) {
+        console.log('[SchemaStore] ====== Comparing relations ======')
+        console.log('[SchemaStore] Old relations:', oldRelations)
+        console.log('[SchemaStore] New relations:', newRelations)
 
-      // Находим удаленные и измененные связи
-      for (const [name, oldData] of Object.entries(oldRelations)) {
-        if (!newRelations[name]) {
-          changes.delete.push({ relationName: name })
-        } else if (JSON.stringify(oldData) !== JSON.stringify(newRelations[name])) {
-          changes.update.push({ 
-            relationName: name, 
-            data: newRelations[name] 
-          })
+        const changes = {
+            delete: [],
+            update: [],
+            create: []
         }
-      }
 
-      // Находим новые связи
-      for (const [name, newData] of Object.entries(newRelations)) {
-        if (!oldRelations[name]) {
-          changes.create.push({ 
-            relationName: name, 
-            data: newData 
-          })
+        // 1. Сначала находим все старые связи, которых нет в новых
+        // или которые изменились по содержимому
+        for (const [oldName, oldData] of Object.entries(oldRelations)) {
+            const newData = newRelations[oldName]
+            
+            if (!newData) {
+                // Если с��язи с таким именем больше нет
+                console.log(`[SchemaStore] Relation "${oldName}" will be deleted`)
+                
+                // Получаем базовое имя связи (без Id)
+                const baseName = oldName.endsWith('Id') ? oldName.slice(0, -2) : oldName
+                
+                // Ищем похожую связь с другим именем
+                const similarNew = Object.entries(newRelations).find(([newName, newData]) => 
+                    newData.type === oldData.type &&
+                    newData.target === oldData.target &&
+                    newData.foreignKey !== oldData.foreignKey // Разные foreignKey означают переименование поля
+                )
+
+                changes.delete.push({ relationName: oldName })
+
+                if (similarNew) {
+                    // Если нашли похожую связь с другим именем - это переименование
+                    console.log(`[SchemaStore] Found renamed relation: "${oldName}" -> "${similarNew[0]}"`)
+                    changes.create.push({
+                        relationName: similarNew[0],
+                        data: similarNew[1]
+                    })
+                    if ($q) {
+                        $q.notify({
+                            type: 'info',
+                            message: `Связь "${oldName}" будет переименована в "${similarNew[0]}"`
+                        })
+                    }
+                } else {
+                    if ($q) {
+                        $q.notify({
+                            type: 'warning',
+                            message: `Связь "${oldName}" будет удалена`
+                        })
+                    }
+                }
+            } else {
+                // Если связь с таким именем есть, проверяем изменения
+                const isDifferent = 
+                    oldData.type !== newData.type ||
+                    oldData.target !== newData.target ||
+                    oldData.foreignKey !== newData.foreignKey ||
+                    oldData.restriction !== newData.restriction
+
+                if (isDifferent) {
+                    console.log(`[SchemaStore] Relation "${oldName}" changed:`, {
+                        old: oldData,
+                        new: newData
+                    })
+                    changes.update.push({
+                        relationName: oldName,
+                        data: newData
+                    })
+                    if ($q) {
+                        $q.notify({
+                            type: 'info',
+                            message: `Связь "${oldName}" будет обновлена`
+                        })
+                    }
+                }
+            }
         }
-      }
 
-      return changes
+        // 2. Находим новые связи, которых не было в старых
+        for (const [newName, newData] of Object.entries(newRelations)) {
+            if (!oldRelations[newName] && 
+                !changes.create.some(c => c.relationName === newName)) {
+                console.log(`[SchemaStore] New relation "${newName}" will be created`)
+                changes.create.push({
+                    relationName: newName,
+                    data: newData
+                })
+                if ($q) {
+                    $q.notify({
+                        type: 'positive',
+                        message: `Будет создана новая связь "${newName}"`
+                    })
+                }
+            }
+        }
+
+        return changes
     },
 
     async updateField(entityName, fieldName, fieldData, $q) {
-      try {
-        const entity = this.getEntityByName(entityName)
-        const oldField = entity.fields.find(f => f.name === fieldName)
-        
-        // 1. Определяем затронутые сущности
-        const affectedEntities = new Set([entityName])
-        
-        if (oldField?.parent) {
-          affectedEntities.add(oldField.parent)
+        try {
+            const entity = this.getEntityByName(entityName)
+            const oldField = entity.fields.find(f => f.name === fieldName)
+            
+            // 1. Сначала обновляем поле
+            await dictionaryService.update('field', fieldName, fieldData, entityName)
+            if ($q) {
+                $q.notify({
+                    type: 'positive',
+                    message: `Поле "${oldField.name}" переименовано в "${fieldData.name}"`
+                })
+            }
+
+            // 2. Если это reference/references поле и изменился родитель
+            if (['reference', 'references'].includes(fieldData.type) && 
+                (oldField.parent !== fieldData.parent || oldField.name !== fieldData.name)) {
+
+                // 2.1. Получаем имена связей
+                const oldRelationName = oldField.name.endsWith('Id') ? 
+                    oldField.name.slice(0, -2) : oldField.name
+                const newRelationName = fieldData.name.endsWith('Id') ? 
+                    fieldData.name.slice(0, -2) : fieldData.name
+
+                // 2.2. Удаляем старую связь в текущей сущности
+                await dictionaryService.delete('relation', entityName, oldRelationName)
+                if ($q) {
+                    $q.notify({
+                        type: 'warning',
+                        message: `Удалена связь "${oldRelationName}" в сущности "${entity.prompt || entity.name}"`
+                    })
+                }
+
+                // 2.3. Создаем новую связь в текущей сущности
+                const relationData = {
+                    name: newRelationName,
+                    type: 'belongsTo',
+                    target: fieldData.parent,
+                    foreignKey: fieldData.name,
+                    restriction: fieldData.restriction || 'restrict'
+                }
+                await dictionaryService.create('relation', entityName, relationData)
+                if ($q) {
+                    $q.notify({
+                        type: 'positive',
+                        message: `Создана связь "${newRelationName}" в сущности "${entity.prompt || entity.name}"`
+                    })
+                }
+
+                // 2.4. Обновляем связи в родительских сущностях
+                if (oldField.parent) {
+                    const oldParentEntity = this.getEntityByName(oldField.parent)
+                    const oldParentRelationName = `${entityName}${oldField.name.charAt(0).toUpperCase()}${oldField.name.slice(1)}`
+                    await dictionaryService.delete('relation', oldField.parent, oldParentRelationName)
+                    if ($q) {
+                        $q.notify({
+                            type: 'warning',
+                            message: `Удалена связь "${oldParentRelationName}" в родительской сущности "${oldParentEntity.prompt || oldParentEntity.name}"`
+                        })
+                    }
+                }
+
+                if (fieldData.parent) {
+                    const newParentEntity = this.getEntityByName(fieldData.parent)
+                    const newParentRelationName = `${entityName}${fieldData.name.charAt(0).toUpperCase()}${fieldData.name.slice(1)}`
+                    const parentRelationData = {
+                        name: newParentRelationName,
+                        type: 'hasMany',
+                        target: entityName,
+                        foreignKey: fieldData.name,
+                        restriction: fieldData.restriction || 'restrict'
+                    }
+                    await dictionaryService.create('relation', fieldData.parent, parentRelationData)
+                    if ($q) {
+                        $q.notify({
+                            type: 'positive',
+                            message: `Создана связь "${newParentRelationName}" в родительской сущности "${newParentEntity.prompt || newParentEntity.name}"`
+                        })
+                    }
+                }
+            }
+
+            // 3. Перезагружаем схему
+            const dictionaryStore = useDictionaryStore()
+            await this.loadSchema(dictionaryStore.currentDictionaryId)
+
+        } catch (error) {
+            console.error('[SchemaStore] Error updating field:', error)
+            if ($q) {
+                $q.notify({
+                    type: 'negative',
+                    message: `Ошибка при обновлении поля "${fieldData.prompt || fieldData.name}"`
+                })
+            }
+            throw error
         }
-        
-        if (fieldData.parent) {
-          affectedEntities.add(fieldData.parent)
-        }
-
-        // 2. Сохраняем поле
-        const fieldToSave = {
-          name: fieldData.name,
-          type: fieldData.type,
-          list: fieldData.list,
-          input: fieldData.input,
-          prompt: fieldData.prompt || undefined,
-          req: fieldData.req || undefined,
-          parent: fieldData.parent || undefined
-        }
-
-        Object.keys(fieldToSave).forEach(key => {
-          if (fieldToSave[key] === undefined) {
-            delete fieldToSave[key]
-          }
-        })
-
-        console.log('[SchemaStore] Saving field:', fieldToSave)
-        await dictionaryService.update('field', fieldName, fieldToSave, entityName)
-        if ($q) {
-          $q.notify({
-            type: 'positive',
-            message: `Поле "${fieldToSave.prompt || fieldToSave.name}" обновлено`
-          })
-        }
-
-        // 3. Для каждой затронутой сущности обновляем связи
-        for (const affectedEntityName of affectedEntities) {
-          const affectedEntity = this.getEntityByName(affectedEntityName)
-          
-          // Вычисляем новые связи
-          const newRelations = this.calculateRelationsForEntity(affectedEntityName)
-          
-          // Обновляем сущность целиком с новыми связями
-          const updatedEntity = {
-            ...affectedEntity,
-            relations: newRelations
-          }
-
-          await this.updateCollection(affectedEntityName, updatedEntity, $q)
-          if ($q) {
-            $q.notify({
-              type: 'positive',
-              message: `Связи сущности "${affectedEntity.prompt || affectedEntity.name}" обновлены`
-            })
-          }
-        }
-
-        // Перезагружаем данные словаря
-        const dictionaryStore = useDictionaryStore()
-        await this.loadSchema(dictionaryStore.currentDictionaryId)
-
-      } catch (error) {
-        console.error('[SchemaStore] Error updating field:', error)
-        if ($q) {
-          $q.notify({
-            type: 'negative',
-            message: `Ошибка при обновлении поля "${fieldData.prompt || fieldData.name}"`
-          })
-        }
-        throw error
-      }
     },
 
     async loadSchema(dictionaryId) {
@@ -254,7 +341,7 @@ export const useSchemaStore = defineStore('schema', {
             if ($q) {
                 $q.notify({
                     type: 'positive',
-                    message: `Сущность "${data.prompt || data.name}" обновлена`
+                    message: `Сущность "${data.prompt || data.name}" бновлена`
                 })
             }
         } catch (error) {
@@ -283,6 +370,85 @@ export const useSchemaStore = defineStore('schema', {
             localStorage.setItem('selectedEntities', JSON.stringify(savedSelections))
             console.log('[SchemaStore] Saved selection to localStorage:', { dictionaryId: currentDictionaryId, entityName: name })
         }
+    },
+
+    async addRelation(entityName, relationData, $q) {
+      try {
+        console.log('[SchemaStore] Adding relation:', relationData)
+        await dictionaryService.create('relation', entityName, relationData)
+        const entity = this.getEntityByName(entityName)
+        if (entity) {
+          entity.relations = entity.relations || {}
+          entity.relations[relationData.name] = relationData
+        }
+        if ($q) {
+          $q.notify({
+            type: 'positive',
+            message: `Связь "${relationData.name}" добавлена`
+          })
+        }
+      } catch (error) {
+        console.error('[SchemaStore] Error adding relation:', error)
+        if ($q) {
+          $q.notify({
+            type: 'negative',
+            message: `Ошибка при добавлении связи "${relationData.name}"`
+          })
+        }
+        throw error
+      }
+    },
+
+    async updateRelation(entityName, relationName, relationData, $q) {
+      try {
+        console.log('[SchemaStore] Updating relation:', relationData)
+        await dictionaryService.update('relation', entityName, relationName, relationData)
+        const entity = this.getEntityByName(entityName)
+        if (entity && entity.relations) {
+          entity.relations[relationName] = relationData
+        }
+        if ($q) {
+          $q.notify({
+            type: 'positive',
+            message: `Связь "${relationName}" обновлена`
+          })
+        }
+      } catch (error) {
+        console.error('[SchemaStore] Error updating relation:', error)
+        if ($q) {
+          $q.notify({
+            type: 'negative',
+            message: `Ошибка при обновлении связи "${relationName}"`
+          })
+        }
+        throw error
+      }
+    },
+
+    async deleteRelation(entityName, relationName, $q) {
+      try {
+        console.log('[SchemaStore] Deleting relation:', relationName)
+        await dictionaryService.delete('relation', entityName, relationName)
+        const entity = this.getEntityByName(entityName)
+        if (entity && entity.relations) {
+          delete entity.relations[relationName]
+        }
+        if ($q) {
+          $q.notify({
+            type: 'positive',
+            message: `Связь "${relationName}" удалена`
+          })
+        }
+      } catch (error) {
+        console.error('[SchemaStore] Error deleting relation:', error)
+        if ($q) {
+          $q.notify({
+            type: 'negative',
+            message: `Ошибка при удалении связи "${relationName}"`
+          })
+        }
+        throw error
+      }
     }
   }
 })

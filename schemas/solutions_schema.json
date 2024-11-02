@@ -58,12 +58,14 @@
           "list": "avatar-label"
         },
         {
-          "name": "typeId1",
+          "name": "typeId6",
           "type": "reference",
           "list": "main-none",
           "input": "none",
           "prompt": "Тип",
-          "parent": "meeting_types"
+          "req": false,
+          "parent": "issues",
+          "restriction": "restrict"
         },
         {
           "name": "solutionUserIds",
@@ -98,12 +100,6 @@
           "foreignKey": "meetingId",
           "restriction": "restrict"
         },
-        "typeId1": {
-          "type": "belongsTo",
-          "target": "meeting_types",
-          "foreignKey": "typeId1",
-          "restriction": "restrict"
-        },
         "solutionUsers": {
           "type": "belongsToMany",
           "target": "employees",
@@ -122,10 +118,10 @@
           "foreignKey": "taskTypeId",
           "restriction": "restrict"
         },
-        "issuesSolution": {
-          "type": "hasMany",
+        "typeId6": {
+          "type": "belongsTo",
           "target": "issues",
-          "foreignKey": "solutionId",
+          "foreignKey": "typeId6",
           "restriction": "restrict"
         }
       }
@@ -227,26 +223,30 @@
         "meetingType": {
           "type": "belongsTo",
           "target": "meeting_types",
-          "foreignKey": "meetingTypeId"
+          "foreignKey": "meetingTypeId",
+          "restriction": "restrict"
+        },
+        "users": {
+          "type": "belongsToMany",
+          "target": "employees",
+          "foreignKey": "userIds",
+          "restriction": "restrict"
         },
         "attendedUsers": {
           "type": "belongsToMany",
           "target": "employees",
-          "foreignKey": "attendedUserIds"
-        },
-        "issues": {
-          "type": "hasMany",
-          "target": "issues",
-          "foreignKey": "meetingId"
+          "foreignKey": "attendedUserIds",
+          "restriction": "restrict"
         },
         "solutions": {
           "type": "hasMany",
           "target": "solutions",
-          "foreignKey": "meetingId"
+          "foreignKey": "meetingId",
+          "restriction": "restrict"
         },
-        "solutionsMeeting": {
+        "issues": {
           "type": "hasMany",
-          "target": "solutions",
+          "target": "issues",
           "foreignKey": "meetingId",
           "restriction": "restrict"
         }
@@ -376,6 +376,12 @@
           "type": "belongsTo",
           "target": "meetings",
           "foreignKey": "meetingId"
+        },
+        "solutionsTypeId6": {
+          "type": "hasMany",
+          "target": "solutions",
+          "foreignKey": "typeId6",
+          "restriction": "restrict"
         }
       }
     },
@@ -625,7 +631,7 @@
         "solutions": {
           "type": "hasMany",
           "target": "solutions",
-          "foreignKey": "typeId1",
+          "foreignKey": "typeId3",
           "restriction": "restrict"
         },
         "meetings": {
